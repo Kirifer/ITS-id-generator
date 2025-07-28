@@ -1,5 +1,6 @@
 // server/controllers/cardController.js
 const Card = require('../models/Card');
+const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
 
@@ -37,16 +38,42 @@ exports.createCard = async (req, res) => {
   }
 };
 
+// Get a single card by id_no
+exports.getCardByIdNo = async (req, res) => {
+  try {
+    const { id_no } = req.params;
+
+    const card = await Card.findOne({ id_no });
+
+    if (!card) {
+      return res.status(404).json({ message: 'Card not found' });
+    }
+
+    res.status(200).json(card);
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving card', error: error.message });
+  }
+};
+
 // UPDATE card
 exports.updateCard = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { name, id_no } = req.body;
+  const { id_no } = req.params;
+  const updateData = req.body;
 
-    const card = await Card.findByIdAndUpdate(id, { name, id_no }, { new: true });
-    res.json(card);
-  } catch (err) {
-    res.status(500).json({ message: 'Error updating card: ' + err.message });
+  try {
+    const updatedCard = await Card.findOneAndUpdate(
+      { id_no: id_no },     
+      updateData,
+      { new: true }      
+    );
+
+    if (!updatedCard) {
+      return res.status(404).json({ message: 'Card not found for id_no: ' + id_no });
+    }
+
+    res.status(200).json(updatedCard);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating card: ' + error.message });
   }
 };
 

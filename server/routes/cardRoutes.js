@@ -7,6 +7,7 @@ const fs = require('fs'); // ← This line is required!
 const {
   getAllCards,
   createCard,
+  getCardByIdNo,
   updateCard,
   deleteCard,
 } = require('../controllers/cardController');
@@ -29,7 +30,8 @@ const upload = multer({ storage });
 // Routes
 router.get('/', getAllCards);
 router.post('/', upload.single('image'), createCard);
-router.put('/:id', updateCard);
-router.delete('/:id', deleteCard);
+router.get('/by-idno/:id_no', getCardByIdNo);
+router.put('/by-idno/:id_no', updateCard);
+router.delete('/by-idno/:id_no', deleteCard);
 
 module.exports = router;
