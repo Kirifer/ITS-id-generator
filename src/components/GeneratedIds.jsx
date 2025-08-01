@@ -15,7 +15,7 @@ export default function GeneratedIds() {
   const formRef = useRef(null);
   const listRef = useRef(null);
   const [syncedHeight, setSyncedHeight] = useState(0);
-
+  
   const idData = [
     { firstName: 'Emily', lastName: 'Tan', type: 'Intern', status: 'Pending', date: '05/02/2025' },
     { firstName: 'David', lastName: 'Cruz', type: 'Employee', status: 'Approved', date: '11/15/2023' },
