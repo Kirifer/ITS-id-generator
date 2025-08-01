@@ -21,3 +21,24 @@ code {
 .custom-bg {
   background: linear-gradient(180deg, #D0CAF3 29.81%, rgba(208, 202, 243, 0.88) 52.4%, #9B93CB 77.4%, #524693 100%);
 }
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 100vh;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #e5e7eb;
+  border-radius: 100vh;
+  border: 2px solid transparent;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #e5e7eb transparent;
+}

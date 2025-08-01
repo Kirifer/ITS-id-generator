@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/images/logo.png';
-import { Eye, EyeOff, User, Lock } from 'lucide-react';
+import { 
+  Eye, EyeOff, User, Lock 
+} from 'lucide-react';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -15,7 +17,7 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center p-6 font-poppins">
+    <div className="flex custom-bg items-center justify-center min-h-screen p-6 font-poppins bg-gray-50">
       <form
         onSubmit={handleLogin}
         className="bg-white w-[500px] p-10 rounded-[20px] shadow-xl space-y-6"
@@ -23,17 +25,17 @@ const Login = () => {
         {/* Logo and Title */}
         <div className="flex items-center justify-center mb-4 space-x-4">
           <img src={logo} alt="Logo" className="w-[80px] h-[73px]" />
-          <h1 className="text-3xl font-extrabold text-black">IT Squarehub</h1>
+          <h1 className="text-3xl font-extrabold text-gray-800">IT Squarehub</h1>
         </div>
 
-        <h2 className="text-2xl font-bold text-center text-black">Log in to Your Account</h2>
-        <p className="text-center text-sm text-gray-500">
+        <h2 className="text-2xl font-bold text-center text-gray-800">Log in to Your Account</h2>
+        <p className="text-center text-sm text-gray-800">
           Welcome back! Please enter your details.
         </p>
 
         {/* Email */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <label className="block text-sm font-semibold text-gray-800 mb-1">Email</label>
           <div className="flex items-center px-3 py-2 border rounded-md border-gray-300">
             <User className="w-4 h-4 text-gray-400 mr-2" />
             <input
@@ -47,7 +49,7 @@ const Login = () => {
 
         {/* Password */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <label className="block text-sm font-semibold text-gray-800 mb-1">Password</label>
           <div className="flex items-center px-3 py-2 border rounded-md border-gray-300">
             <Lock className="w-4 h-4 text-gray-400 mr-2" />
             <input
@@ -72,7 +74,7 @@ const Login = () => {
 
         {/* Remember Me & Forgot Password */}
         <div className="flex items-center justify-between text-sm">
-          <label className="flex items-center">
+          <label className="flex items-center text-gray-800">
             <input type="checkbox" className="mr-2" /> Remember Me
           </label>
           <a href="#" className="text-purple-600 hover:underline">
@@ -89,7 +91,7 @@ const Login = () => {
         </button>
 
         {/* Sign Up Prompt */}
-        <p className="text-center text-sm">
+        <p className="text-center text-sm text-gray-800">
           Don’t have an account?{' '}
           <a href="#" className="text-purple-600 hover:underline">
             Sign Up
