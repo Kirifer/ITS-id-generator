@@ -102,7 +102,6 @@ export default function Dashboard() {
   );
 }
 
-// Nav Item component
 function NavItem({ icon, label }) {
   return (
     <div className="flex items-center gap-3 hover:text-purple-400 cursor-pointer">
@@ -112,7 +111,6 @@ function NavItem({ icon, label }) {
   );
 }
 
-// Stat Card component: Icon (left), Count (right)
 function StatCard({ icon, label, count }) {
   return (
     <div className="bg-white p-4 rounded-2xl shadow-lg flex flex-col justify-between min-h-[160px]">
