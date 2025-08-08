@@ -4,6 +4,7 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard'; 
 import DashboardHR from './components/DashboardHR';
 import ApprovalHR from './components/ApprovalHR';
+import Viewing from './components/Viewing';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboardhr" element={<DashboardHR />} />
           <Route path="/approvalhr" element={<ApprovalHR />} />
+          <Route path="/view" element={<Viewing />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>
