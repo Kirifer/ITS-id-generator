@@ -77,9 +77,6 @@ const Login = () => {
           <label className="flex items-center text-gray-800">
             <input type="checkbox" className="mr-2" /> Remember Me
           </label>
-          <a href="#" className="text-purple-600 hover:underline">
-            Forgot Password
-          </a>
         </div>
 
         {/* Login Button */}
@@ -89,14 +86,6 @@ const Login = () => {
         >
           Login
         </button>
-
-        {/* Sign Up Prompt */}
-        <p className="text-center text-sm text-gray-800">
-          Don’t have an account?{' '}
-          <a href="#" className="text-purple-600 hover:underline">
-            Sign Up
-          </a>
-        </p>
       </form>
     </div>
   );
