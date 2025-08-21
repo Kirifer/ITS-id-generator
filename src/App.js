@@ -5,6 +5,7 @@ import Dashboard from './components/Dashboard';
 import DashboardHR from './components/DashboardHR';
 import ApprovalHR from './components/ApprovalHR';
 import Viewing from './components/Viewing';
+import ViewIDForm from './components/Login2'
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/dashboardhr" element={<DashboardHR />} />
           <Route path="/approvalhr" element={<ApprovalHR />} />
           <Route path="/view" element={<Viewing />} />
+          <Route path="/viewidlogin" element={<ViewIDForm />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>
