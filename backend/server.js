@@ -8,6 +8,8 @@ const approverRoutes = require('./routes/approver');  // ✅ renamed from hr.js
 const employeeRoutes = require('./routes/employee');
 const authRoutes = require('./routes/auth');
 
+
+
 // Load environment variables
 dotenv.config();
 
@@ -48,6 +50,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/approver', approverRoutes);  // ✅ renamed route
 app.use('/api/employee', employeeRoutes);
+
+
 
 // 404 Handler
 app.use((req, res) => {

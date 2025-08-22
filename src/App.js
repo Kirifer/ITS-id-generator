@@ -4,8 +4,8 @@ import Login from './components/Login';
 import Admin_Dashboard from './components/Admin-Dashboard'; 
 import Admin_IDGenerator from './components/Admin-IDGenerator';
 import Admin_GeneratedIDs from './components/Admin-GeneratedIDs';
-import HR_Dashboard from './components/HR-Dashboard';
-import HR_GeneratedIDs from './components/HR-GeneratedIDs';
+import Approver_Dashboard from './components/Approver-Dashboard';
+import Approver_GeneratedIDs from './components/Approver-GeneratedIDs';
 
 function App() {
   return (
@@ -18,8 +18,8 @@ function App() {
           <Route path="/id-generator" element={<Admin_IDGenerator />} />
           <Route path="/generated-ids" element={<Admin_GeneratedIDs />} />
 
-          <Route path="/hr-dashboard" element={<HR_Dashboard />} />
-          <Route path="/hr-generated-ids" element={<HR_GeneratedIDs />} />
+          <Route path="/approver-dashboard" element={<Approver_Dashboard />} />
+          <Route path="/approver-generated-ids" element={<Approver_GeneratedIDs />} />
 
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>

@@ -14,10 +14,21 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const res = await axios.post('http://localhost:5000/api/admin/login', {
+    // First, try Admin login
+    let res;
+    try {
+      res = await axios.post('http://localhost:5000/api/admin/login', {
         username,
         password,
       });
+    } catch (err) {
+      // If Admin fails, try Approver
+      res = await axios.post('http://localhost:5000/api/approver/login', {
+        username,
+        password,
+      });
+    }
+      
 
       // Save token + role in localStorage
       localStorage.setItem('token', res.data.token);
