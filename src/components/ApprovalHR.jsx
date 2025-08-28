@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Eye } from 'lucide-react';
-import { FaTh, FaIdCard, FaSignOutAlt } from 'react-icons/fa';
+import { FaTh, FaIdCard, FaSignOutAlt, FaCheck, FaTimes } from 'react-icons/fa';
 import logo from '../assets/images/logo.png';
 import frontID from '../assets/images/1 FRONT.png';
 import backID from '../assets/images/1 BACK.png';
 
-export default function DashboardHR() {
-  const idData = [
+export default function ApprovalHR() {
+  const initialData = [
     { firstName: 'Emily', middleInitial: 'A', lastName: 'Tan', type: 'Intern', status: 'Pending', date: '05/02/2025' },
     { firstName: 'David', middleInitial: 'M', lastName: 'Cruz', type: 'Employee', status: 'Approved', date: '11/15/2023' },
     { firstName: 'Sarah', middleInitial: 'J', lastName: 'Lopez', type: 'Intern', status: 'Pending', date: '07/21/2024' },
@@ -20,10 +20,36 @@ export default function DashboardHR() {
     { firstName: 'Anthony', middleInitial: 'F', lastName: 'Diaz', type: 'Employee', status: 'Approved', date: '12/30/2022' }
   ];
 
+  const [idData, setIdData] = useState(initialData);
   const [selectedId, setSelectedId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('Pending'); 
+  const [sidebarHover, setSidebarHover] = useState(false);
+
+  const [previewClosed, setPreviewClosed] = useState(false);     
+  const [hideForHover, setHideForHover] = useState(false);       
+  const hoverTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    };
+  }, []);
+
+  const handleApprove = (id) => {
+    setIdData((prev) =>
+      prev.map((item) => (item === id ? { ...item, status: 'Approved' } : item))
+    );
+    if (selectedId === id) setSelectedId({ ...id, status: 'Approved' });
+  };
+
+  const handleReject = (id) => {
+    setIdData((prev) =>
+      prev.map((item) => (item === id ? { ...item, status: 'Rejected' } : item))
+    );
+    if (selectedId === id) setSelectedId({ ...id, status: 'Rejected' });
+  };
 
   const filteredData = idData.filter((id) => {
     const fullName = `${id.firstName} ${id.middleInitial} ${id.lastName}`.toLowerCase();
@@ -33,38 +59,73 @@ export default function DashboardHR() {
     return matchesSearch && matchesType && matchesStatus;
   });
 
+  const toggleSelectId = (id) => {
+    if (selectedId === id) {
+      setSelectedId(null);
+      setPreviewClosed(false);
+    } else {
+      setSelectedId(id);
+      setPreviewClosed(false); 
+    }
+  };
+
+  const previewMounted = Boolean(selectedId) && !previewClosed;
+  const sidebarExpanded = !selectedId || sidebarHover;
+
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
       <aside
+        onMouseEnter={() => {
+          setSidebarHover(true);
+          if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+          setHideForHover(true);
+          hoverTimerRef.current = setTimeout(() => {
+            setHideForHover(false);
+            hoverTimerRef.current = null;
+          }, 1000);
+        }}
+        onMouseLeave={() => {
+          setSidebarHover(false);
+          if (hoverTimerRef.current) {
+            clearTimeout(hoverTimerRef.current);
+            hoverTimerRef.current = null;
+          }
+          setHideForHover(false);
+        }}
         className={`${
-          selectedId ? 'w-20' : 'w-60'
+          selectedId && !sidebarHover ? 'w-20' : 'w-60'
         } bg-[#262046] text-white min-h-screen p-5 flex flex-col justify-between transition-all duration-300`}
       >
         <div className="space-y-6">
           <div className="flex items-center gap-3">
             <img src={logo} alt="Logo" className="w-8 h-8" />
-            {!selectedId && <h1 className="text-xl font-bold">IT Squarehub</h1>}
+            <span
+              className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${
+                sidebarExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'
+              } text-xl font-bold`}
+            >
+              IT Squarehub
+            </span>
           </div>
 
           <nav className="space-y-3">
-            <NavItem to="/dashboardhr" icon={<FaTh />} label={!selectedId && 'Dashboard'} />
-            <NavItem to="/approvalhr" icon={<FaIdCard />} label={!selectedId && 'Generated IDs'} />
+            <NavItem to="/dashboardhr" icon={<FaTh />} label="Dashboard" sidebarExpanded={sidebarExpanded} />
+            <NavItem to="/approvalhr" icon={<FaIdCard />} label="Generated IDs" sidebarExpanded={sidebarExpanded} />
           </nav>
         </div>
 
         <div className="pt-6 border-t border-gray-600">
-          <NavItem to="/login" icon={<FaSignOutAlt />} label={!selectedId && 'Logout'} />
+          <NavItem to="/login" icon={<FaSignOutAlt />} label="Logout" sidebarExpanded={sidebarExpanded} />
         </div>
       </aside>
 
       {/* Main Content */}
-      <main
-        className={`flex-1 p-6 transition-all duration-300 ${
-          selectedId ? 'mr-[600px]' : ''
-        } custom-bg flex items-center justify-center min-h-screen`}
-      >
-        <div className="bg-white rounded-2xl shadow-md p-6 w-full max-w-6xl max-h-[75vh] overflow-hidden flex flex-col">
+      <main className="flex-1 p-6 transition-all duration-300 custom-bg flex items-center justify-center min-h-screen relative">
+        <div
+          className={`bg-white rounded-2xl shadow-md p-6 w-full max-w-6xl max-h-[75vh] overflow-hidden flex flex-col transition-all duration-500`}
+          style={{ marginRight: previewMounted ? '650px' : '0' }}
+        >
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4">
             <h2 className="text-2xl font-bold text-gray-800">Generated IDs</h2>
             <div className="flex gap-4 flex-wrap items-center">
@@ -86,6 +147,7 @@ export default function DashboardHR() {
                 <option value="All">Status: All</option>
                 <option value="Approved">Approved</option>
                 <option value="Pending">Pending</option>
+                <option value="Rejected">Rejected</option>
               </select>
 
               <div className="relative">
@@ -126,19 +188,47 @@ export default function DashboardHR() {
               <tbody>
                 {filteredData.length ? (
                   filteredData.map((id, index) => (
-                    <tr key={index} className="bg-white even:bg-gray-100">
+                    <tr
+                      key={index}
+                      className={`transition-colors duration-200 cursor-pointer ${
+                        selectedId === id
+                          ? 'bg-purple-200'
+                          : index % 2 === 0
+                          ? 'bg-white'
+                          : 'bg-gray-100'
+                      }`}
+                    >
                       <td className="p-4">{`${id.firstName} ${id.middleInitial} ${id.lastName}`}</td>
                       <td className="p-4">{id.type}</td>
                       <td className="p-4">{id.status}</td>
                       <td className="p-4">{id.date}</td>
-                      <td
-                        className="p-4 text-purple-600 cursor-pointer flex items-center justify-center"
-                        onClick={() => setSelectedId(id)}
-                      >
-                        <Eye
-                          size={16}
-                          className="hover:border-b hover:border-purple-800 transition-all duration-200"
-                        />
+                      <td className="p-4 text-purple-600 flex justify-center items-center gap-3">
+                        <button
+                          className="relative group"
+                          onClick={() => toggleSelectId(id)}
+                          title="View"
+                        >
+                          <Eye size={16} className="hover:text-purple-800 transition-colors duration-150" />
+                        </button>
+
+                        {selectedId === id && id.status === 'Pending' && (
+                          <>
+                            <button
+                              className="relative group"
+                              onClick={() => handleApprove(id)}
+                              title="Approve"
+                            >
+                              <FaCheck className="text-green-500 hover:text-green-600" />
+                            </button>
+                            <button
+                              className="relative group"
+                              onClick={() => handleReject(id)}
+                              title="Reject"
+                            >
+                              <FaTimes className="text-red-500 hover:text-red-600" />
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -154,73 +244,71 @@ export default function DashboardHR() {
           </div>
         </div>
 
-        {/* ID Preview Panel */}
-          {selectedId && (
-            <div className="fixed top-1/2 right-6 -translate-y-1/2 w-[580px] max-h-[90vh] rounded-2xl shadow-2xl p-4 z-50 flex flex-col items-center bg-transparent overflow-y-auto">
-              <div className="p-3 rounded-xl flex justify-center gap-4">
-                <div className="text-center">
-                  <p className="text-xs font-semibold text-gray-700 mb-1">Front</p>
-                  <img
-                    src={frontID}
-                    alt="Front ID"
-                    className={`object-contain ${
-                      selectedId.status === 'Pending' ? 'w-[160px]' : 'w-[140px]'
-                    }`}
-                  />
-                </div>
-                <div className="text-center">
-                  <p className="text-xs font-semibold text-gray-700 mb-1">Back</p>
-                  <img
-                    src={backID}
-                    alt="Back ID"
-                    className={`object-contain ${
-                      selectedId.status === 'Pending' ? 'w-[160px]' : 'w-[140px]'
-                    }`}
-                  />
-                </div>
-              </div>
+        {/* ID Preview */}
+        {previewMounted && selectedId && (
+          <div
+            className="fixed top-1/2 right-0 z-50 flex flex-col items-center bg-transparent transition-transform duration-500"
+            style={{ transform: 'translate(-50%, -50%)' }}
+          >
+            <div className="w-full flex justify-end pr-2">
+              <button
+                onClick={() => setSelectedId(null)}
+                className="text-gray-600 hover:text-red-500 text-lg font-bold"
+                title="Close preview"
+              >
+                ✕
+              </button>
+            </div>
 
-              <div className="w-full mt-4">
-                {selectedId.status === 'Approved' ? (
-                  <div className="flex flex-col gap-3">
-                    <div className="bg-white p-3 rounded-lg shadow text-sm">
-                      <p className="font-semibold">Generated by:</p>
-                      <p>Janssen Gundran</p>
-                      <p className="text-gray-500">janssen@gmail.com</p>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg shadow text-sm">
-                      <p className="font-semibold">Approved by:</p>
-                      <p>Christian Elagio</p>
-                      <p className="text-gray-500">christian@gmail.com</p>
-                    </div>
-                  </div>
-                ) : (
+            <div className="p-3 rounded-xl flex justify-center gap-6 bg-white shadow-lg">
+              <div className="text-center">
+                <p className="text-xs font-semibold text-gray-700 mb-1">Front</p>
+                <img
+                  src={frontID}
+                  alt="Front ID"
+                  className={`object-contain ${selectedId.status === 'Pending' ? 'w-[160px]' : 'w-[140px]'}`}
+                />
+              </div>
+              <div className="text-center">
+                <p className="text-xs font-semibold text-gray-700 mb-1">Back</p>
+                <img
+                  src={backID}
+                  alt="Back ID"
+                  className={`object-contain ${selectedId.status === 'Pending' ? 'w-[160px]' : 'w-[140px]'}`}
+                />
+              </div>
+            </div>
+
+            <div className="w-full mt-4">
+              {selectedId.status === 'Approved' ? (
+                <div className="flex flex-col gap-3">
                   <div className="bg-white p-3 rounded-lg shadow text-sm">
                     <p className="font-semibold">Generated by:</p>
                     <p>Janssen Gundran</p>
                     <p className="text-gray-500">janssen@gmail.com</p>
                   </div>
-                )}
-              </div>
-
-              {selectedId.status === 'Pending' && (
-                <div className="flex gap-3 mt-3 w-full">
-                  <button className="w-1/2 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600">
-                    Approve
-                  </button>
-                  <button className="w-1/2 py-2 rounded-lg bg-red-400 text-white font-semibold hover:bg-red-500">
-                    Reject
-                  </button>
+                  <div className="bg-white p-3 rounded-lg shadow text-sm">
+                    <p className="font-semibold">Approved by:</p>
+                    <p>Christian Elagio</p>
+                    <p className="text-gray-500">christian@gmail.com</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white p-3 rounded-lg shadow text-sm">
+                  <p className="font-semibold">Generated by:</p>
+                  <p>Janssen Gundran</p>
+                  <p className="text-gray-500">janssen@gmail.com</p>
                 </div>
               )}
             </div>
-          )}
+          </div>
+        )}
       </main>
     </div>
   );
 }
 
-function NavItem({ icon, label, to }) {
+function NavItem({ icon, label, to, sidebarExpanded }) {
   return (
     <NavLink
       to={to}
@@ -231,7 +319,13 @@ function NavItem({ icon, label, to }) {
       }
     >
       {icon}
-      {label && <span>{label}</span>}
+      <span
+        className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${
+          sidebarExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'
+        }`}
+      >
+        {label}
+      </span>
     </NavLink>
   );
 }
