@@ -3,24 +3,20 @@ const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema(
   {
-    email: {
+    username: {
       type: String,
       required: true,
       unique: true,
-      lowercase: true,
       trim: true,
     },
     password: {
       type: String,
-      select: false, // Exclude password by default in queries
-    },
-    googleId: {
-      type: String,
-      default: null,
+      required: true,
+      select: false, // Exclude password by default
     },
     role: {
       type: String,
-      enum: ['Admin', 'HR', 'Employee'],
+      enum: ['Admin', 'Approver', 'Employee', 'Intern'],
       default: 'Employee',
     },
     isActive: {
@@ -35,7 +31,7 @@ const userSchema = new mongoose.Schema(
 
 // Hash password before saving (only if modified)
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password') || !this.password) return next();
+  if (!this.isModified('password')) return next();
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);

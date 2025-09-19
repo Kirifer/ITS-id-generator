@@ -16,14 +16,14 @@ mongoose.connect(process.env.MONGO_URI)
     }
 
     const user = new User({
-      email: 'test@example.com',
-      password: '123456', // This will be hashed by the model
-      role: 'Employee',
+      username: 'approver2',
+      password: 'approver123', // This will be hashed by the model
+      role: 'Approver',
       isActive: true
     });
 
     await user.save();
-    console.log('✅ Test user created:', user.email);
+    console.log('✅ Test user created:', user.username);
     process.exit(0);
   })
   .catch((err) => {

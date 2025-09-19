@@ -1,39 +1,40 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 
 const router = express.Router();
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Middleware for logging requests
-const validateRequest = (req, res, next) => {
-  console.log(`[AUTH] ${req.method} ${req.path}`, req.body);
+// Minimal, safe request logging (no request bodies/passwords)
+const logReq = (req, _res, next) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[AUTH] ${req.method} ${req.path}`);
+  }
   next();
 };
 
-// =======================
-// Email/Password Login
-// =======================
-router.post('/login', validateRequest, async (req, res) => {
+// Email/Password Login (no Google)
+router.post('/login', logReq, async (req, res) => {
   try {
-    const { email, password } = req.body;
-
+    const { email, password } = req.body || {};
     if (!email || !password) {
       return res.status(400).json({ success: false, message: 'Email and password are required' });
     }
 
+    // Include password for comparison
     const user = await User.findOne({ email }).select('+password');
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+
+    // Generic messages to avoid account enumeration
+    if (!user || !user.password) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    if (user.googleId && !user.password) {
-      return res.status(400).json({ success: false, message: 'This account uses Google Sign-In. Please login with Google.' });
+    // Optional policy: block these roles from logging in
+    if (user.role === 'Employee' || user.role === 'Intern') {
+      return res.status(403).json({ success: false, message: 'Employees/Interns cannot log in. Please use ID input instead.' });
     }
 
-    const isValidPassword = await user.comparePassword(password);
-    if (!isValidPassword) {
+    const isValid = await user.comparePassword(password);
+    if (!isValid) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
@@ -44,77 +45,17 @@ router.post('/login', validateRequest, async (req, res) => {
     const token = jwt.sign(
       { id: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '24h', algorithm: 'HS256' }
     );
 
     res.status(200).json({
       success: true,
       token,
-      user: {
-        email: user.email,
-        role: user.role
-      }
+      user: { email: user.email, role: user.role }
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ success: false, message: 'Login failed.', error: error.message });
-  }
-});
-
-// =======================
-// Google Sign-In Login
-// =======================
-router.post('/google', validateRequest, async (req, res) => {
-  try {
-    const { credential } = req.body;
-
-    if (!credential) {
-      return res.status(400).json({ success: false, message: 'No credential provided' });
-    }
-
-    const ticket = await client.verifyIdToken({
-      idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID
-    });
-    const payload = ticket.getPayload();
-    const email = payload.email;
-    
-    const googleId = payload.sub;
-
-    // Find or create user
-    let user = await User.findOne({ email });
-
-    if (!user) {
-      user = await User.create({
-        email,
-        googleId,
-        role: 'Employee',
-        isActive: true
-      });
-      console.log('[Google] New user created:', user.email);
-    } else if (!user.googleId) {
-      user.googleId = googleId;
-      await user.save();
-      console.log('[Google] Existing user updated with Google ID:', user.email);
-    }
-
-    const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    res.status(200).json({
-      success: true,
-      token,
-      user: {
-        email: user.email,
-        role: user.role
-      }
-    });
-  } catch (error) {
-    console.error('Google login error:', error);
-    res.status(500).json({ success: false, message: 'Authentication failed.', error: error.message });
+    console.error('Login error:', error.message);
+    res.status(500).json({ success: false, message: 'Login failed.' });
   }
 });
 

@@ -1,73 +1,94 @@
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
-const connectDB = require('./config/db');
-
-// Routes
-const authRoutes = require('./routes/auth');
+const fileURLToPath = require('url');
 const adminRoutes = require('./routes/admin');
-const hrRoutes = require('./routes/hr');
+const approverRoutes = require('./routes/approver');  // ✅ renamed from hr.js
 const employeeRoutes = require('./routes/employee');
-const cardRoutes = require('./routes/cardRoutes');
+const authRoutes = require('./routes/auth');
+const idCardsRouter = require('./routes/idCardRoutes'); // Import ID card routes
+
+
 
 // Load environment variables
 dotenv.config();
 
 if (!process.env.MONGO_URI || !process.env.FRONTEND_URL || !process.env.JWT_SECRET) {
-  console.error('❌ Missing required environment variables: MONGO_URI, FRONTEND_URL, or JWT_SECRET');
+  console.error('Missing required environment variables: MONGO_URI, FRONTEND_URL, or JWT_SECRET');
   process.exit(1);
 }
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
-
-// Middleware
+// CORS
 const corsOptions = {
-  origin: [process.env.FRONTEND_URL, 'http://localhost:3000'],
+  origin: [process.env.FRONTEND_URL, 'http://localhost:3000', 'http://localhost:5000'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204,
 };
-
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '10mb' }));
+
+// Body parsers
+app.use(express.json({ limit: '10mb', strict: false }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Static folder for uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Static files
+const primaryUploads = path.join(__dirname, 'uploads');
+console.log('[static] /uploads →', primaryUploads);
+app.use('/uploads', express.static(primaryUploads));
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Request logger
+// Logger
 app.use((req, res, next) => {
-  console.log(`📥 ${req.method} ${req.url}`);
+  console.log('=== Incoming Request ===');
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   console.log('Headers:', req.headers);
   console.log('Body:', req.body);
   next();
 });
 
-// Routes
+// ===== ROUTES =====
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/hr', hrRoutes);
+app.use('/api/approver', approverRoutes);  // ✅ renamed route
 app.use('/api/employee', employeeRoutes);
-app.use('/api/cards', cardRoutes);
+app.use("/api/id-cards", idCardsRouter); // Use ID card routes
 
-// 404 Not Found
+
+// 404 Handler
 app.use((req, res) => {
-  console.warn(`⚠️ 404 Not Found: ${req.method} ${req.url}`);
-  res.status(404).json({ error: 'Route Not Found', method: req.method, path: req.url });
+  console.log('404 - Route Not Found:', req.method, req.url);
+  res.status(404).json({
+    error: 'Route Not Found',
+    method: req.method,
+    path: req.url,
+  });
 });
 
-// Global error handler
+// Global Error Handler
 app.use((err, req, res, next) => {
-  console.error('🔥 Global Error Handler:', err.stack);
-  res.status(500).json({ error: 'Internal Server Error', message: err.message });
+  console.error('Unhandled error:', err);
+  res.status(500).json({
+    error: 'Internal server error',
+    message: err.message,
+  });
 });
 
-// Start server
+// MongoDB connection
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log('✅ MongoDB connected');
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('❌ MongoDB connection error:', error);
+    process.exit(1);
+  });

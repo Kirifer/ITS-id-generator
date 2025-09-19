@@ -3,7 +3,7 @@ const router = express.Router();
 const { verifyToken, requireRole } = require('../middleware/authMiddleware');
 
 // Example protected Employee route
-router.get('/dashboard', verifyToken, requireRole('employee'), (req, res) => {
+router.get('/dashboard', verifyToken, requireRole('Employee'), (req, res) => {
   res.json({ message: 'Welcome to the Employee dashboard', user: req.user });
 });
 

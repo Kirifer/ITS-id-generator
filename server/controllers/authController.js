@@ -1,107 +1,98 @@
-const jwt = require('jsonwebtoken');
-const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
-// Generate JWT Token
+// Generate JWT
 const generateToken = (user) => {
   return jwt.sign(
-    { id: user._id, email: user.email, role: user.role },
+    { id: user._id, role: user.role },
     process.env.JWT_SECRET,
-    { expiresIn: '24h' }
+    { expiresIn: '1d' }
   );
 };
 
-// =======================
-// Login with Email/Password
-// =======================
-exports.login = async (req, res) => {
+// @desc    Register new user (Admin/Approver only)
+// @route   POST /api/auth/register
+// @access  Private (later protect with Admin-only route)
+exports.register = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password, role } = req.body;
 
-    if (!email || !password)
-      return res.status(400).json({ success: false, message: 'Email and password are required.' });
+    // Restrict login roles (Employees/Interns shouldn't register here)
+    if (role === 'Employee' || role === 'Intern') {
+      return res
+        .status(400)
+        .json({ message: 'Employee/Intern do not require login accounts.' });
+    }
 
-    const user = await User.findOne({ email }).select('+password');
-    if (!user)
-      return res.status(404).json({ success: false, message: 'User not found.' });
+    // Check if user exists
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Username already exists' });
+    }
 
-    if (user.googleId && !user.password)
-      return res.status(400).json({ success: false, message: 'This account uses Google Sign-In. Please login with Google.' });
+    // Create user
+    const user = new User({ username, password, role });
+    await user.save();
 
-    const isValidPassword = await user.comparePassword(password);
-    if (!isValidPassword)
-      return res.status(401).json({ success: false, message: 'Invalid credentials.' });
-
-    if (!user.isActive)
-      return res.status(403).json({ success: false, message: 'Account is inactive.' });
-
-    const token = generateToken(user);
-
-    res.status(200).json({
-      success: true,
-      token,
-      user: {
-        email: user.email,
-        role: user.role
-      }
+    res.status(201).json({
+      message: 'User registered successfully',
+      user: { id: user._id, username: user.username, role: user.role },
     });
-
   } catch (error) {
-    console.error('[Login] Error:', error);
-    res.status(500).json({ success: false, message: 'Login failed.', error: error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
-// =======================
-// Login/Register with Google
-// =======================
-exports.googleLogin = async (req, res) => {
+// @desc    Login user (Admin/Approver only)
+// @route   POST /api/auth/login
+// @access  Public
+exports.login = async (req, res) => {
   try {
-    const { credential } = req.body;
+    const { username, password } = req.body;
 
-    if (!credential)
-      return res.status(400).json({ success: false, message: 'No credential provided.' });
-
-    const ticket = await client.verifyIdToken({
-      idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
-    const email = payload.email;
-    const googleId = payload.sub;
-
-    let user = await User.findOne({ email });
-
+    // Check user
+    const user = await User.findOne({ username }).select('+password');
     if (!user) {
-      user = await User.create({
-        email,
-        googleId,
-        isActive: true,
-        role: 'Employee',
-      });
-      console.log('[Google] New user created:', email);
-    } else if (!user.googleId) {
-      user.googleId = googleId;
-      await user.save();
-      console.log('[Google] Existing user updated with Google ID:', email);
+      return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    // Block Employee/Intern login
+    if (user.role === 'Employee' || user.role === 'Intern') {
+      return res
+        .status(403)
+        .json({ message: 'Employee/Intern do not require login.' });
+    }
+
+    // Check password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    // Generate token
     const token = generateToken(user);
 
-    res.status(200).json({
-      success: true,
+    res.json({
       token,
-      user: {
-        email: user.email,
-        role: user.role
-      }
+      user: { id: user._id, username: user.username, role: user.role },
     });
-
   } catch (error) {
-    console.error('[Google Login] Error:', error);
-    res.status(500).json({ success: false, message: 'Authentication failed.', error: error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Get logged in user
+// @route   GET /api/auth/me
+// @access  Private
+exports.getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
 };

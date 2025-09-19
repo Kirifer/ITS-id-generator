@@ -1,49 +1,36 @@
+// server/middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
 
-/**
- * Middleware to verify JWT token and extract user info.
- */
+/** Verify JWT and attach decoded user to req.user */
 const verifyToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({
-      success: false,
-      message: 'No token provided',
-    });
+  const h = req.headers.authorization || '';
+  if (!h.startsWith('Bearer ')) {
+    return res.status(401).json({ success: false, message: 'No token provided' });
   }
-
-  const token = authHeader.split(' ')[1];
-
   try {
+    const token = h.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Add user data to request object
+    req.user = decoded;
     next();
-  } catch (err) {
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid or expired token',
-    });
+  } catch {
+    return res.status(401).json({ success: false, message: 'Invalid or expired token' });
   }
 };
 
-/**
- * Middleware to restrict route access to specific roles.
- * @param {string} role - Role name to authorize (e.g., 'Admin', 'HR', 'Employee')
- */
-const requireRole = (role) => {
-  return (req, res, next) => {
-    if (!req.user || req.user.role !== role) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied: Insufficient role',
-      });
-    }
-    next();
-  };
+/** Require exactly one role */
+const requireRole = (role) => (req, res, next) => {
+  if (!req.user || req.user.role !== role) {
+    return res.status(403).json({ success: false, message: 'Access denied: Insufficient role' });
+  }
+  next();
 };
 
-module.exports = {
-  verifyToken,
-  requireRole,
+/** Allow any of these roles */
+const requireAnyRole = (...roles) => (req, res, next) => {
+  if (!req.user || !roles.includes(req.user.role)) {
+    return res.status(403).json({ success: false, message: 'Access denied: Insufficient role' });
+  }
+  next();
 };
+
+module.exports = { verifyToken, requireRole, requireAnyRole };
