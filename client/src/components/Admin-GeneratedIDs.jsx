@@ -565,16 +565,22 @@ function NavItem({ icon, label, to, sidebarExpanded }) {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex items-center gap-3 px-2 py-1 rounded-md transition-colors duration-200 ${isActive ? 'bg-[#3E3862] text-white' : 'hover:text-purple-400'}`
+        `flex items-center gap-3 px-2 py-3 rounded-md transition-colors duration-200 justify-start ${isActive ? 'bg-[#3E3862] text-white' : 'hover:text-purple-400'}`
       }
+      title={label} // show tooltip on hover when collapsed
     >
-      {icon}
-      <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+      <div className="flex-shrink-0">
+        {React.cloneElement(icon, { size: 24 })} {/* fixed icon size */}
+      </div>
+      <span
+        className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarExpanded ? 'opacity-100 w-auto ml-2' : 'opacity-0 w-0 ml-0'}`}
+      >
         {label}
       </span>
     </NavLink>
   );
 }
+
 
 function Dropdown({ label, options, value, onChange }) {
   return (
