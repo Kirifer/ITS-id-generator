@@ -3,16 +3,11 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
-const fileURLToPath = require('url');
-const adminRoutes = require('./routes/admin');
-const approverRoutes = require('./routes/approver');  // ✅ renamed from hr.js
-const employeeRoutes = require('./routes/employee');
-const authRoutes = require('./routes/auth');
-const idCardsRouter = require('./routes/idCardRoutes'); // Import ID card routes
-
-
-
-// Load environment variables
+const adminRoutes = require('./routes/adminRoutes');
+const approverRoutes = require('./routes/approverRoutes');  
+const employeeRoutes = require('./routes/employeeRoutes');
+const authRoutes = require('./routes/authRoutes');
+const idCardsRouter = require('./routes/idCardRoutes'); 
 dotenv.config();
 
 if (!process.env.MONGO_URI || !process.env.FRONTEND_URL || !process.env.JWT_SECRET) {
@@ -54,9 +49,9 @@ app.use((req, res, next) => {
 // ===== ROUTES =====
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/approver', approverRoutes);  // ✅ renamed route
+app.use('/api/approver', approverRoutes);  
 app.use('/api/employee', employeeRoutes);
-app.use("/api/id-cards", idCardsRouter); // Use ID card routes
+app.use("/api/id-cards", idCardsRouter);
 
 
 // 404 Handler

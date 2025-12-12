@@ -1,98 +1,68 @@
-const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+const User = require('../models/User');
 
-// Generate JWT
-const generateToken = (user) => {
-  return jwt.sign(
-    { id: user._id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: '1d' }
-  );
-};
 
-// @desc    Register new user (Admin/Approver only)
-// @route   POST /api/auth/register
-// @access  Private (later protect with Admin-only route)
-exports.register = async (req, res) => {
+const loginUser = async (req, res) => {
   try {
-    const { username, password, role } = req.body;
-
-    // Restrict login roles (Employees/Interns shouldn't register here)
-    if (role === 'Employee' || role === 'Intern') {
+    const { email, password } = req.body || {};
+    if (!email || !password) {
       return res
         .status(400)
-        .json({ message: 'Employee/Intern do not require login accounts.' });
+        .json({ success: false, message: "Email and password are required" });
     }
 
-    // Check if user exists
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Username already exists' });
+    // Include password for comparison
+    const user = await User.findOne({ email }).select("+password");
+
+    // Generic messages to avoid account enumeration
+    if (!user || !user.password) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid credentials" });
     }
 
-    // Create user
-    const user = new User({ username, password, role });
-    await user.save();
-
-    res.status(201).json({
-      message: 'User registered successfully',
-      user: { id: user._id, username: user.username, role: user.role },
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// @desc    Login user (Admin/Approver only)
-// @route   POST /api/auth/login
-// @access  Public
-exports.login = async (req, res) => {
-  try {
-    const { username, password } = req.body;
-
-    // Check user
-    const user = await User.findOne({ username }).select('+password');
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
-    // Block Employee/Intern login
-    if (user.role === 'Employee' || user.role === 'Intern') {
+    // Optional policy: block these roles from logging in
+    if (user.role === "Employee" || user.role === "Intern") {
       return res
         .status(403)
-        .json({ message: 'Employee/Intern do not require login.' });
+        .json({
+          success: false,
+          message:
+            "Employees/Interns cannot log in. Please use ID input instead.",
+        });
     }
 
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+    const isValid = await user.comparePassword(password);
+    if (!isValid) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid credentials" });
     }
 
-    // Generate token
-    const token = generateToken(user);
+    if (!user.isActive) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Account is inactive" });
+    }
 
-    res.json({
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "24h", algorithm: "HS256" }
+    );
+
+    res.status(200).json({
+      success: true,
       token,
-      user: { id: user._id, username: user.username, role: user.role },
+      user: { email: user.email, role: user.role },
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Login error:", error.message);
+    res.status(500).json({ success: false, message: "Login failed." });
   }
 };
 
-// @desc    Get logged in user
-// @route   GET /api/auth/me
-// @access  Private
-exports.getMe = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select('-password');
-    res.json(user);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+
+module.exports = {
+    loginUser
+}
