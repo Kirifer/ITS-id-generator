@@ -9,10 +9,9 @@ import { FaChevronDown, FaSearch, FaSignOutAlt, FaDownload, FaPrint } from 'reac
 import logo from '../assets/images/logo.png';
 import api from '../api/axios';
 
-const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000/api';
-// Build absolute URL for /uploads assets served by your API
-const ASSET_BASE = (API_BASE || '').replace(/\/api$/, '');
+const ASSET_BASE = api.defaults.baseURL.replace(/\/api$/, '');
 const getAssetUrl = (p) => (p ? ASSET_BASE + p : '');
+
 
 export default function Admin_GeneratedIDs() {
   const navigate = useNavigate();
