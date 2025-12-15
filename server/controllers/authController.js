@@ -115,19 +115,43 @@ const refresher = async (req, res) => {
   }
 };
 
-const checkAuth = async(req,res) => {
-  try{
-    const user = await User.findById(req.user.id).select('id role');
+const checkAuth = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("_id role");
 
-    if(!user) {
-      return res.status(401).json({error: "You are not authenticated."})
+    if (!user) {
+      return res.status(401).json({ error: "You are not authenticated." });
     }
 
-    return res.status(200).json({success: true, role: user.role, id: user.id})
-  }catch(err){
-    console.log(err)
-    return res.status(500).json({error: "Something went wrong."})
+    return res
+      .status(200)
+      .json({ success: true, role: user.role, id: user._id });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ error: "Something went wrong." });
   }
-}
+};
 
-module.exports = { login, refresher, checkAuth };
+const logout = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("_id");
+
+    if (!user) {
+      return res.status(401).json({ error: "You are not authenticated." });
+    }
+
+    user.refreshToken = null;
+    await user.save();
+
+    return res
+      .clearCookie("accessToken")
+      .clearCookie("refreshToken")
+      .status(200)
+      .json({ success: "Successfully logged out." });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Something went wrong." });
+  }
+};
+
+module.exports = { login, refresher, checkAuth, logout };
