@@ -1,92 +1,85 @@
-import React from 'react';
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate
-} from 'react-router-dom';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import Login from './components/Login';
-import Logout from './components/Logout';
-import Admin_Dashboard from './components/Admin-Dashboard';
-import Admin_IDGenerator from './components/Admin-IDGenerator';
-import Admin_GeneratedIDs from './components/Admin-GeneratedIDs';
-import Approver_Dashboard from './components/DashboardHR';
-import Approver_GeneratedIDs from './components/ApprovalHR';
-import IDViewer from './components/Login2';
-import GeneratedID from './components/Viewing';
+import Login from "./screens/Login";
+import Logout from "./screens/Logout";
+import Admin_Dashboard from "./screens/Admin-Dashboard";
+import Admin_IDGenerator from "./screens/Admin-IDGenerator";
+import Admin_GeneratedIDs from "./screens/Admin-GeneratedIDs";
+import Approver_Dashboard from "./screens/DashboardHR";
+import Approver_GeneratedIDs from "./screens/ApprovalHR";
+import IDViewer from "./screens/Login2";
+import GeneratedID from "./screens/Viewing";
 
-/* ---------- auth helpers ---------- */
-function getToken() {
-  return localStorage.getItem('token') || '';
-}
+import ProtectedRouting from "./guards/ProtectedRouting";
+import { RoleLanding } from "./utils/roleLanding";
+import PublicRoute from "./guards/PublicRoute";
 
-function getRole() {
-  return localStorage.getItem('role') || '';
-}
-
-/* ---------- route guards ---------- */
-function RequireAuth({ children }) {
-  return getToken()
-    ? children
-    : <Navigate to="/login" replace />;
-}
-
-function RequireRole({ role, children }) {
-  const token = getToken();
-  const userRole = getRole();
-
-  if (!token) return <Navigate to="/login" replace />;
-  if (userRole === role) return children;
-  if (userRole === 'Admin') return <Navigate to="/dashboard" replace />;
-  if (userRole === 'Approver') return <Navigate to="/approver-dashboard" replace />;
-
-  return <Navigate to="/login" replace />;
-}
-
-function RedirectIfAuthed({ children }) {
-  const token = getToken();
-  const role = getRole();
-
-  if (!token) return children;
-  if (role === 'Admin') return <Navigate to="/dashboard" replace />;
-  if (role === 'Approver') return <Navigate to="/approver-dashboard" replace />;
-
-  return children;
-}
-
-/* ---------- app ---------- */
 export default function App() {
   return (
     <Router>
       <div className="App min-h-screen custom-bg">
         <Routes>
-          {/* Public */}
-          <Route path="/login" element={<RedirectIfAuthed><Login /></RedirectIfAuthed>} />
+          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/logout" element={<Logout />} />
           <Route path="/view-login" element={<IDViewer />} />
           <Route path="/view-generated-id/:idNumber" element={<GeneratedID />} />
-          {/* Admin */}
-          <Route path="/dashboard" element={<RequireRole role="Admin"><Admin_Dashboard /></RequireRole>} />
-          <Route path="/id-generator" element={<RequireRole role="Admin"><Admin_IDGenerator /></RequireRole>} />
-          <Route path="/generated-ids" element={<RequireRole role="Admin"><Admin_GeneratedIDs /></RequireRole>} />
-          {/* Approver */}
-          <Route path="/approver-dashboard" element={<RequireRole role="Approver"><Approver_Dashboard /></RequireRole>} />
-          <Route path="/approver-generated-ids" element={<RequireRole role="Approver"><Approver_GeneratedIDs /></RequireRole>} />
-          {/* Fallback */}
-          <Route path="*" element={<RequireAuth><RoleLanding /></RequireAuth>} />
+
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRouting role="Admin">
+                <Admin_Dashboard />
+              </ProtectedRouting>
+            }
+          />
+
+          <Route
+            path="/id-generator"
+            element={
+              <ProtectedRouting role="Admin">
+                <Admin_IDGenerator />
+              </ProtectedRouting>
+            }
+          />
+
+          <Route
+            path="/generated-ids"
+            element={
+              <ProtectedRouting role="Admin">
+                <Admin_GeneratedIDs />
+              </ProtectedRouting>
+            }
+          />
+
+          <Route
+            path="/approver-dashboard"
+            element={
+              <ProtectedRouting role="Approver">
+                <Approver_Dashboard />
+              </ProtectedRouting>
+            }
+          />
+
+          <Route
+            path="/approver-generated-ids"
+            element={
+              <ProtectedRouting role="Approver">
+                <Approver_GeneratedIDs />
+              </ProtectedRouting>
+            }
+          />
+
+          <Route
+            path="*"
+            element={
+              <ProtectedRouting>
+                <RoleLanding />
+              </ProtectedRouting>
+            }
+          />
         </Routes>
       </div>
     </Router>
   );
-}
-
-/* ---------- role landing ---------- */
-function RoleLanding() {
-  const role = getRole();
-
-  if (role === 'Admin') return <Navigate to="/dashboard" replace />;
-  if (role === 'Approver') return <Navigate to="/approver-dashboard" replace />;
-
-  return <Navigate to="/login" replace />;
 }

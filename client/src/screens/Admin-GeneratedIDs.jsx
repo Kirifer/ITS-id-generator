@@ -8,6 +8,7 @@ import {
 import { FaChevronDown, FaSearch, FaSignOutAlt, FaDownload, FaPrint } from 'react-icons/fa';
 import logo from '../assets/images/logo.png';
 import api from '../api/axios';
+import Sidebar from '../components/Sidebar';
 
 const ASSET_BASE = api.defaults.baseURL.replace(/\/api$/, '');
 const getAssetUrl = (p) => (p ? ASSET_BASE + p : '');
@@ -217,38 +218,11 @@ export default function Admin_GeneratedIDs() {
 
   return (
     <div className="flex h-screen w-screen font-inter">
-      {/* Sidebar */}
-      <aside
+      <Sidebar
+        expanded={sidebarExpanded}
         onMouseEnter={() => setSidebarHover(true)}
         onMouseLeave={() => setSidebarHover(false)}
-        className={`${selectedId && !sidebarHover ? 'w-20' : 'w-60'} bg-[#262046] text-white min-h-screen p-5 flex flex-col justify-between transition-all duration-300`}
-      >
-        <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="Logo" className="w-8 h-8" />
-            <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'} text-xl font-bold`}>
-              IT Squarehub
-            </span>
-          </div>
-          <nav className="space-y-3">
-            <NavItem to="/dashboard" icon={<LayoutGrid size={20} />} label="Dashboard" sidebarExpanded={sidebarExpanded}/>
-            <NavItem to="/id-generator" icon={<Contact size={20} />} label="ID Generator" sidebarExpanded={sidebarExpanded}/>
-            <NavItem to="/generated-ids" icon={<NotebookText size={20} />} label="Generated IDs" sidebarExpanded={sidebarExpanded}/>
-          </nav>
-        </div>
-        <div className="pt-6 border-t border-gray-600">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-2 py-1 rounded-md hover:text-purple-300"
-            title="Logout"
-          >
-            <FaSignOutAlt />
-            <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
-              Logout
-            </span>
-          </button>
-        </div>
-      </aside>
+      />
 
       {/* Main Content */}
       <main ref={mainRef} className="flex-1 overflow-auto">
@@ -559,21 +533,6 @@ function Info({ label, value }) {
   );
 }
 
-function NavItem({ icon, label, to, sidebarExpanded }) {
-  return (
-    <NavLink
-      to={to}
-      className={({ isActive }) =>
-        `flex items-center gap-3 px-2 py-1 rounded-md transition-colors duration-200 ${isActive ? 'bg-[#3E3862] text-white' : 'hover:text-purple-400'}`
-      }
-    >
-      {icon}
-      <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
-        {label}
-      </span>
-    </NavLink>
-  );
-}
 
 function Dropdown({ label, options, value, onChange }) {
   return (
