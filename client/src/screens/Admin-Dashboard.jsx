@@ -1,19 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutGrid, Contact, NotebookText, LogOut } from 'lucide-react';
-import { FaIdCard, FaUserCheck, FaClipboardList, FaTasks, FaChevronDown, FaSearch, FaSignOutAlt } from 'react-icons/fa';
-import logo from '../assets/images/logo.png';
-import api, { clearToken } from "../api/axios";
+import { useNavigate } from 'react-router-dom';
+import { FaIdCard, FaUserCheck, FaClipboardList, FaTasks, FaChevronDown, FaSearch } from 'react-icons/fa';
+import Sidebar from '../components/Sidebar';
+import api from '../api/axios';
+import StatCard from '../components/StatCard';
 
-export default function Admin_Dashboard() {
-  const navigate = useNavigate();
+export default function AdminDashboard() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedId, setSelectedId] = useState(null);
-  const [typeFilter, setTypeFilter] = useState('All');     // All | Intern | Employee
-  const [statusFilter, setStatusFilter] = useState('All'); // All | Approved | Pending | Rejected
+  const [typeFilter, setTypeFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
   const [sidebarHover, setSidebarHover] = useState(false);
-  const [items, setItems] = useState([]);                  // live data from server
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
 
@@ -24,7 +23,7 @@ export default function Admin_Dashboard() {
       setLoading(true);
       setErr('');
       try {
-        const { data } = await api.get('/id-cards'); // token auto-attached by axios interceptor
+        const { data } = await api.get('/id-cards');
         if (!cancelled) setItems(Array.isArray(data) ? data : []);
       } catch (e) {
         if (!cancelled) setErr(e?.response?.data?.message || e.message || 'Failed to load data');
@@ -39,7 +38,7 @@ export default function Admin_Dashboard() {
   const total = items.length;
   const approvedCount = useMemo(() => items.filter(i => i.status === 'Approved').length, [items]);
   const pendingCount  = useMemo(() => items.filter(i => i.status === 'Pending').length, [items]);
-  const actionsCount  = pendingCount; // actions = items needing approval
+  const actionsCount  = pendingCount;
 
   // Filtering + search
   const filteredData = useMemo(() => {
@@ -61,11 +60,10 @@ export default function Admin_Dashboard() {
     });
   }, [items, searchTerm, typeFilter, statusFilter]);
 
-  // Approve action (inline)
+  // Approve action
   async function approve(id) {
     try {
       await api.patch(`/id-cards/${id}/approve`);
-      // Update in place (no full reload)
       setItems(prev => prev.map(it => it._id === id ? { ...it, status: 'Approved' } : it));
     } catch (e) {
       const msg = e?.response?.data?.message || e.message || 'Approve failed';
@@ -73,51 +71,23 @@ export default function Admin_Dashboard() {
     }
   }
 
-  // Logout
-  function onLogout() {
-    clearToken();
-    localStorage.removeItem('role');
-    navigate('/login');
-  }
-
-  // Format date from server
+  // Format date
   const fmtDate = (iso) => {
     const d = iso ? new Date(iso) : null;
     if (!d || Number.isNaN(+d)) return '';
     return d.toLocaleDateString(undefined, { month: '2-digit', day: '2-digit', year: 'numeric' });
   };
 
-  const previewMounted = Boolean(selectedId) && !sidebarHover;
   const sidebarExpanded = !selectedId || sidebarHover;
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
+      <Sidebar
+        expanded={sidebarExpanded}
+        onMouseEnter={() => setSidebarHover(true)}
+        onMouseLeave={() => setSidebarHover(false)}
+      />
 
-      {/* Sidebar */}
-            <aside
-              onMouseEnter={() => setSidebarHover(true)}
-              onMouseLeave={() => setSidebarHover(false)}
-              className={`${selectedId && !sidebarHover ? 'w-20' : 'w-60'} bg-[#262046] text-white min-h-screen p-5 flex flex-col justify-between transition-all duration-300`}
-            >
-              <div className="space-y-6">
-                <div className="flex items-center gap-3">
-                  <img src={logo} alt="Logo" className="w-8 h-8" />
-                  <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'} text-xl font-bold`}>
-                    IT Squarehub
-                  </span>
-                </div>
-                <nav className="space-y-3">
-                  <NavItem to="/dashboard" icon={<LayoutGrid size={20} />} label="Dashboard" sidebarExpanded={sidebarExpanded}/>
-                  <NavItem to="/id-generator" icon={<Contact size={20} />} label="ID Generator" sidebarExpanded={sidebarExpanded}/>
-                  <NavItem to="/generated-ids" icon={<NotebookText size={20} />} label="Generated IDs" sidebarExpanded={sidebarExpanded}/>
-                </nav>
-              </div>
-              <div className="pt-6 border-t border-gray-600">
-                <NavItem to="/logout" icon={<FaSignOutAlt />} label="Logout" sidebarExpanded={sidebarExpanded}/>
-              </div>
-            </aside>
-
-      {/* Main */}
       <main className="flex-1 p-6 custom-bg flex flex-col overflow-hidden">
         
         {/* Stat Cards */}
@@ -239,29 +209,3 @@ export default function Admin_Dashboard() {
   );
 }
 
-function NavItem({ icon, label, to, sidebarExpanded }) {
-  return (
-    <NavLink
-      to={to}
-      className={({ isActive }) =>
-        `flex items-center gap-3 px-2 py-1 rounded-md transition-colors duration-200
-         ${isActive ? 'bg-[#3E3862] text-white' : 'hover:text-purple-400'}`
-      }
-    >
-      {icon}
-      <span>{label}</span>
-    </NavLink>
-  );
-}
-
-function StatCard({ icon, label, count }) {
-  return (
-    <div className="bg-white p-4 rounded-2xl shadow-lg flex flex-col justify-between min-h-[160px]">
-      <div className="text-xl font-bold text-gray-800 text-left">{label}</div>
-      <div className="flex items-center justify-center flex-1 gap-4">
-        <div className="text-purple-600">{icon}</div>
-        <div className="text-4xl font-bold text-gray-800">{count}</div>
-      </div>
-    </div>
-  );
-}
