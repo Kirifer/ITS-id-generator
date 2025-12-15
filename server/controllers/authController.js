@@ -115,4 +115,19 @@ const refresher = async (req, res) => {
   }
 };
 
-module.exports = { login, refresher };
+const checkAuth = async(req,res) => {
+  try{
+    const user = await User.findById(req.user.id).select('id email name');
+
+    if(!user) {
+      return res.status(401).json({error: "You are not authenticated."})
+    }
+
+    return res.status(200).json({success: true})
+  }catch(err){
+    console.log(err)
+    return res.status(500).json({error: "Something went wrong."})
+  }
+}
+
+module.exports = { login, refresher, checkAuth };

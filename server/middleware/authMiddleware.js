@@ -6,7 +6,7 @@ const verifyToken = (req, res, next) => {
   try {
     const token = req.cookies?.accessToken;
 
-    if (token) {
+    if (!token) {
       return res.status(401).json({ error: "Access Token not found." });
     }
 
