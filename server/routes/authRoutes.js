@@ -1,5 +1,6 @@
 const express = require("express");
-const { loginUser } = require("../controllers/authController");
+const { login, refresher, checkAuth } = require("../controllers/authController");
+const { verifyToken } = require("../middleware/authMiddleware");
 
 const authRoutes = express.Router();
 
@@ -10,6 +11,9 @@ const logReq = (req, _res, next) => {
   next();
 };
 
-authRoutes.post("/login", logReq, loginUser);
+authRoutes.post("/login", logReq, login);
+authRoutes.post("/refresh-token", refresher);
+authRoutes.get("/check", verifyToken, checkAuth)
+
 
 module.exports = authRoutes;
