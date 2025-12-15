@@ -59,6 +59,8 @@ app.use((req, res, next) => {
 // ===== ROUTES =====
 app.use("/api/auth", authRoutes);
 app.use("/api/id-cards", idCardsRouter);
+app.use('/api/id-generator', idGeneratorRoutes);
+
 
 // 404 Handler
 app.use((req, res) => {

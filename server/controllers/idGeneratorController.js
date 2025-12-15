@@ -1,60 +1,48 @@
-const PDFDocument = require('pdfkit');
-const bwipjs = require('bwip-js');
-const fs = require('fs');
+// server/controllers/idGeneratorController.js
+const IdCard = require('../models/IdCard');
+const { generateIDImages } = require('../utils/generateImage');
 
-
+/*
+ HR reference:
+ - Admin = Creator
+ - Separate design for Employee / Intern
+ - Template-based
+ - Standalone
+*/
 
 const postIdGenerator = async (req, res) => {
   try {
-    const {
-      firstName, lastName, idNumber, position, type,
-      emergencyContactName, emergencyContactNumber,
-      signatoryName, signatoryPosition, companyAddress,
-      barcodeValue
-    } = req.body;
+    const card = await IdCard.findById(req.params.id);
 
-    const photoFile = req.files['photo'][0];
-    const signatureFile = req.files['signatorySignature'][0];
+    if (!card) {
+      return res.status(404).json({ message: 'ID Card not found' });
+    }
 
-    // Create PDF
-    const doc = new PDFDocument({ size: 'A7', layout: 'landscape' }); // ID card size
-    const filePath = `generated/${Date.now()}-${idNumber}.pdf`;
-    doc.pipe(fs.createWriteStream(filePath));
+    if (!card.photoPath) {
+      return res.status(400).json({ message: 'Photo required before generation' });
+    }
 
-    // Background
-    doc.rect(0, 0, doc.page.width, doc.page.height).fill('#fff');
+    // Generate front & back using templates
+    const { front, back } = await generateIDImages(card.toObject());
 
-    // Front view
-    doc.fontSize(10).fillColor('#000').text(`Name: ${firstName} ${lastName}`, 20, 20);
-    doc.text(`ID: ${idNumber}`, 20, 35);
-    doc.text(`Position: ${position}`, 20, 50);
-    doc.text(`Type: ${type}`, 20, 65);
-    if (photoFile) doc.image(photoFile.path, 120, 20, { width: 60, height: 60 });
+    card.generatedFrontImagePath = front;
+    card.generatedBackImagePath = back;
+    card.templateVersion = `${card.type}_V1`;
 
-    // Rear view
-    doc.text(`Emergency Contact: ${emergencyContactName} - ${emergencyContactNumber}`, 20, 100);
-    doc.text(`Signatory: ${signatoryName} (${signatoryPosition})`, 20, 115);
-    if (signatureFile) doc.image(signatureFile.path, 120, 100, { width: 60, height: 30 });
-    doc.text(`Company: ${companyAddress}`, 20, 140);
+    await card.save();
 
-    // Barcode generation
-    const barcodeBuffer = await bwipjs.toBuffer({
-      bcid: 'code128',       // Barcode type
-      text: barcodeValue,    // Barcode value
-      scale: 2,
-      height: 10,
-      includetext: true,
-      textxalign: 'center'
+    res.json({
+      success: true,
+      front,
+      back,
     });
-    doc.image(barcodeBuffer, 20, 160, { width: 160, height: 30 });
-
-    doc.end();
-
-    res.json({ success: true, file: filePath });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: 'ID Generation failed' });
+    res.status(500).json({
+      success: false,
+      message: 'ID generation failed',
+    });
   }
-}
+};
 
-module.exports = {postIdGenerator}
+module.exports = { postIdGenerator };
