@@ -117,13 +117,13 @@ const refresher = async (req, res) => {
 
 const checkAuth = async(req,res) => {
   try{
-    const user = await User.findById(req.user.id).select('id email name');
+    const user = await User.findById(req.user.id).select('id role');
 
     if(!user) {
       return res.status(401).json({error: "You are not authenticated."})
     }
 
-    return res.status(200).json({success: true})
+    return res.status(200).json({success: true, role: user.role, id: user.id})
   }catch(err){
     console.log(err)
     return res.status(500).json({error: "Something went wrong."})
