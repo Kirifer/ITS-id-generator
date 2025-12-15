@@ -6,6 +6,7 @@ const path = require("path");
 const authRoutes = require("./routes/authRoutes");
 const idCardsRouter = require("./routes/idCardRoutes");
 const cookieParser = require("cookie-parser");
+const idGeneratorRoutes = require("./routes/idGeneratorRoutes");
 dotenv.config();
 
 if (

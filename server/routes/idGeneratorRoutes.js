@@ -3,13 +3,13 @@ const express = require('express');
 const { verifyToken, requireRole } = require('../middleware/authMiddleware');
 const { postIdGenerator } = require('../controllers/idGeneratorController');
 
-const router = express.Router();
+const idGeneratorRoutes = express.Router();
 
-router.post(
+idGeneratorRoutes.post(
   '/:id/generate',
   verifyToken,
   requireRole('Admin'),
   postIdGenerator
 );
 
-module.exports = router;
+module.exports = idGeneratorRoutes;
