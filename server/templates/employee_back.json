@@ -1,11 +1,38 @@
 {
   "background": "Employee-Rear-Template.png",
-  "designSize": { "width": 1200, "height": 750 },
+  "designSize": {
+    "width": 1200,
+    "height": 750
+  },
+  "forceOutputToDesignSize": false,
+  "backgroundFit": "contain",
 
   "text": {
-    "emName":   { "x": 600, "y": 420, "align": "center", "fontSize": 30, "fill": "#111", "weight": 700 },
-    "emPhone":  { "x": 600, "y": 470, "align": "center", "fontSize": 28, "fill": "#111", "weight": 600 },
-    "ceoName":  { "x": 950, "y": 650, "align": "center", "fontSize": 26, "fill": "#111", "weight": 700, "value": "CEO Name" }
+    "emName": {
+      "x": 600,
+      "y": 420,
+      "align": "center",
+      "fontSize": 30,
+      "fill": "#111",
+      "weight": 700
+    },
+    "emPhone": {
+      "x": 600,
+      "y": 470,
+      "align": "center",
+      "fontSize": 28,
+      "fill": "#111",
+      "weight": 600
+    },
+    "ceoName": {
+      "x": 950,
+      "y": 650,
+      "align": "center",
+      "fontSize": 26,
+      "fill": "#111",
+      "weight": 700,
+      "value": "CEO Name"
+    }
   },
 
   "barcode": {

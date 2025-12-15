@@ -1,12 +1,44 @@
 {
   "background": "Employee-Front-Template.png",
-  "designSize": { "width": 1200, "height": 750 },
+  "designSize": {
+    "width": 1200,
+    "height": 750
+  },
   "forceOutputToDesignSize": false,
   "backgroundFit": "contain",
-  "photo": { "left": 25, "top": 280, "width": 300, "height": 380, "radius": 16 },
+
+  "photo": {
+    "left": 450,
+    "top": 170,
+    "width": 300,
+    "height": 360,
+    "radius": 16
+  },
+
   "text": {
-    "name":     { "x": 600, "y": 300, "align": "center", "fontSize": 40, "fill": "#111", "weight": 700 },
-    "position": { "x": 600, "y": 350, "align": "center", "fontSize": 30, "fill": "#2f6cb4", "weight": 600 },
-    "idNumber": { "x": 600, "y": 395, "align": "center", "fontSize": 28, "fill": "#111", "weight": 500 }
+    "name": {
+      "x": 600,
+      "y": 560,
+      "align": "center",
+      "fontSize": 40,
+      "fill": "#111",
+      "weight": 700
+    },
+    "position": {
+      "x": 600,
+      "y": 610,
+      "align": "center",
+      "fontSize": 30,
+      "fill": "#2f6cb4",
+      "weight": 600
+    },
+    "idNumber": {
+      "x": 600,
+      "y": 655,
+      "align": "center",
+      "fontSize": 28,
+      "fill": "#111",
+      "weight": 500
+    }
   }
 }
