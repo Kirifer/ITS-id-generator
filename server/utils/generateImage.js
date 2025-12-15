@@ -1,217 +1,185 @@
 // server/utils/generateImage.js
-const sharp = require("sharp");
+const { createCanvas, loadImage } = require("canvas");
 const path = require("path");
 const fs = require("fs");
+const bwipjs = require("bwip-js");
 
 const SERVER_ROOT = path.join(__dirname, "..");
 const TEMPLATES_DIR = path.join(SERVER_ROOT, "templates");
 
-/* ------------ helpers (unchanged/condensed) ------------ */
-const escapeXml = (s = "") =>
-  String(s).replace(/[<>&"']/g, m =>
-    m === "<" ? "&lt;" : m === ">" ? "&gt;" : m === "&" ? "&amp;" : m === '"' ? "&quot;" : "&#39;"
-  );
-
+/* ------------ helpers ------------ */
 const resolveTypeKey = (type) => {
   const t = String(type || "").trim().toLowerCase();
   return t === "intern" ? "intern" : t === "employee" ? "employee" : "default";
 };
 
-function toPx(val, axisBase, scale = 1) {
-  if (val == null) return undefined;
-  if (typeof val === "string" && val.trim().endsWith("%")) {
-    const p = parseFloat(val);
-    return Number.isFinite(p) ? Math.round((p / 100) * axisBase) : undefined;
+function toPx(val, base) {
+  if (val == null) return 0;
+  if (typeof val === "string" && val.endsWith("%")) {
+    return Math.round((parseFloat(val) / 100) * base);
   }
-  const n = Number(val);
-  return Number.isFinite(n) ? Math.round(n * scale) : undefined;
+  return Math.round(Number(val));
 }
 
-/* ------------ template cache ------------ */
-const templateCache = new Map();
+/* ------------ image cover helper ------------ */
+function drawImageCover(ctx, img, x, y, w, h) {
+  const imgRatio = img.width / img.height;
+  const boxRatio = w / h;
 
-async function loadTemplateCached(templateKey) {
-  const k = String(templateKey || "default");
-  if (templateCache.has(k)) return templateCache.get(k);
+  let sx, sy, sw, sh;
 
-  const cfgPath = path.join(TEMPLATES_DIR, `${k}.json`);
-  if (!fs.existsSync(cfgPath)) throw new Error(`Template config not found: ${k}.json`);
-  const raw = JSON.parse(fs.readFileSync(cfgPath, "utf-8"));
-
-  const bgAbs = path.isAbsolute(raw.background)
-    ? raw.background
-    : path.join(TEMPLATES_DIR, raw.background);
-  if (!fs.existsSync(bgAbs)) throw new Error(`Background not found: ${bgAbs}`);
-
-  const meta = await sharp(bgAbs).metadata();
-  const bgW = meta.width || 1200;
-  const bgH = meta.height || 750;
-
-  const designW = Number(raw?.designSize?.width)  || bgW;
-  const designH = Number(raw?.designSize?.height) || bgH;
-  const force   = !!raw.forceOutputToDesignSize;
-  const fit     = raw.backgroundFit || "cover";
-
-  let canvasW, canvasH, bgCanvasBuf;
-  if (force) {
-    canvasW = designW;
-    canvasH = designH;
-    bgCanvasBuf = await sharp(bgAbs)
-      .resize(canvasW, canvasH, {
-        fit, position: "centre",
-        background: { r:0,g:0,b:0,alpha:0 },
-      })
-      .ensureAlpha()
-      .toBuffer();
+  if (imgRatio > boxRatio) {
+    sh = img.height;
+    sw = sh * boxRatio;
+    sx = (img.width - sw) / 2;
+    sy = 0;
   } else {
-    canvasW = bgW;
-    canvasH = bgH;
-    bgCanvasBuf = await sharp(bgAbs).ensureAlpha().toBuffer();
+    sw = img.width;
+    sh = sw / boxRatio;
+    sx = 0;
+    sy = (img.height - sh) / 2;
   }
 
-  const cfg = {
-    __backgroundAbs: bgAbs,
-    __designW: designW,
-    __designH: designH,
-    __forceOutput: force,
-    __bgFit: fit,
-    __photo: raw.photo || null,
-    __text: raw.text || {},
-    __signature: raw.signature || null,           // NEW: optional signature box
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+/* ------------ barcode helper ------------ */
+async function generateBarcodeImage(text, width, height) {
+  const buf = await bwipjs.toBuffer({
+    bcid: "code128",
+    text: String(text),
+    scale: 3,
+    height,
+    includetext: false,
+    backgroundcolor: "FFFFFF",
+  });
+  return loadImage(buf);
+}
+
+/* ------------ load template ------------ */
+async function loadTemplate(templateKey) {
+  const cfgPath = path.join(TEMPLATES_DIR, `${templateKey}.json`);
+  if (!fs.existsSync(cfgPath)) {
+    throw new Error(`Template not found: ${templateKey}.json`);
+  }
+
+  const raw = JSON.parse(fs.readFileSync(cfgPath, "utf-8"));
+  const bgPath = path.join(TEMPLATES_DIR, raw.background);
+  const bgImage = await loadImage(bgPath);
+
+  const designW = raw.designSize?.width || bgImage.width;
+  const designH = raw.designSize?.height || bgImage.height;
+
+  return {
+    bgImage,
+    bgW: bgImage.width,
+    bgH: bgImage.height,
+    designW,
+    designH,
+    photo: raw.photo || null,
+    text: raw.text || {},
+    barcode: raw.barcode || null,
+  };
+}
+
+/* ------------ render one side ------------ */
+async function renderSide(card, templateKey, suffix) {
+  const tpl = await loadTemplate(templateKey);
+
+  const canvas = createCanvas(tpl.designW, tpl.designH);
+  const ctx = canvas.getContext("2d");
+
+  /* ---------- BACKGROUND (CENTERED & SCALED) ---------- */
+  const scale = Math.min(
+    tpl.designW / tpl.bgW,
+    tpl.designH / tpl.bgH
+  );
+
+  const bgDrawW = tpl.bgW * scale;
+  const bgDrawH = tpl.bgH * scale;
+  const bgX = (tpl.designW - bgDrawW) / 2;
+  const bgY = (tpl.designH - bgDrawH) / 2;
+
+  ctx.drawImage(tpl.bgImage, bgX, bgY, bgDrawW, bgDrawH);
+
+  /* ---------- PHOTO ---------- */
+  if (card.photoPath && tpl.photo) {
+    const photoPath = path.join(
+      SERVER_ROOT,
+      card.photoPath.replace(/^\//, "")
+    );
+
+    if (fs.existsSync(photoPath)) {
+      const img = await loadImage(photoPath);
+
+      const w = toPx(tpl.photo.width, tpl.designW);
+      const h = toPx(tpl.photo.height, tpl.designH);
+      const x = toPx(tpl.photo.left, tpl.designW);
+      const y = toPx(tpl.photo.top, tpl.designH);
+
+      drawImageCover(ctx, img, x, y, w, h);
+    }
+  }
+
+  /* ---------- BARCODE ---------- */
+  if (tpl.barcode && card.idNumber) {
+    const bw = toPx(tpl.barcode.width, tpl.designW);
+    const bh = toPx(tpl.barcode.height, tpl.designH);
+    const bx = toPx(tpl.barcode.x, tpl.designW);
+    const by = toPx(tpl.barcode.y, tpl.designH);
+
+    const barcodeImg = await generateBarcodeImage(card.idNumber, bw, bh);
+    ctx.drawImage(barcodeImg, bx, by, bw, bh);
+  }
+
+  /* ---------- TEXT ---------- */
+  const drawText = (value, spec) => {
+    if (!value || !spec) return;
+
+    ctx.fillStyle = spec.fill || "#000";
+    ctx.font = `${spec.weight || 700} ${spec.fontSize || 30}px Arial`;
+    ctx.textAlign = spec.align || "left";
+
+    ctx.fillText(
+      value,
+      toPx(spec.x, tpl.designW),
+      toPx(spec.y, tpl.designH)
+    );
   };
 
-  const out = { cfg, canvasW, canvasH, bgCanvasBuf };
-  templateCache.set(k, out);
-  return out;
-}
+  const fullName =
+    `${card.fullName.firstName} ${card.fullName.middleInitial || ""} ${card.fullName.lastName}`
+      .replace(/\s+/g, " ")
+      .trim();
 
-/* ------------ text layer ------------ */
-function buildTextSVG(canvasW, canvasH, items) {
-  const nodes = [];
-  for (const it of items) {
-    const { text, spec, sx, sy } = it;
-    if (!spec || text == null || text === "") continue;
+  drawText(fullName, tpl.text.name);
+  drawText(card.position, tpl.text.position);
+  drawText(card.idNumber, tpl.text.idNumber);
+  drawText(
+    `${card.emergencyContact?.firstName || ""} ${card.emergencyContact?.lastName || ""}`.trim(),
+    tpl.text.emName
+  );
+  drawText(card.emergencyContact?.phone, tpl.text.emPhone);
 
-    const align = spec.align || "left";
-    const baseline = spec.baseline || "alphabetic";
-    const hasBox = spec.box && (spec.box.width != null);
-    const boxLeft  = hasBox ? toPx(spec.box.x,     canvasW, sx) : undefined;
-    const boxTop   = hasBox ? toPx(spec.box.y,     canvasH, sy) : undefined;
-    const boxWidth = hasBox ? toPx(spec.box.width, canvasW, sx) : undefined;
-
-    let x;
-    if (hasBox && align === "center") x = (boxLeft ?? 0) + (boxWidth ?? 0) / 2;
-    else if (hasBox && align === "right") x = (boxLeft ?? 0) + (boxWidth ?? 0);
-    else x = toPx(spec.x, canvasW, sx) ?? 0;
-
-    let y = toPx(spec.y, canvasH, sy) ?? 0;
-    if (hasBox && y === 0 && typeof boxTop === "number") y = boxTop;
-
-    let fs = spec.fontSize;
-    if (typeof fs === "string" && fs.endsWith("%")) fs = (parseFloat(fs) / 100) * canvasH;
-    fs = Number(fs); if (!Number.isFinite(fs)) fs = 36;
-    fs = Math.max(1, Math.round(fs * sy));
-
-    let ls = Number(spec.letterSpacing);
-    ls = Number.isFinite(ls) ? ls * sy : 0;
-
-    const ta = align === "center" ? "middle" : align === "right" ? "end" : "start";
-    const db =
-      baseline === "top" ? "text-before-edge" :
-      baseline === "middle" ? "middle" : "alphabetic";
-
-    const content = escapeXml(spec.uppercase ? String(text).toUpperCase() : String(text));
-    nodes.push(
-      `<text x="${x}" y="${y}" text-anchor="${ta}" dominant-baseline="${db}" ` +
-      `style="font-size:${fs}px;font-weight:${spec.weight || spec.fontWeight || 700};` +
-      `fill:${spec.fill || "#000"};font-family:${spec.fontFamily || "Arial, Helvetica, sans-serif"};` +
-      `letter-spacing:${ls ? ls + "px" : "normal"}">${content}</text>`
-    );
-  }
-  return Buffer.from(`<svg width="${canvasW}" height="${canvasH}" xmlns="http://www.w3.org/2000/svg">${nodes.join("")}</svg>`);
-}
-
-/* ------------ render a single side by template key ------------ */
-async function renderSide(card, templateKey, fileSuffix = "") {
-  const { cfg, canvasW, canvasH, bgCanvasBuf } = await loadTemplateCached(templateKey);
-  const sx = canvasW / cfg.__designW;
-  const sy = canvasH / cfg.__designH;
-
-  let img = sharp(bgCanvasBuf).ensureAlpha();
-
-  // photo on this side?
-  if (card.photoPath && cfg.__photo) {
-    const photoAbs = path.join(SERVER_ROOT, String(card.photoPath).replace(/^\//, ""));
-    if (fs.existsSync(photoAbs)) {
-      const w = toPx(cfg.__photo.width,  canvasW, sx) ?? 300;
-      const h = toPx(cfg.__photo.height, canvasH, sy) ?? 380;
-      const l = toPx(cfg.__photo.left,   canvasW, sx) ?? 0;
-      const t = toPx(cfg.__photo.top,    canvasH, sy) ?? 0;
-      const r = toPx(cfg.__photo.radius, Math.min(canvasW, canvasH), Math.min(sx, sy)) ?? 0;
-
-      let photoBuf = await sharp(photoAbs).rotate().resize(w, h, { fit: "cover" }).toBuffer();
-      if (r > 0) {
-        const mask = Buffer.from(`<svg width="${w}" height="${h}"><rect width="${w}" height="${h}" rx="${r}" ry="${r}"/></svg>`);
-        photoBuf = await sharp(photoBuf).composite([{ input: mask, blend: "dest-in" }]).toBuffer();
-      }
-      img = img.composite([{ input: photoBuf, left: l, top: t }]);
-    }
-  }
-
-  // optional signature overlay (rear)
-  if (cfg.__signature) {
-    const { left, top, width, height, file } = cfg.__signature;
-    if (file) {
-      const sigAbs = path.isAbsolute(file) ? file : path.join(TEMPLATES_DIR, file);
-      if (fs.existsSync(sigAbs)) {
-        const w = toPx(width,  canvasW, sx);
-        const h = toPx(height, canvasH, sy);
-        const l = toPx(left,   canvasW, sx) ?? 0;
-        const t = toPx(top,    canvasH, sy) ?? 0;
-        const sigBuf = await sharp(sigAbs).resize(w, h, { fit: "contain" }).ensureAlpha().toBuffer();
-        img = img.composite([{ input: sigBuf, left: l, top: t }]);
-      }
-    }
-  }
-
-  // text layer (decide per side via template)
-  const fullName = `${card?.fullName?.firstName || ""} ${card?.fullName?.middleInitial || ""} ${card?.fullName?.lastName || ""}`.replace(/\s+/g," ").trim();
-  const items = [
-    { text: fullName,                      spec: cfg.__text.name,     sx, sy },
-    { text: card?.position,                spec: cfg.__text.position, sx, sy },
-    { text: card?.type,                    spec: cfg.__text.type,     sx, sy },
-    { text: card?.idNumber,                spec: cfg.__text.idNumber, sx, sy },
-    { text: card?.emergencyContact?.phone, spec: cfg.__text.emPhone,  sx, sy },
-    // OPTIONAL rear-only: emergency contact name and CEO name
-    { text: `${card?.emergencyContact?.firstName || ""} ${card?.emergencyContact?.lastName || ""}`.trim(),
-      spec: cfg.__text?.emName, sx, sy },
-    { text: cfg.__text?.ceoName?.value || "", spec: cfg.__text?.ceoName, sx, sy }, // you can set value in template or fetch from DB later
-  ];
-  const textLayer = buildTextSVG(canvasW, canvasH, items);
-  img = img.composite([{ input: textLayer, left: 0, top: 0 }]);
-
-  // save
+  /* ---------- SAVE ---------- */
   const outDir = path.join(SERVER_ROOT, "uploads", "generated");
   fs.mkdirSync(outDir, { recursive: true });
-  const outName = `${Date.now()}-${card?.idNumber || "id"}${fileSuffix ? `-${fileSuffix}` : ""}.png`;
-  await img.png().toFile(path.join(outDir, outName));
+
+  const outName = `${Date.now()}-${card.idNumber}-${suffix}.png`;
+  const outPath = path.join(outDir, outName);
+
+  fs.writeFileSync(outPath, canvas.toBuffer("image/png"));
+
   return `/uploads/generated/${outName}`;
 }
 
 /* ------------ public API ------------ */
 async function generateIDImages(card) {
-  const typeKey = resolveTypeKey(card?.type);
-  // expect templates like: "employee_front.json", "employee_back.json"
-  const frontKey = `${typeKey}_front`;
-  const backKey  = `${typeKey}_back`;
-
-  const front = await renderSide(card, frontKey, "front");
-  const back  = await renderSide(card, backKey,  "back");
-  return { front, back };
+  const typeKey = resolveTypeKey(card.type);
+  return {
+    front: await renderSide(card, `${typeKey}_front`, "front"),
+    back: await renderSide(card, `${typeKey}_back`, "back"),
+  };
 }
 
-module.exports = {
-  generateIDImages,
-  // keep old name generating only one side if you still use it anywhere:
-  generateIDImage: async (card, templateKey) => renderSide(card, templateKey, "front"),
-};
+module.exports = { generateIDImages };

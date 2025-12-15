@@ -8,6 +8,8 @@ const approverRoutes = require('./routes/approverRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const authRoutes = require('./routes/authRoutes');
 const idCardsRouter = require('./routes/idCardRoutes'); 
+const idGeneratorRoutes = require('./routes/idGenerator');
+
 dotenv.config();
 
 if (!process.env.MONGO_URI || !process.env.FRONTEND_URL || !process.env.JWT_SECRET) {
@@ -52,6 +54,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/approver', approverRoutes);  
 app.use('/api/employee', employeeRoutes);
 app.use("/api/id-cards", idCardsRouter);
+app.use('/api/id-generator', idGeneratorRoutes);
+
 
 
 // 404 Handler

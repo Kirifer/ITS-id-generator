@@ -1,10 +1,13 @@
+// server/controllers/idCardController.js
 const path = require("path");
 const fs = require("fs");
 const sharp = require("sharp");
 const mongoose = require("mongoose");
 const IdCard = require("../models/IdCard");
-const { generateIDImage } = require("../utils/generateImage");
 
+/* =========================
+   Public lookup (Approved IDs only)
+========================= */
 const getDetailIdCard = async (req, res) => {
   try {
     const item = await IdCard.findOne({
@@ -12,59 +15,70 @@ const getDetailIdCard = async (req, res) => {
       status: "Approved",
     }).lean();
 
-    if (!item)
-      return res
-        .status(404)
-        .json({ message: "No approved ID with that number" });
+    if (!item) {
+      return res.status(404).json({ message: "No approved ID with that number" });
+    }
 
-    // Return only what's safe/needed publicly
     res.json({
       idNumber: item.idNumber,
       fullName: item.fullName,
       position: item.position,
       type: item.type,
-      generatedImagePath: item.generatedImagePath,
+      generatedFrontImagePath: item.generatedFrontImagePath,
+      generatedBackImagePath: item.generatedBackImagePath,
     });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
 };
 
+/* =========================
+   Create ID (Admin only)
+========================= */
 const postIdCard = async (req, res) => {
   try {
     const {
       firstName,
       middleInitial,
       lastName,
+      employeeNumber,
       idNumber,
       position,
       type,
+      email,
+      phone,
       emFirstName,
       emMiddleInitial,
       emLastName,
       emPhone,
     } = req.body || {};
 
-    // Required fields
+    // Required fields (HR document)
     const required = {
       firstName,
       lastName,
+      employeeNumber,
       idNumber,
       position,
       type,
+      email,
+      phone,
       emFirstName,
       emLastName,
       emPhone,
     };
+
     for (const [k, v] of Object.entries(required)) {
-      if (!v) return res.status(400).json({ message: `Missing field: ${k}` });
+      if (!v) {
+        return res.status(400).json({ message: `Missing field: ${k}` });
+      }
     }
 
     if (await IdCard.findOne({ idNumber })) {
-      return res.status(400).json({ message: "ID number already exists." });
+      return res.status(400).json({ message: "ID number already exists" });
     }
 
-    // Validate the uploaded file is an image
+    // Validate photo (HR/Admin upload only)
     if (req.file) {
       try {
         await sharp(req.file.path).metadata();
@@ -80,9 +94,14 @@ const postIdCard = async (req, res) => {
 
     const doc = await IdCard.create({
       fullName: { firstName, middleInitial, lastName },
+      employeeNumber,
       idNumber,
       position,
       type,
+      contactDetails: {
+        email,
+        phone,
+      },
       emergencyContact: {
         firstName: emFirstName,
         middleInitial: emMiddleInitial,
@@ -91,34 +110,24 @@ const postIdCard = async (req, res) => {
       },
       photoPath,
       status: "Pending",
+      createdBy: req.user.id, // ✅ FIXED
     });
-
-    // Generate composite (auto template by type)
-    try {
-      const generated = await generateIDImage(doc.toObject());
-      if (generated) {
-        if (gen?.front) doc.generatedFrontImagePath = gen.front;
-        if (gen?.back) doc.generatedFrontImagePath = gen.back;
-        await doc.save();
-      }
-    } catch (e) {
-      console.warn("Composite generation failed:", e.message);
-    }
 
     res.status(201).json(doc);
   } catch (err) {
-    const msg = /Invalid file type/i.test(err.message)
-      ? "Invalid file type. Only JPEG and PNG are allowed."
-      : err.message;
-    res.status(500).json({ message: msg });
+    res.status(500).json({ message: err.message });
   }
 };
 
+/* =========================
+   List IDs (Admin / Approver)
+========================= */
 const getIdCard = async (req, res) => {
   try {
     const { status } = req.query;
     const filter = {};
     if (status) filter.status = status;
+
     const items = await IdCard.find(filter).sort({ createdAt: -1 });
     res.json(items);
   } catch (e) {
@@ -126,17 +135,26 @@ const getIdCard = async (req, res) => {
   }
 };
 
+/* =========================
+   Approve ID (Approver)
+========================= */
 const patchIdCardApprove = async (req, res) => {
   try {
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id))
+    if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ message: "Invalid ID" });
+    }
 
     const updated = await IdCard.findByIdAndUpdate(
       id,
-      { status: "Approved" },
+      {
+        status: "Approved",
+        approvedBy: req.user.id, // ✅ FIXED
+        issuedAt: new Date(),
+      },
       { new: true }
     );
+
     if (!updated) return res.status(404).json({ message: "Not found" });
     res.json(updated);
   } catch (e) {
@@ -144,17 +162,25 @@ const patchIdCardApprove = async (req, res) => {
   }
 };
 
+/* =========================
+   Reject ID (Approver)
+========================= */
 const patchIdCardReject = async (req, res) => {
   try {
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id))
+    if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ message: "Invalid ID" });
+    }
 
     const updated = await IdCard.findByIdAndUpdate(
       id,
-      { status: "Rejected" },
+      {
+        status: "Rejected",
+        approvedBy: req.user.id, // ✅ FIXED
+      },
       { new: true }
     );
+
     if (!updated) return res.status(404).json({ message: "Not found" });
     res.json(updated);
   } catch (e) {
@@ -162,77 +188,56 @@ const patchIdCardReject = async (req, res) => {
   }
 };
 
+/* =========================
+   Update ID data (Admin)
+========================= */
 const patchIdCardDetails = async (req, res) => {
   try {
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id))
+    if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ message: "Invalid ID" });
-
-    const b = req.body || {};
-    const payload = {
-      "fullName.firstName": b?.fullName?.firstName,
-      "fullName.middleInitial": b?.fullName?.middleInitial,
-      "fullName.lastName": b?.fullName?.lastName,
-      idNumber: b?.idNumber,
-      position: b?.position,
-      type: b?.type,
-      "emergencyContact.firstName": b?.emergencyContact?.firstName,
-      "emergencyContact.middleInitial": b?.emergencyContact?.middleInitial,
-      "emergencyContact.lastName": b?.emergencyContact?.lastName,
-      "emergencyContact.phone": b?.emergencyContact?.phone,
-    };
-    Object.keys(payload).forEach(
-      (k) => payload[k] === undefined && delete payload[k]
-    );
-
-    let updated = await IdCard.findByIdAndUpdate(id, payload, { new: true });
-    if (!updated) return res.status(404).json({ message: "Not found" });
-
-    // Regenerate composite whenever data changes
-    try {
-      const out = await generateIDImage(updated.toObject());
-      if (out) {
-        if (gen?.front) updated.generatedFrontImagePath = gen.front;
-        if (gen?.back) updated.generatedFrontImagePath = gen.back;
-        await updated.save();
-      }
-    } catch (e) {
-      console.warn("Regenerate failed:", e.message);
     }
 
+    const updated = await IdCard.findByIdAndUpdate(id, req.body, {
+      new: true,
+    });
+
+    if (!updated) return res.status(404).json({ message: "Not found" });
     res.json(updated);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
 };
 
-
+/* =========================
+   Delete ID (Admin)
+========================= */
 const deleteIdCard = async (req, res) => {
   try {
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id))
+    if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ message: "Invalid ID" });
+    }
 
     const doc = await IdCard.findByIdAndDelete(id);
     if (!doc) return res.status(404).json({ message: "Not found" });
 
-    // Best-effort cleanup
-    const toDelete = [];
+    // Cleanup files
+    const files = [];
     if (doc.photoPath)
-      toDelete.push(
-        path.join(__dirname, "..", doc.photoPath.replace(/^\//, ""))
-      );
-    if (doc.generatedImagePath)
-      toDelete.push(
-        path.join(__dirname, "..", doc.generatedImagePath.replace(/^\//, ""))
-      );
-    toDelete.forEach((p) => fs.existsSync(p) && fs.unlink(p, () => {}));
+      files.push(path.join(__dirname, "..", doc.photoPath.replace(/^\//, "")));
+    if (doc.generatedFrontImagePath)
+      files.push(path.join(__dirname, "..", doc.generatedFrontImagePath.replace(/^\//, "")));
+    if (doc.generatedBackImagePath)
+      files.push(path.join(__dirname, "..", doc.generatedBackImagePath.replace(/^\//, "")));
+
+    files.forEach((p) => fs.existsSync(p) && fs.unlink(p, () => {}));
 
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
-}
+};
 
 module.exports = {
   getDetailIdCard,
@@ -241,5 +246,5 @@ module.exports = {
   patchIdCardApprove,
   patchIdCardReject,
   patchIdCardDetails,
-  deleteIdCard
+  deleteIdCard,
 };
