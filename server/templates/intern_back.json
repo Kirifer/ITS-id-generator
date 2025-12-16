@@ -7,17 +7,17 @@
 
   "text": {
     "emName": {
-      "x": 180,
-      "y": 360,
-      "align": "left",
+      "x": 375,
+      "y": 300,
+      "align": "center",
       "fontSize": 30,
       "fill": "#111111",
       "weight": 700
     },
     "emPhone": {
-      "x": 180,
-      "y": 410,
-      "align": "left",
+      "x": 375,
+      "y": 350,
+      "align": "center",
       "fontSize": 28,
       "fill": "#111111",
       "weight": 600
@@ -25,7 +25,7 @@
 
     "hrName": {
       "x": 375,
-      "y": 540,
+      "y": 750,
       "align": "center",
       "fontSize": 26,
       "fill": "#111111",
@@ -33,7 +33,7 @@
     },
     "hrTitle": {
       "x": 375,
-      "y": 575,
+      "y": 800,
       "align": "center",
       "fontSize": 22,
       "fill": "#111111",
@@ -43,15 +43,15 @@
 
   "signature": {
     "x": 300,
-    "y": 480,
+    "y": 670,
     "width": 150,
-    "height": 50
+    "height": 55
   },
 
   "barcode": {
     "x": 225,
-    "y": 700,
+    "y": 850,
     "width": 300,
-    "height": 90
+    "height": 95
   }
 }
