@@ -42,23 +42,6 @@ const postIdCard = async (req, res) => {
       firstName,
       middleInitial,
       lastName,
-      employeeNumber, // Auto generate UUID
-      idNumber, // ITS_N
-      position,
-      type,
-      email,
-      phone,
-      emFirstName,
-      emMiddleInitial,
-      emLastName,
-      emPhone,
-    } = req.body || {};
-
-    console.log(
-
-            firstName,
-      middleInitial,
-      lastName,
       employeeNumber,
       idNumber,
       position,
