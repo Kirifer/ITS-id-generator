@@ -22,6 +22,7 @@ const getDetailIdCard = async (req, res) => {
 
     res.json({
       idNumber: item.idNumber,
+      employeeNumber: item.employeeNumber,
       fullName: item.fullName,
       position: item.position,
       type: item.type,
@@ -42,7 +43,6 @@ const postIdCard = async (req, res) => {
       firstName,
       middleInitial,
       lastName,
-      employeeNumber,
       idNumber,
       position,
       type,
@@ -59,7 +59,6 @@ const postIdCard = async (req, res) => {
     const required = {
       firstName,
       lastName,
-      employeeNumber,
       idNumber,
       position,
       type,
@@ -102,7 +101,6 @@ const postIdCard = async (req, res) => {
 
     const doc = await IdCard.create({
       fullName: { firstName, middleInitial, lastName },
-      employeeNumber,
       idNumber,
       position,
       type,
@@ -113,14 +111,11 @@ const postIdCard = async (req, res) => {
         lastName: emLastName,
         phone: emPhone,
       },
-
-      /* ✅ CORRECT PATHS */
       hrDetails: {
         name: hrName,
         position: hrPosition,
         signaturePath: `/uploads/photos/${hrSignature.filename}`,
       },
-
       photoPath: `/uploads/photos/${photo.filename}`,
       status: "Pending",
       createdBy: req.user.id,

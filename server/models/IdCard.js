@@ -2,6 +2,7 @@
 // CommonJS - Mongoose Model for e-Employee & Intern ID Generator
 
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
 /* ===========================
    SUB-SCHEMAS
@@ -92,7 +93,9 @@ const IdCardSchema = new mongoose.Schema(
     employeeNumber: {
       type: String,
       required: true,
-      trim: true,
+      unique: true,
+      immutable: true,
+      default: () => crypto.randomUUID(),
     },
 
     idNumber: {
@@ -210,7 +213,7 @@ const IdCardSchema = new mongoose.Schema(
 =========================== */
 
 IdCardSchema.index({ idNumber: 1 }, { unique: true });
-IdCardSchema.index({ employeeNumber: 1 });
+IdCardSchema.index({ employeeNumber: 1 }, { unique: true });
 IdCardSchema.index({ type: 1, status: 1 });
 
 /* ===========================
