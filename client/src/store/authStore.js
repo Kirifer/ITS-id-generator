@@ -46,6 +46,8 @@ export const loginStore = create(
         });
       }
     },
+
+    reset: () => set({ loading: false, success: false, error: false, message: "" }),
   }))
 );
 
@@ -87,5 +89,49 @@ export const authCheckStore = create(
         });
       }
     },
+
+    reset: () => set({ loading: false, success: false, error: false, message: "" }),
+  }))
+);
+
+export const logoutStore = create(
+  devtools((set) => ({
+    loading: false,
+    success: false,
+    error: false,
+    message: "",
+
+    logout: async () => {
+      set({ loading: true, success: false, error: false, message: "" });
+
+      try {
+        const response = await axios.post(
+          `${baseUrl}/auth/logout`,
+          {},
+          { withCredentials: true }
+        );
+
+        if (response.data?.success) {
+          loginStore.getState().reset();
+          authCheckStore.getState().reset();
+          
+          set({
+            loading: false,
+            success: true,
+            error: false,
+            message: response.data.success,
+          });
+        }
+      } catch (err) {
+        set({
+          loading: false,
+          success: false,
+          error: true,
+          message: err.response?.data?.error || "Something went wrong",
+        });
+      }
+    },
+
+    reset: () => set({ loading: false, success: false, error: false, message: "" }),
   }))
 );

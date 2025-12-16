@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/images/logo.png";
 import { Eye, EyeOff, User, Lock } from "lucide-react";
-import { loginStore } from "../store/authStore";
+import { loginStore, authCheckStore } from "../store/authStore";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -11,7 +11,7 @@ const Login = () => {
 
   const navigate = useNavigate();
 
-  const { login, loading, success, error, message } = loginStore();
+  const { login, loading, success, error, message, reset } = loginStore();
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -19,14 +19,40 @@ const Login = () => {
   };
 
   useEffect(() => {
-    if (success) {
-      navigate("/");
-    }
+    let mounted = true;
 
+    const handleSuccess = async () => {
+      if (success && mounted) {
+        authCheckStore.getState().reset();
+        
+        await authCheckStore.getState().authCheck();
+        
+        const userRole = authCheckStore.getState().message?.role;
+        
+        if (mounted) {
+          if (userRole === "Admin") {
+            navigate("/dashboard", { replace: true });
+          } else if (userRole === "Approver") {
+            navigate("/approver-dashboard", { replace: true });
+          }
+          
+          reset();
+        }
+      }
+    };
+
+    handleSuccess();
+
+    return () => {
+      mounted = false;
+    };
+  }, [success, navigate, reset]);
+
+  useEffect(() => {
     if (error && message) {
       alert(message);
     }
-  }, [success, error, message, navigate]);
+  }, [error, message]);
 
   return (
     <div className="flex custom-bg items-center justify-center min-h-screen p-6 font-poppins bg-gray-50">
@@ -102,7 +128,7 @@ const Login = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-purple-400 hover:bg-purple-500 text-white font-semibold py-2 rounded-md transition duration-200"
+          className="w-full bg-purple-400 hover:bg-purple-500 text-white font-semibold py-2 rounded-md transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? "Logging in..." : "Login"}
         </button>

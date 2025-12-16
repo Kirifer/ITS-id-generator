@@ -1,5 +1,7 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import ProtectedRoute from "./guards/ProtectedRouting";
+
 
 import Login from "./screens/Login";
 import Logout from "./screens/Logout";
@@ -10,74 +12,67 @@ import Approver_Dashboard from "./screens/DashboardHR";
 import Approver_GeneratedIDs from "./screens/ApprovalHR";
 import IDViewer from "./screens/Login2";
 import GeneratedID from "./screens/Viewing";
-
-import ProtectedRouting from "./guards/ProtectedRouting";
-import { RoleLanding } from "./utils/roleLanding";
-import PublicRoute from "./guards/PublicRoute";
+// import Unauthorized from "./screens/Unauthorized";
 
 export default function App() {
   return (
     <Router>
       <div className="App min-h-screen custom-bg">
         <Routes>
-          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+          {/* Public routes */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/logout" element={<Logout />} />
           <Route path="/view-login" element={<IDViewer />} />
           <Route path="/view-generated-id/:idNumber" element={<GeneratedID />} />
+          {/* <Route path="/unauthorized" element={<Unauthorized />} /> */}
 
+          {/* Admin-only routes */}
           <Route
             path="/dashboard"
             element={
-              <ProtectedRouting role="Admin">
+              <ProtectedRoute allowedRoles={["Admin"]}>
                 <Admin_Dashboard />
-              </ProtectedRouting>
+              </ProtectedRoute>
             }
           />
-
           <Route
             path="/id-generator"
             element={
-              <ProtectedRouting role="Admin">
+              <ProtectedRoute allowedRoles={["Admin"]}>
                 <Admin_IDGenerator />
-              </ProtectedRouting>
+              </ProtectedRoute>
             }
           />
-
           <Route
             path="/generated-ids"
             element={
-              <ProtectedRouting role="Admin">
+              <ProtectedRoute allowedRoles={["Admin"]}>
                 <Admin_GeneratedIDs />
-              </ProtectedRouting>
+              </ProtectedRoute>
             }
           />
 
+          {/* Approver-only routes */}
           <Route
             path="/approver-dashboard"
             element={
-              <ProtectedRouting role="Approver">
+              <ProtectedRoute allowedRoles={["Approver"]}>
                 <Approver_Dashboard />
-              </ProtectedRouting>
+              </ProtectedRoute>
             }
           />
-
           <Route
             path="/approver-generated-ids"
             element={
-              <ProtectedRouting role="Approver">
+              <ProtectedRoute allowedRoles={["Approver"]}>
                 <Approver_GeneratedIDs />
-              </ProtectedRouting>
+              </ProtectedRoute>
             }
           />
 
-          <Route
-            path="*"
-            element={
-              <ProtectedRouting>
-                <RoleLanding />
-              </ProtectedRouting>
-            }
-          />
+          {/* Catch-all route */}
+          <Route path="*" element={<Login />} />
         </Routes>
       </div>
     </Router>
