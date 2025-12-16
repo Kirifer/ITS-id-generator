@@ -58,24 +58,20 @@ async function generateBarcodeImage(text, width, height) {
 
 /* ------------ load template ------------ */
 async function loadTemplate(templateKey) {
-  const cfgPath = path.join(TEMPLATES_DIR, `${templateKey}.json`);
-  if (!fs.existsSync(cfgPath)) {
-    throw new Error(`Template not found: ${templateKey}.json`);
-  }
+  const raw = JSON.parse(
+    fs.readFileSync(path.join(TEMPLATES_DIR, `${templateKey}.json`), "utf-8")
+  );
 
-  const raw = JSON.parse(fs.readFileSync(cfgPath, "utf-8"));
-  const bgPath = path.join(TEMPLATES_DIR, raw.background);
-  const bgImage = await loadImage(bgPath);
-
-  const designW = raw.designSize?.width || bgImage.width;
-  const designH = raw.designSize?.height || bgImage.height;
+  const bgImage = await loadImage(
+    path.join(TEMPLATES_DIR, raw.background)
+  );
 
   return {
     bgImage,
     bgW: bgImage.width,
     bgH: bgImage.height,
-    designW,
-    designH,
+    designW: raw.designSize.width,
+    designH: raw.designSize.height,
     photo: raw.photo || null,
     text: raw.text || {},
     barcode: raw.barcode || null,
@@ -85,11 +81,10 @@ async function loadTemplate(templateKey) {
 /* ------------ render one side ------------ */
 async function renderSide(card, templateKey, suffix) {
   const tpl = await loadTemplate(templateKey);
-
   const canvas = createCanvas(tpl.designW, tpl.designH);
   const ctx = canvas.getContext("2d");
 
-  /* ---------- BACKGROUND (CENTERED & SCALED) ---------- */
+  /* ---------- BACKGROUND ---------- */
   const scale = Math.min(
     tpl.designW / tpl.bgW,
     tpl.designH / tpl.bgH
@@ -102,27 +97,24 @@ async function renderSide(card, templateKey, suffix) {
 
   ctx.drawImage(tpl.bgImage, bgX, bgY, bgDrawW, bgDrawH);
 
-  /* ---------- PHOTO ---------- */
-  if (card.photoPath && tpl.photo) {
-    const photoPath = path.join(
-      SERVER_ROOT,
-      card.photoPath.replace(/^\//, "")
+  /* ---------- PHOTO (FRONT ONLY) ---------- */
+  if (suffix === "front" && card.photoPath && tpl.photo) {
+    const img = await loadImage(
+      path.join(SERVER_ROOT, card.photoPath.replace(/^\//, ""))
     );
 
-    if (fs.existsSync(photoPath)) {
-      const img = await loadImage(photoPath);
-
-      const w = toPx(tpl.photo.width, tpl.designW);
-      const h = toPx(tpl.photo.height, tpl.designH);
-      const x = toPx(tpl.photo.left, tpl.designW);
-      const y = toPx(tpl.photo.top, tpl.designH);
-
-      drawImageCover(ctx, img, x, y, w, h);
-    }
+    drawImageCover(
+      ctx,
+      img,
+      toPx(tpl.photo.left, tpl.designW),
+      toPx(tpl.photo.top, tpl.designH),
+      toPx(tpl.photo.width, tpl.designW),
+      toPx(tpl.photo.height, tpl.designH)
+    );
   }
 
-  /* ---------- BARCODE ---------- */
-  if (tpl.barcode && card.idNumber) {
+  /* ---------- BARCODE (BACK ONLY) ---------- */
+  if (suffix === "back" && tpl.barcode && card.idNumber) {
     const bw = toPx(tpl.barcode.width, tpl.designW);
     const bh = toPx(tpl.barcode.height, tpl.designH);
     const bx = toPx(tpl.barcode.x, tpl.designW);
@@ -139,6 +131,7 @@ async function renderSide(card, templateKey, suffix) {
     ctx.fillStyle = spec.fill || "#000";
     ctx.font = `${spec.weight || 700} ${spec.fontSize || 30}px Arial`;
     ctx.textAlign = spec.align || "left";
+    ctx.textBaseline = "top";
 
     ctx.fillText(
       value,
@@ -147,28 +140,53 @@ async function renderSide(card, templateKey, suffix) {
     );
   };
 
-  const fullName =
-    `${card.fullName.firstName} ${card.fullName.middleInitial || ""} ${card.fullName.lastName}`
-      .replace(/\s+/g, " ")
-      .trim();
+  /* ---------- FRONT TEXT ---------- */
+  if (suffix === "front") {
+    const fullName =
+      `${card.fullName.firstName} ${card.fullName.middleInitial || ""} ${card.fullName.lastName}`
+        .replace(/\s+/g, " ")
+        .trim();
 
-  drawText(fullName, tpl.text.name);
-  drawText(card.position, tpl.text.position);
-  drawText(card.idNumber, tpl.text.idNumber);
-  drawText(
-    `${card.emergencyContact?.firstName || ""} ${card.emergencyContact?.lastName || ""}`.trim(),
-    tpl.text.emName
-  );
-  drawText(card.emergencyContact?.phone, tpl.text.emPhone);
+    drawText(fullName, tpl.text.name);
+    drawText(card.position, tpl.text.position);
+    drawText(card.idNumber, tpl.text.idNumber);
+  }
+
+  /* ---------- BACK TEXT ---------- */
+  if (suffix === "back") {
+    if (card.emergencyContact) {
+      drawText(
+        `Name: ${card.emergencyContact.firstName} ${card.emergencyContact.lastName}`,
+        tpl.text.emName
+      );
+      drawText(
+        `Number: ${card.emergencyContact.phone}`,
+        tpl.text.emPhone
+      );
+    }
+
+    // ✅ HR / APPROVER DETAILS (DYNAMIC)
+    if (card.approvedBy) {
+      const hrName = `${card.approvedBy.firstName} ${card.approvedBy.lastName}`;
+      const hrTitle =
+        card.approvedBy.position ||
+        card.approvedBy.role ||
+        "HR APPROVER";
+
+      drawText(hrName, tpl.text.hrName);
+      drawText(hrTitle, tpl.text.hrTitle);
+    }
+  }
 
   /* ---------- SAVE ---------- */
   const outDir = path.join(SERVER_ROOT, "uploads", "generated");
   fs.mkdirSync(outDir, { recursive: true });
 
   const outName = `${Date.now()}-${card.idNumber}-${suffix}.png`;
-  const outPath = path.join(outDir, outName);
-
-  fs.writeFileSync(outPath, canvas.toBuffer("image/png"));
+  fs.writeFileSync(
+    path.join(outDir, outName),
+    canvas.toBuffer("image/png")
+  );
 
   return `/uploads/generated/${outName}`;
 }

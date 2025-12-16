@@ -1,31 +1,50 @@
 {
   "background": "Intern-Rear-Template.png",
-  "designSize": { "width": 1200, "height": 750 },
-  "backgroundFit": "contain",
+  "designSize": {
+    "width": 750,
+    "height": 1200
+  },
 
   "text": {
     "emName": {
-      "x": 600,
-      "y": 420,
-      "align": "center",
+      "x": 180,
+      "y": 360,
+      "align": "left",
       "fontSize": 30,
-      "fill": "#111",
+      "fill": "#111111",
       "weight": 700
     },
     "emPhone": {
-      "x": 600,
-      "y": 470,
-      "align": "center",
+      "x": 180,
+      "y": 410,
+      "align": "left",
       "fontSize": 28,
-      "fill": "#111",
+      "fill": "#111111",
+      "weight": 600
+    },
+
+    "hrName": {
+      "x": 375,
+      "y": 540,
+      "align": "center",
+      "fontSize": 26,
+      "fill": "#111111",
+      "weight": 700
+    },
+    "hrTitle": {
+      "x": 375,
+      "y": 575,
+      "align": "center",
+      "fontSize": 22,
+      "fill": "#111111",
       "weight": 600
     }
   },
 
   "barcode": {
-    "x": 450,
-    "y": 520,
+    "x": 225,
+    "y": 700,
     "width": 300,
-    "height": 80
+    "height": 90
   }
 }
