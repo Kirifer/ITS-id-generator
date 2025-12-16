@@ -1,4 +1,5 @@
 // server/routes/idCardRoutes.js
+
 const express = require("express");
 const {
   verifyToken,
@@ -14,9 +15,9 @@ const {
   patchIdCardDetails,
   deleteIdCard,
 } = require("../controllers/idCardController");
-const {upload} = require("../service/upload")
-const idCardRoutes = express.Router();
+const { upload } = require("../service/upload");
 
+const idCardRoutes = express.Router();
 
 /* =========================
    Public lookup (keep first)
@@ -25,19 +26,29 @@ idCardRoutes.get("/by-id-number/:idNumber", getDetailIdCard);
 
 /* =========================
    Create (Admin only)
+   - employee photo
+   - HR signature
    ========================= */
 idCardRoutes.post(
   "/",
   verifyToken,
   requireRole("Admin"),
-  upload.single("photo"),
+  upload.fields([
+    { name: "photo", maxCount: 1 },
+    { name: "hrSignature", maxCount: 1 },
+  ]),
   postIdCard
 );
 
 /* =========================
    List (Admin or Approver)
    ========================= */
-idCardRoutes.get("/", verifyToken, requireAnyRole("Admin", "Approver"), getIdCard);
+idCardRoutes.get(
+  "/",
+  verifyToken,
+  requireAnyRole("Admin", "Approver"),
+  getIdCard
+);
 
 /* =========================
    Approvals (Approver only)
@@ -59,11 +70,25 @@ idCardRoutes.patch(
 /* =========================
    Update fields (Admin only)
    ========================= */
-idCardRoutes.patch("/:id", verifyToken, requireRole("Admin"), patchIdCardDetails);
+idCardRoutes.patch(
+  "/:id",
+  verifyToken,
+  requireRole("Admin"),
+  upload.fields([
+    { name: "photo", maxCount: 1 },
+    { name: "hrSignature", maxCount: 1 },
+  ]),
+  patchIdCardDetails
+);
 
 /* =========================
    Delete (Admin only)
    ========================= */
-idCardRoutes.delete("/:id", verifyToken, requireRole("Admin"), deleteIdCard);
+idCardRoutes.delete(
+  "/:id",
+  verifyToken,
+  requireRole("Admin"),
+  deleteIdCard
+);
 
 module.exports = idCardRoutes;

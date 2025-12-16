@@ -1,4 +1,5 @@
 // server/controllers/idCardController.js
+
 const path = require("path");
 const fs = require("fs");
 const sharp = require("sharp");
@@ -51,9 +52,10 @@ const postIdCard = async (req, res) => {
       emMiddleInitial,
       emLastName,
       emPhone,
+      hrName,
+      hrPosition,
     } = req.body || {};
 
-    // Required fields (HR document)
     const required = {
       firstName,
       lastName,
@@ -66,6 +68,8 @@ const postIdCard = async (req, res) => {
       emFirstName,
       emLastName,
       emPhone,
+      hrName,
+      hrPosition,
     };
 
     for (const [k, v] of Object.entries(required)) {
@@ -78,19 +82,23 @@ const postIdCard = async (req, res) => {
       return res.status(400).json({ message: "ID number already exists" });
     }
 
-    // Validate photo (HR/Admin upload only)
-    if (req.file) {
-      try {
-        await sharp(req.file.path).metadata();
-      } catch {
-        fs.unlink(req.file.path, () => {});
-        return res.status(400).json({ message: "Invalid image file" });
-      }
+    const photo = req.files?.photo?.[0];
+    const hrSignature = req.files?.hrSignature?.[0];
+
+    if (!photo || !hrSignature) {
+      return res
+        .status(400)
+        .json({ message: "Photo and HR signature are required" });
     }
 
-    const photoPath = req.file
-      ? `/uploads/photos/${req.file.filename}`
-      : undefined;
+    try {
+      await sharp(photo.path).metadata();
+      await sharp(hrSignature.path).metadata();
+    } catch {
+      fs.unlink(photo.path, () => {});
+      fs.unlink(hrSignature.path, () => {});
+      return res.status(400).json({ message: "Invalid image file" });
+    }
 
     const doc = await IdCard.create({
       fullName: { firstName, middleInitial, lastName },
@@ -98,19 +106,24 @@ const postIdCard = async (req, res) => {
       idNumber,
       position,
       type,
-      contactDetails: {
-        email,
-        phone,
-      },
+      contactDetails: { email, phone },
       emergencyContact: {
         firstName: emFirstName,
         middleInitial: emMiddleInitial,
         lastName: emLastName,
         phone: emPhone,
       },
-      photoPath,
+
+      /* ✅ CORRECT PATHS */
+      hrDetails: {
+        name: hrName,
+        position: hrPosition,
+        signaturePath: `/uploads/photos/${hrSignature.filename}`,
+      },
+
+      photoPath: `/uploads/photos/${photo.filename}`,
       status: "Pending",
-      createdBy: req.user.id, // ✅ FIXED
+      createdBy: req.user.id,
     });
 
     res.status(201).json(doc);
@@ -149,7 +162,7 @@ const patchIdCardApprove = async (req, res) => {
       id,
       {
         status: "Approved",
-        approvedBy: req.user.id, // ✅ FIXED
+        approvedBy: req.user.id,
         issuedAt: new Date(),
       },
       { new: true }
@@ -176,7 +189,7 @@ const patchIdCardReject = async (req, res) => {
       id,
       {
         status: "Rejected",
-        approvedBy: req.user.id, // ✅ FIXED
+        approvedBy: req.user.id,
       },
       { new: true }
     );
@@ -189,7 +202,7 @@ const patchIdCardReject = async (req, res) => {
 };
 
 /* =========================
-   Update ID data (Admin)
+   Update ID data (Admin only)
 ========================= */
 const patchIdCardDetails = async (req, res) => {
   try {
@@ -198,12 +211,27 @@ const patchIdCardDetails = async (req, res) => {
       return res.status(400).json({ message: "Invalid ID" });
     }
 
-    const updated = await IdCard.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
+    const card = await IdCard.findById(id);
+    if (!card) return res.status(404).json({ message: "Not found" });
 
-    if (!updated) return res.status(404).json({ message: "Not found" });
-    res.json(updated);
+    const hrSignature = req.files?.hrSignature?.[0];
+    const photo = req.files?.photo?.[0];
+
+    if (req.body.hrName) card.hrDetails.name = req.body.hrName;
+    if (req.body.hrPosition) card.hrDetails.position = req.body.hrPosition;
+
+    if (hrSignature) {
+      await sharp(hrSignature.path).metadata();
+      card.hrDetails.signaturePath = `/uploads/photos/${hrSignature.filename}`;
+    }
+
+    if (photo) {
+      await sharp(photo.path).metadata();
+      card.photoPath = `/uploads/photos/${photo.filename}`;
+    }
+
+    await card.save();
+    res.json(card);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
@@ -222,14 +250,33 @@ const deleteIdCard = async (req, res) => {
     const doc = await IdCard.findByIdAndDelete(id);
     if (!doc) return res.status(404).json({ message: "Not found" });
 
-    // Cleanup files
     const files = [];
+
     if (doc.photoPath)
       files.push(path.join(__dirname, "..", doc.photoPath.replace(/^\//, "")));
+
+    if (doc.hrDetails?.signaturePath)
+      files.push(
+        path.join(__dirname, "..", doc.hrDetails.signaturePath.replace(/^\//, ""))
+      );
+
     if (doc.generatedFrontImagePath)
-      files.push(path.join(__dirname, "..", doc.generatedFrontImagePath.replace(/^\//, "")));
+      files.push(
+        path.join(
+          __dirname,
+          "..",
+          doc.generatedFrontImagePath.replace(/^\//, "")
+        )
+      );
+
     if (doc.generatedBackImagePath)
-      files.push(path.join(__dirname, "..", doc.generatedBackImagePath.replace(/^\//, "")));
+      files.push(
+        path.join(
+          __dirname,
+          "..",
+          doc.generatedBackImagePath.replace(/^\//, "")
+        )
+      );
 
     files.forEach((p) => fs.existsSync(p) && fs.unlink(p, () => {}));
 

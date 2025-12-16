@@ -1,4 +1,5 @@
 // server/utils/generateImage.js
+
 const { createCanvas, loadImage } = require("canvas");
 const path = require("path");
 const fs = require("fs");
@@ -75,6 +76,7 @@ async function loadTemplate(templateKey) {
     photo: raw.photo || null,
     text: raw.text || {},
     barcode: raw.barcode || null,
+    signature: raw.signature || null,
   };
 }
 
@@ -85,10 +87,7 @@ async function renderSide(card, templateKey, suffix) {
   const ctx = canvas.getContext("2d");
 
   /* ---------- BACKGROUND ---------- */
-  const scale = Math.min(
-    tpl.designW / tpl.bgW,
-    tpl.designH / tpl.bgH
-  );
+  const scale = Math.min(tpl.designW / tpl.bgW, tpl.designH / tpl.bgH);
 
   const bgDrawW = tpl.bgW * scale;
   const bgDrawH = tpl.bgH * scale;
@@ -165,16 +164,23 @@ async function renderSide(card, templateKey, suffix) {
       );
     }
 
-    // ✅ HR / APPROVER DETAILS (DYNAMIC)
-    if (card.approvedBy) {
-      const hrName = `${card.approvedBy.firstName} ${card.approvedBy.lastName}`;
-      const hrTitle =
-        card.approvedBy.position ||
-        card.approvedBy.role ||
-        "HR APPROVER";
+    /* ✅ HR TEXT (MANUAL INPUT) */
+    drawText(card.hrDetails.name, tpl.text.hrName);
+    drawText(card.hrDetails.position, tpl.text.hrTitle);
 
-      drawText(hrName, tpl.text.hrName);
-      drawText(hrTitle, tpl.text.hrTitle);
+    /* ✅ HR SIGNATURE (IMAGE) */
+    if (tpl.signature && card.hrDetails.signaturePath) {
+      const sigImg = await loadImage(
+        path.join(SERVER_ROOT, card.hrDetails.signaturePath.replace(/^\//, ""))
+      );
+
+      ctx.drawImage(
+        sigImg,
+        toPx(tpl.signature.x, tpl.designW),
+        toPx(tpl.signature.y, tpl.designH),
+        toPx(tpl.signature.width, tpl.designW),
+        toPx(tpl.signature.height, tpl.designH)
+      );
     }
   }
 

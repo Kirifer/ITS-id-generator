@@ -56,6 +56,27 @@ const EmergencyContactSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const HrDetailsSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    position: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    signaturePath: {
+      type: String, // uploaded image path
+      required: true,
+      trim: true,
+    },
+  },
+  { _id: false }
+);
+
 /* ===========================
    MAIN ID CARD SCHEMA
 =========================== */
@@ -113,6 +134,12 @@ const IdCardSchema = new mongoose.Schema(
       required: true,
     },
 
+    /* -------- HR / SIGNATORY (MANUAL INPUT) -------- */
+    hrDetails: {
+      type: HrDetailsSchema,
+      required: true,
+    },
+
     /* -------- Media -------- */
     photoPath: {
       type: String,
@@ -164,13 +191,13 @@ const IdCardSchema = new mongoose.Schema(
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // HR Creator
+      ref: 'User', // Creator (admin)
       required: true,
     },
 
     approvedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // HR Head / Approver
+      ref: 'User', // Approver (workflow only)
     },
   },
   {

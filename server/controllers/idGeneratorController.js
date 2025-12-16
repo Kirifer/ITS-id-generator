@@ -1,40 +1,52 @@
 // server/controllers/idGeneratorController.js
-const IdCard = require('../models/IdCard');
-const { generateIDImages } = require('../utils/generateImage');
+
+const IdCard = require("../models/IdCard");
+const { generateIDImages } = require("../utils/generateImage");
 
 /*
- HR reference:
- - Admin = Creator
- - Approver = HR Signatory (Back of ID)
- - Separate design for Employee / Intern
- - Template-based
- - Standalone
+ HR reference (FINAL):
+ - HR details are MANUALLY INPUT per ID
+ - Stored in IdCard.hrDetails
+ - User credentials are NOT rendered
+ - Approver is workflow-only
 */
 
 const postIdGenerator = async (req, res) => {
   try {
-    // 🔑 POPULATE APPROVER DATA
-    const card = await IdCard.findById(req.params.id)
-      .populate('approvedBy', 'firstName lastName position role');
+    const card = await IdCard.findById(req.params.id);
 
     if (!card) {
-      return res.status(404).json({ message: 'ID Card not found' });
+      return res.status(404).json({ message: "ID Card not found" });
     }
 
-    if (card.status !== 'Approved') {
+    if (card.status !== "Approved") {
       return res.status(400).json({
-        message: 'ID must be approved before generation',
+        message: "ID must be approved before generation",
       });
     }
 
     if (!card.photoPath) {
       return res.status(400).json({
-        message: 'Photo required before generation',
+        message: "Photo required before generation",
       });
     }
 
-    // Generate front & back using templates
-    const { front, back } = await generateIDImages(card.toObject());
+    if (
+      !card.hrDetails ||
+      !card.hrDetails.name ||
+      !card.hrDetails.position ||
+      !card.hrDetails.signaturePath
+    ) {
+      return res.status(400).json({
+        message: "HR details (name, position, signature) are required",
+      });
+    }
+
+    // Convert to plain object
+    const cardData = card.toObject();
+
+    // Generate front & back images
+    const { front, back } = await generateIDImages(cardData);
 
     card.generatedFrontImagePath = front;
     card.generatedBackImagePath = back;
@@ -46,13 +58,12 @@ const postIdGenerator = async (req, res) => {
       success: true,
       front,
       back,
-      approver: card.approvedBy, // 👈 for debugging/confirmation
     });
   } catch (err) {
-    console.error('ID generation error:', err);
+    console.error("ID generation error:", err);
     res.status(500).json({
       success: false,
-      message: 'ID generation failed',
+      message: "ID generation failed",
     });
   }
 };
