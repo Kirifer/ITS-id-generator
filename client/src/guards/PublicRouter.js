@@ -1,28 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { authCheckStore } from "../store/authStore";
 
-const ProtectedRoute = ({ children, allowedRoles = [] }) => {
+const PublicRoute = ({ children }) => {
   const [isChecking, setIsChecking] = useState(true);
   const [authData, setAuthData] = useState(null);
-  const location = useLocation();
 
   useEffect(() => {
     let isMounted = true;
 
     const checkAuth = async () => {
       try {
-        await authCheckStore.getState().authCheck();
+        await authCheckStore.getState().authCheck(); // just call it
 
         if (isMounted) {
-          const state = authCheckStore.getState();
+          const state = authCheckStore.getState(); // read Zustand state
           setAuthData(state);
           setIsChecking(false);
         }
-      } catch (error) {
-        if (isMounted) {
-          setIsChecking(false);
-        }
+      } catch {
+        if (isMounted) setIsChecking(false);
       }
     };
 
@@ -44,22 +41,14 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     );
   }
 
-  if (!authData?.success) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  const userRole = authData.message?.role;
-
-  if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
-    if (userRole === "Admin") {
-      return <Navigate to="/dashboard" replace />;
-    } else if (userRole === "Approver") {
+  if (authData?.success) {
+    const userRole = authData.message.role;
+    if (userRole === "Admin") return <Navigate to="/dashboard" replace />;
+    if (userRole === "Approver")
       return <Navigate to="/approver-dashboard" replace />;
-    }
-    return <Navigate to="/login" replace />;
   }
 
   return children;
 };
 
-export default ProtectedRoute;
+export default PublicRoute;

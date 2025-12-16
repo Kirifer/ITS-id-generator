@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { LayoutGrid, Contact, NotebookText, Loader } from "lucide-react";
 import { FaSignOutAlt } from "react-icons/fa";
@@ -8,6 +8,7 @@ import { logoutStore } from "../store/authStore";
 export default function Sidebar({ expanded, onMouseEnter, onMouseLeave }) {
   const { logout, loading, success, error, message, reset } = logoutStore();
   const navigate = useNavigate();
+  const [role, setRole] = useState(localStorage.getItem("role"));
 
   const handleLogout = async () => {
     await logout();
@@ -15,6 +16,8 @@ export default function Sidebar({ expanded, onMouseEnter, onMouseLeave }) {
 
   useEffect(() => {
     if (success) {
+      // remove role from localStorage on logout
+      localStorage.removeItem("role");
       reset();
       navigate("/login", { replace: true });
     }
@@ -31,7 +34,7 @@ export default function Sidebar({ expanded, onMouseEnter, onMouseLeave }) {
     >
       <div className="space-y-6">
         <SidebarLogo expanded={expanded} />
-        <SidebarNav expanded={expanded} />
+        <SidebarNav expanded={expanded} role={role} />
       </div>
       <SidebarFooter
         expanded={expanded}
@@ -55,12 +58,25 @@ function SidebarLogo({ expanded }) {
   );
 }
 
-function SidebarNav({ expanded }) {
+function SidebarNav({ expanded, role }) {
+  const navItems = [
+    { to: "/dashboard", icon: <LayoutGrid size={20} />, label: "Dashboard" },
+    { to: "/id-generator", icon: <Contact size={20} />, label: "ID Generator" },
+    { to: "/generated-ids", icon: <NotebookText size={20} />, label: "Generated IDs" },
+  ];
+
+  if (role === "Approver") {
+    navItems.splice(0, navItems.length,
+      { to: "/approver-dashboard", icon: <LayoutGrid size={20} />, label: "Dashboard" },
+      { to: "/approver-generated-ids", icon: <NotebookText size={20} />, label: "Generated IDs" }
+    );
+  }
+
   return (
     <nav className="space-y-3">
-      <NavItem to="/dashboard" icon={<LayoutGrid size={20} />} label="Dashboard" expanded={expanded} />
-      <NavItem to="/id-generator" icon={<Contact size={20} />} label="ID Generator" expanded={expanded} />
-      <NavItem to="/generated-ids" icon={<NotebookText size={20} />} label="Generated IDs" expanded={expanded} />
+      {navItems.map(({ to, icon, label }) => (
+        <NavItem key={to} to={to} icon={icon} label={label} expanded={expanded} />
+      ))}
     </nav>
   );
 }

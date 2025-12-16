@@ -12,7 +12,7 @@ import Approver_Dashboard from "./screens/DashboardHR";
 import Approver_GeneratedIDs from "./screens/ApprovalHR";
 import IDViewer from "./screens/Login2";
 import GeneratedID from "./screens/Viewing";
-// import Unauthorized from "./screens/Unauthorized";
+import PublicRoute from "./guards/PublicRouter";
 
 export default function App() {
   return (
@@ -21,11 +21,11 @@ export default function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/logout" element={<Logout />} />
           <Route path="/view-login" element={<IDViewer />} />
           <Route path="/view-generated-id/:idNumber" element={<GeneratedID />} />
-          {/* <Route path="/unauthorized" element={<Unauthorized />} /> */}
+
 
           {/* Admin-only routes */}
           <Route
@@ -72,7 +72,7 @@ export default function App() {
           />
 
           {/* Catch-all route */}
-          <Route path="*" element={<Login />} />
+          <Route path="*" element={<Navigate to="/login" />}></Route>
         </Routes>
       </div>
     </Router>

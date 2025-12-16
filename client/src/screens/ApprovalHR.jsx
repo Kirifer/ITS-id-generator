@@ -33,27 +33,27 @@ export default function ApprovalHR() {
   }, []);
 
   // Fetch
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setErr('');
-      try {
-        const res = await api.get('/id-cards'); // Authorization auto-added by interceptor
-        if (!cancelled) setItems(Array.isArray(res.data) ? res.data : []);
-      } catch (e) {
-        if (e?.response?.status === 401) {
-          // No token/expired → back to login
-          navigate('/login');
-          return;
-        }
-        if (!cancelled) setErr(e?.response?.data?.message || e.message || 'Failed to load');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [navigate]);
+  // useEffect(() => {
+  //   let cancelled = false;
+  //   (async () => {
+  //     setLoading(true);
+  //     setErr('');
+  //     try {
+  //       const res = await api.get('/id-cards'); // Authorization auto-added by interceptor
+  //       if (!cancelled) setItems(Array.isArray(res.data) ? res.data : []);
+  //     } catch (e) {
+  //       if (e?.response?.status === 401) {
+  //         // No token/expired → back to login
+  //         navigate('/login');
+  //         return;
+  //       }
+  //       if (!cancelled) setErr(e?.response?.data?.message || e.message || 'Failed to load');
+  //     } finally {
+  //       if (!cancelled) setLoading(false);
+  //     }
+  //   })();
+  //   return () => { cancelled = true; };
+  // }, [navigate]);
 
   // Flatten items → rows for this UI
   const rows = useMemo(() => {
