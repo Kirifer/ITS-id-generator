@@ -43,7 +43,8 @@ const postIdCard = async (req, res) => {
       firstName,
       middleInitial,
       lastName,
-      idNumber,
+      employeeNumber, // Auto generate UUID
+      idNumber, // ITS_N
       position,
       type,
       email,
@@ -52,9 +53,8 @@ const postIdCard = async (req, res) => {
       emMiddleInitial,
       emLastName,
       emPhone,
-      hrName,
-      hrPosition,
     } = req.body || {};
+
 
     const required = {
       firstName,

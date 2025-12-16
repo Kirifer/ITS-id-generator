@@ -134,6 +134,7 @@ const checkAuth = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
+    console.log("TRIGGER!!!!")
     const user = await User.findById(req.user.id).select("_id");
 
     if (!user) {
