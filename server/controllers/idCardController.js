@@ -250,6 +250,22 @@ const patchIdCardDetails = async (req, res) => {
     if (req.body.lastName)
       card.fullName.lastName = req.body.lastName;
 
+     /* =========================
+       EMERGENCY CONTACT
+    ========================= */
+
+    if (req.body.emFirstName)
+      card.emergencyContact.firstName = req.body.emFirstName;
+
+    if (req.body.emMiddleInitial !== undefined)
+      card.emergencyContact.middleInitial = req.body.emMiddleInitial;
+
+    if (req.body.emLastName)
+      card.emergencyContact.lastName = req.body.emLastName;
+
+    if (req.body.emPhone)
+      card.emergencyContact.phone = req.body.emPhone;
+
     /* ===== UPDATE HR DETAILS ===== */
     if (req.body.hrName)
       card.hrDetails.name = req.body.hrName;
