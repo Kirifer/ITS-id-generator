@@ -44,7 +44,7 @@ const getDetailIdCard = async (req, res) => {
         .json({ message: "No approved ID with that employee number" });
     }
 
-    res.json({
+    res.status(200).json({
       employeeNumber: item.employeeNumber,
       idNumber: item.idNumber,
       fullName: item.fullName,
@@ -183,7 +183,7 @@ const getIdCard = async (req, res) => {
     if (status) filter.status = status;
 
     const items = await IdCard.find(filter).sort({ createdAt: -1 });
-    res.json(items);
+    res.status(200).json(items);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
@@ -210,7 +210,7 @@ const patchIdCardApprove = async (req, res) => {
     );
 
     if (!updated) return res.status(404).json({ message: "Not found" });
-    res.json(updated);
+    res.status(200).json(updated);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
@@ -230,7 +230,7 @@ const patchIdCardReject = async (req, res) => {
     );
 
     if (!updated) return res.status(404).json({ message: "Not found" });
-    res.json(updated);
+    res.status(200).json(updated);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
@@ -266,7 +266,7 @@ const patchIdCardDetails = async (req, res) => {
     }
 
     await card.save();
-    res.json(card);
+    res.status(200).json(card);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
@@ -312,7 +312,7 @@ const deleteIdCard = async (req, res) => {
 
     files.forEach((p) => fs.existsSync(p) && fs.unlink(p, () => {}));
 
-    res.json({ ok: true });
+    res.status(200).json({ ok: true });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
