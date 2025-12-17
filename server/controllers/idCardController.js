@@ -1,5 +1,3 @@
-// server/controllers/idCardController.js
-
 const path = require("path");
 const fs = require("fs");
 const sharp = require("sharp");
@@ -29,7 +27,6 @@ const generateUniqueIdNumber = async () => {
 
 /* =========================
    Public lookup (Approved IDs only)
-   Uses EMPLOYEE NUMBER (front of ID)
 ========================= */
 const getDetailIdCard = async (req, res) => {
   try {
@@ -44,7 +41,7 @@ const getDetailIdCard = async (req, res) => {
         .json({ message: "No approved ID with that employee number" });
     }
 
-    res.status(200).json({
+    res.json({
       employeeNumber: item.employeeNumber,
       idNumber: item.idNumber,
       fullName: item.fullName,
@@ -68,8 +65,7 @@ const postIdCard = async (req, res) => {
       middleInitial,
       lastName,
 
-      employeeNumber, // FRONT (ITS-00003)
-
+      employeeNumber,
       position,
       type,
       email,
@@ -80,8 +76,8 @@ const postIdCard = async (req, res) => {
       emLastName,
       emPhone,
 
-      hrName,        // ✅ FIX
-      hrPosition,    // ✅ FIX
+      hrName,
+      hrPosition,
     } = req.body || {};
 
     const required = {
@@ -105,14 +101,12 @@ const postIdCard = async (req, res) => {
       }
     }
 
-    // Ensure employeeNumber uniqueness
     if (await IdCard.exists({ employeeNumber })) {
       return res.status(400).json({
         message: "Employee number already exists",
       });
     }
 
-    // 🔒 Auto-generate UNIQUE idNumber
     const idNumber = await generateUniqueIdNumber();
 
     const photo = req.files?.photo?.[0];
@@ -135,28 +129,22 @@ const postIdCard = async (req, res) => {
 
     const doc = await IdCard.create({
       fullName: { firstName, middleInitial, lastName },
-
       employeeNumber,
       idNumber,
-
       position,
       type,
-
       contactDetails: { email, phone },
-
       emergencyContact: {
         firstName: emFirstName,
         middleInitial: emMiddleInitial,
         lastName: emLastName,
         phone: emPhone,
       },
-
       hrDetails: {
         name: hrName,
         position: hrPosition,
         signaturePath: `/uploads/photos/${hrSignature.filename}`,
       },
-
       photoPath: `/uploads/photos/${photo.filename}`,
       status: "Pending",
       createdBy: req.user.id,
@@ -174,7 +162,7 @@ const postIdCard = async (req, res) => {
 };
 
 /* =========================
-   List IDs (Admin / Approver)
+   List IDs
 ========================= */
 const getIdCard = async (req, res) => {
   try {
@@ -183,7 +171,7 @@ const getIdCard = async (req, res) => {
     if (status) filter.status = status;
 
     const items = await IdCard.find(filter).sort({ createdAt: -1 });
-    res.status(200).json(items);
+    res.json(items);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
@@ -210,7 +198,7 @@ const patchIdCardApprove = async (req, res) => {
     );
 
     if (!updated) return res.status(404).json({ message: "Not found" });
-    res.status(200).json(updated);
+    res.json(updated);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
@@ -230,14 +218,14 @@ const patchIdCardReject = async (req, res) => {
     );
 
     if (!updated) return res.status(404).json({ message: "Not found" });
-    res.status(200).json(updated);
+    res.json(updated);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
 };
 
 /* =========================
-   Update / Delete (unchanged)
+   PATCH ID DETAILS (✅ UPDATED)
 ========================= */
 const patchIdCardDetails = async (req, res) => {
   try {
@@ -249,12 +237,27 @@ const patchIdCardDetails = async (req, res) => {
     const card = await IdCard.findById(id);
     if (!card) return res.status(404).json({ message: "Not found" });
 
-    const hrSignature = req.files?.hrSignature?.[0];
     const photo = req.files?.photo?.[0];
+    const hrSignature = req.files?.hrSignature?.[0];
 
-    if (req.body.hrName) card.hrDetails.name = req.body.hrName;
-    if (req.body.hrPosition) card.hrDetails.position = req.body.hrPosition;
+    /* ===== UPDATE INTERN NAME ===== */
+    if (req.body.firstName)
+      card.fullName.firstName = req.body.firstName;
 
+    if (req.body.middleInitial !== undefined)
+      card.fullName.middleInitial = req.body.middleInitial;
+
+    if (req.body.lastName)
+      card.fullName.lastName = req.body.lastName;
+
+    /* ===== UPDATE HR DETAILS ===== */
+    if (req.body.hrName)
+      card.hrDetails.name = req.body.hrName;
+
+    if (req.body.hrPosition)
+      card.hrDetails.position = req.body.hrPosition;
+
+    /* ===== UPDATE FILES ===== */
     if (photo) {
       await sharp(photo.path).metadata();
       card.photoPath = `/uploads/photos/${photo.filename}`;
@@ -262,16 +265,20 @@ const patchIdCardDetails = async (req, res) => {
 
     if (hrSignature) {
       await sharp(hrSignature.path).metadata();
-      card.hrDetails.signaturePath = `/uploads/photos/${hrSignature.filename}`;
+      card.hrDetails.signaturePath =
+        `/uploads/photos/${hrSignature.filename}`;
     }
 
     await card.save();
-    res.status(200).json(card);
+    res.json(card);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
 };
 
+/* =========================
+   Delete ID
+========================= */
 const deleteIdCard = async (req, res) => {
   try {
     const { id } = req.params;
@@ -312,7 +319,7 @@ const deleteIdCard = async (req, res) => {
 
     files.forEach((p) => fs.existsSync(p) && fs.unlink(p, () => {}));
 
-    res.status(200).json({ ok: true });
+    res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
