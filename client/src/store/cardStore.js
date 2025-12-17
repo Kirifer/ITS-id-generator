@@ -72,7 +72,7 @@ export const idCardApproveStore = create(
       });
 
       try {
-        const response = await axios.patch(`${baseUrl}/id-cards/${id}/approve`, {
+        const response = await axios.patch(`${baseUrl}/id-cards/${id}/approve`, {},{
           withCredentials: true,
         });
         if (response.data) {
@@ -121,7 +121,7 @@ export const idCardRejectStore = create(
       });
 
       try {
-        const response = await axios.patch(`${baseUrl}/id-cards/${id}/reject`, {
+        const response = await axios.patch(`${baseUrl}/id-cards/${id}/reject`, {},{
           withCredentials: true,
         });
         console.log(response.data)
@@ -250,5 +250,56 @@ export const idCardUpdateStore = create(
         error: false,
         message: "",
       }),
+  }))
+);
+
+
+export const idCardPostStore = create(
+  devtools((set) => ({
+    loading: false,
+    success: false,
+    error: false,
+    message: "",
+
+    idCardPost: async (formData) => {
+      set({ loading: true, success: false, error: false, message: "" });
+      try {
+        const response = await axios.post(
+          `${baseUrl}/id-cards`,
+          formData,
+          {
+            withCredentials: true,
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
+
+        if (response.data) {
+          set({
+            loading: false,
+            success: true,
+            error: false,
+            message: 'ID Card created successfully',
+          });
+        } else {
+          set({
+            loading: false,
+            success: false,
+            error: true,
+            message: response.data?.message || "Creation failed",
+          });
+        }
+      } catch (err) {
+        set({
+          loading: false,
+          success: false,
+          error: true,
+          message: err.response?.data?.message || "Something went wrong",
+        });
+      }
+    },
+
+    reset: () => set({ loading: false, success: false, error: false, message: "" }),
   }))
 );

@@ -1,7 +1,5 @@
-// src/components/DashboardHR.jsx
 import React, { useEffect, useMemo, useState } from 'react';
 import { FaIdCard, FaUserCheck, FaClipboardList, FaTasks } from 'react-icons/fa';
-
 import Sidebar from '../components/Sidebar';
 import StatCard from '../components/StatCard';
 import IDTable from '../components/GeneratedIDs/IDtable';
@@ -9,18 +7,15 @@ import FilterBar from '../components/GeneratedIDs/FilterBar';
 import { idCardStore } from '../store/cardStore';
 
 export default function DashboardHR() {
-  const { items, loading, error, message, getIdCards, approveIdCard, rejectIdCard } = idCardStore();
-  
+  const { items, loading, error, message, getIdCards } = idCardStore();
+
   const [selectedId, setSelectedId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [sidebarHover, setSidebarHover] = useState(false);
-  const [actionBusy, setActionBusy] = useState(null);
 
-  useEffect(() => {
-    getIdCards();
-  }, [getIdCards]);
+  useEffect(() => { getIdCards(); }, [getIdCards]);
 
   const mapDocToRow = (d) => ({
     _id: d._id,
@@ -53,28 +48,6 @@ export default function DashboardHR() {
     });
   }, [rows, searchTerm, typeFilter, statusFilter]);
 
-  const approve = async (row) => {
-    if (!row?._id) return;
-    setActionBusy(row._id);
-    await approveIdCard(row._id);
-    setActionBusy(null);
-    const updated = items.find(d => d._id === row._id);
-    if (updated && selectedId?._id === row._id) {
-      setSelectedId(mapDocToRow(updated));
-    }
-  };
-
-  const reject = async (row) => {
-    if (!row?._id) return;
-    setActionBusy(row._id);
-    await rejectIdCard(row._id);
-    setActionBusy(null);
-    const updated = items.find(d => d._id === row._id);
-    if (updated && selectedId?._id === row._id) {
-      setSelectedId(mapDocToRow(updated));
-    }
-  };
-
   const previewMounted = Boolean(selectedId) && !sidebarHover;
 
   const stats = [
@@ -94,14 +67,10 @@ export default function DashboardHR() {
         selectedId={selectedId}
         role="approver"
       />
-
       <main className="flex-1 p-6 transition-all duration-300 custom-bg flex flex-col overflow-hidden">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, idx) => (
-            <StatCard key={idx} icon={stat.icon} label={stat.label} count={stat.count} />
-          ))}
+          {stats.map((stat, idx) => <StatCard key={idx} icon={stat.icon} label={stat.label} count={stat.count} />)}
         </div>
-
         <div
           className="bg-white rounded-2xl shadow-md p-6 flex flex-col flex-1 overflow-hidden transition-all duration-500"
           style={{ marginRight: previewMounted ? '600px' : '0' }}
@@ -114,17 +83,13 @@ export default function DashboardHR() {
             statusFilter={statusFilter}
             setStatusFilter={setStatusFilter}
           />
-
           <IDTable
             loading={loading}
             err={err}
             filteredData={filteredData}
             selectedId={selectedId}
             setSelectedId={setSelectedId}
-            approve={approve}
-            reject={reject}
-            actionBusy={actionBusy}
-            previewMounted={previewMounted}
+            canView={true}
           />
         </div>
       </main>

@@ -61,18 +61,13 @@ export default function Admin_GeneratedIDs() {
   }, [getIdCards]);
 
   useEffect(() => {
-    if (error && message) {
-      showMessageBox(message);
-    }
+    if (error && message) showMessageBox(message);
   }, [error, message]);
 
   useEffect(() => {
     if (updateSuccess) {
       showMessageBox(updateMessage);
       updateReset();
-      if (selectedId) {
-        setSelectedId((prev) => ({ ...prev, ...selectedId }));
-      }
       setPanelMode("view");
       setPhoto(null);
     }
@@ -80,7 +75,7 @@ export default function Admin_GeneratedIDs() {
       showMessageBox(updateMessage);
       updateReset();
     }
-  }, [updateSuccess, updateError, updateMessage, updateReset, selectedId]);
+  }, [updateSuccess, updateError, updateMessage, updateReset]);
 
   useEffect(() => {
     if (deleteSuccess) {
@@ -98,8 +93,8 @@ export default function Admin_GeneratedIDs() {
     }
   }, [deleteSuccess, deleteError, deleteMessage, deleteReset, selectedId]);
 
-  const viewRows = useMemo(() => {
-    return items.map((doc) => ({
+  const viewRows = useMemo(() =>
+    items.map((doc) => ({
       _id: doc._id,
       firstName: doc?.fullName?.firstName || "",
       middleInitial: doc?.fullName?.middleInitial || "",
@@ -117,8 +112,8 @@ export default function Admin_GeneratedIDs() {
         doc?.generatedFrontImagePath || doc?.generatedImagePath || "",
       generatedBackImagePath: doc?.generatedBackImagePath || "",
       photoPath: doc?.photoPath || "",
-    }));
-  }, [items]);
+    }))
+  , [items]);
 
   const filteredData = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -127,11 +122,8 @@ export default function Admin_GeneratedIDs() {
         `${id.firstName} ${id.lastName}`.toLowerCase().includes(q) ||
         String(id.idNumber).toLowerCase().includes(q) ||
         id.position.toLowerCase().includes(q);
-
       const matchesType = typeFilter === "All" || id.type === typeFilter;
-      const matchesStatus =
-        statusFilter === "All" || id.status === statusFilter;
-
+      const matchesStatus = statusFilter === "All" || id.status === statusFilter;
       return matchesSearch && matchesType && matchesStatus;
     });
   }, [viewRows, searchTerm, typeFilter, statusFilter]);
@@ -152,9 +144,7 @@ export default function Admin_GeneratedIDs() {
 
   async function onSubmitUpdate(e) {
     e.preventDefault();
-    console.log(selectedId._id)
     if (!selectedId?._id) return;
-
     const payload = {
       fullName: {
         firstName: selectedId.firstName,
@@ -171,38 +161,28 @@ export default function Admin_GeneratedIDs() {
         phone: selectedId.emergencyContactNumber,
       },
     };
-
     try {
       await idCardUpdate(payload, selectedId._id);
-
-      if (!updateError) {
-        const updatedItem = {
-          ...selectedId,
-          ...payload,
-          fullName: payload.fullName,
-          emergencyContact: payload.emergencyContact,
-        };
-
-        idCardStore.setState((state) => ({
-          items: state.items.map((d) =>
-            d._id === selectedId._id ? updatedItem : d
-          ),
-        }));
-
-        setSelectedId(updatedItem);
-      }
-    } catch (e) {
-      console.error(e)
-    }
+      const updatedItem = {
+        ...selectedId,
+        ...payload,
+        fullName: payload.fullName,
+        emergencyContact: payload.emergencyContact,
+      };
+      idCardStore.setState((state) => ({
+        items: state.items.map((d) =>
+          d._id === selectedId._id ? updatedItem : d
+        ),
+      }));
+      setSelectedId(updatedItem);
+    } catch (e) {}
   }
 
   async function onDelete(row) {
     if (!window.confirm(`Delete ${row.firstName} ${row.lastName}?`)) return;
-
     try {
       await idCardDelete(row._id);
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   const sidebarExpanded = !selectedId || sidebarHover;
@@ -215,7 +195,6 @@ export default function Admin_GeneratedIDs() {
         onMouseEnter={() => setSidebarHover(true)}
         onMouseLeave={() => setSidebarHover(false)}
       />
-
       <main ref={mainRef} className="flex-1 overflow-auto">
         <div className="flex justify-center items-center min-h-screen p-6">
           <div className="flex flex-col lg:flex-row gap-6 w-full max-w-screen-xl items-stretch">
@@ -232,17 +211,18 @@ export default function Admin_GeneratedIDs() {
                 statusFilter={statusFilter}
                 setStatusFilter={setStatusFilter}
               />
-
               <IDTable
                 loading={isActionLoading}
                 err={error ? message : ""}
                 filteredData={filteredData}
+                canView={true}
+                canEdit={true}
+                canDelete={true}
                 onView={onView}
                 onEdit={onEdit}
                 onDelete={onDelete}
               />
             </div>
-
             <div
               ref={formRef}
               className="lg:w-[40%] bg-white rounded-2xl shadow-md p-6"
@@ -258,7 +238,6 @@ export default function Admin_GeneratedIDs() {
                   }}
                 />
               )}
-
               {panelMode === "edit" && selectedId && (
                 <EditPanel
                   selectedId={selectedId}
@@ -273,7 +252,6 @@ export default function Admin_GeneratedIDs() {
                   }}
                 />
               )}
-
               {!panelMode && (
                 <p className="text-gray-800 text-sm font-extrabold">
                   Select an ID to view or edit.

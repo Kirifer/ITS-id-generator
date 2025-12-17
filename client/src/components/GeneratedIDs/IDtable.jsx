@@ -1,7 +1,24 @@
 import React from 'react';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 
-export default function IDTable({ loading, err, filteredData, onView, onEdit, onDelete }) {
+export default function IDTable({
+  loading,
+  err,
+  filteredData,
+  canView,
+  canEdit,
+  canDelete,
+  canApprove,
+  canReject,
+  onView,
+  onEdit,
+  onDelete,
+  onApprove,
+  onReject,
+  statusBasedButtons
+}) {
+  const showActions = canView || canEdit || canDelete || canApprove || canReject;
+
   return (
     <div className="rounded-2xl overflow-hidden flex flex-col h-full">
       <div className="overflow-y-auto custom-scrollbar" style={{ height: '630px' }}>
@@ -17,7 +34,7 @@ export default function IDTable({ loading, err, filteredData, onView, onEdit, on
                 <th className="p-4">Type</th>
                 <th className="p-4">Status</th>
                 <th className="p-4">Date Generated</th>
-                <th className="p-4 rounded-tr-2xl">Actions</th>
+                {showActions && <th className="p-4 rounded-tr-2xl">Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -28,18 +45,36 @@ export default function IDTable({ loading, err, filteredData, onView, onEdit, on
                     <td className="p-4">{id.type}</td>
                     <td className="p-4">{id.status}</td>
                     <td className="p-4">{id.date}</td>
-                    <td className="p-4 text-purple-600">
-                      <div className="flex justify-center gap-3">
-                        <Eye size={16} className="cursor-pointer" onClick={() => onView(id)} />
-                        <Pencil size={16} className="cursor-pointer" onClick={() => onEdit(id)} />
-                        <Trash2 size={16} className="cursor-pointer" onClick={() => onDelete(id)} />
-                      </div>
-                    </td>
+                    {showActions && (
+                      <td className="p-4 text-purple-600">
+                        <div className="flex justify-center gap-3">
+                          {canView && <Eye size={16} className="cursor-pointer" onClick={() => onView(id)} />}
+                          {canEdit && <Pencil size={16} className="cursor-pointer" onClick={() => onEdit(id)} />}
+                          {canDelete && <Trash2 size={16} className="cursor-pointer" onClick={() => onDelete(id)} />}
+                          {statusBasedButtons && (
+                            <>
+                              {id.status === 'Pending' && canApprove && (
+                                <button onClick={() => onApprove(id)} className="bg-green-500 text-white px-2 py-1 rounded text-xs">Approve</button>
+                              )}
+                              {id.status === 'Pending' && canReject && (
+                                <button onClick={() => onReject(id)} className="bg-red-500 text-white px-2 py-1 rounded text-xs">Reject</button>
+                              )}
+                              {id.status === 'Approved' && canReject && (
+                                <button onClick={() => onReject(id)} className="bg-red-500 text-white px-2 py-1 rounded text-xs">Reject</button>
+                              )}
+                              {id.status === 'Rejected' && canApprove && (
+                                <button onClick={() => onApprove(id)} className="bg-green-500 text-white px-2 py-1 rounded text-xs">Approve</button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="p-4 text-gray-500 italic">No matching results.</td>
+                  <td colSpan={showActions ? 5 : 4} className="p-4 text-gray-500 italic">No matching results.</td>
                 </tr>
               )}
             </tbody>
