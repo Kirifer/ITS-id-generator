@@ -1,5 +1,5 @@
-import React from 'react';
-import { Eye, Pencil, Trash2 } from 'lucide-react';
+import React from "react";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 
 export default function IDTable({
   loading,
@@ -15,13 +15,17 @@ export default function IDTable({
   onDelete,
   onApprove,
   onReject,
-  statusBasedButtons
+  statusBasedButtons,
 }) {
-  const showActions = canView || canEdit || canDelete || canApprove || canReject;
+  const showActions =
+    canView || canEdit || canDelete || canApprove || canReject;
 
   return (
     <div className="rounded-2xl overflow-hidden flex flex-col h-full">
-      <div className="overflow-y-auto custom-scrollbar" style={{ height: '630px' }}>
+      <div
+        className="overflow-y-auto custom-scrollbar"
+        style={{ height: "630px" }}
+      >
         {loading ? (
           <div className="p-6 text-gray-600 text-sm">Loading…</div>
         ) : err ? (
@@ -40,30 +44,73 @@ export default function IDTable({
             <tbody>
               {filteredData.length > 0 ? (
                 filteredData.map((id, index) => (
-                  <tr key={id._id || index} className="bg-white even:bg-gray-100">
-                    <td className="p-4">{id.firstName} {id.lastName}</td>
+                  <tr
+                    key={id._id || index}
+                    className="bg-white even:bg-gray-100"
+                  >
+                    <td className="p-4">
+                      {id.firstName} {id.lastName}
+                    </td>
                     <td className="p-4">{id.type}</td>
                     <td className="p-4">{id.status}</td>
                     <td className="p-4">{id.date}</td>
                     {showActions && (
                       <td className="p-4 text-purple-600">
                         <div className="flex justify-center gap-3">
-                          {canView && <Eye size={16} className="cursor-pointer" onClick={() => onView(id)} />}
-                          {canEdit && <Pencil size={16} className="cursor-pointer" onClick={() => onEdit(id)} />}
-                          {canDelete && <Trash2 size={16} className="cursor-pointer" onClick={() => onDelete(id)} />}
+                          {canView && (
+                            <Eye
+                              size={16}
+                              className="cursor-pointer"
+                              onClick={() => onView(id)}
+                            />
+                          )}
+                          {canEdit && (
+                            <Pencil
+                              size={16}
+                              className="cursor-pointer"
+                              onClick={() => onEdit(id)}
+                            />
+                          )}
+                          {canDelete && (
+                            <Trash2
+                              size={16}
+                              className="cursor-pointer"
+                              onClick={() => onDelete(id)}
+                            />
+                          )}
                           {statusBasedButtons && (
                             <>
-                              {id.status === 'Pending' && canApprove && (
-                                <button onClick={() => onApprove(id)} className="bg-green-500 text-white px-2 py-1 rounded text-xs">Approve</button>
+                              {id.status === "Pending" && canApprove && (
+                                <button
+                                  onClick={() => onApprove(id)}
+                                  className="bg-green-500 text-white px-2 py-1 rounded text-xs"
+                                >
+                                  Approve
+                                </button>
                               )}
-                              {id.status === 'Pending' && canReject && (
-                                <button onClick={() => onReject(id)} className="bg-red-500 text-white px-2 py-1 rounded text-xs">Reject</button>
+                              {id.status === "Pending" && canReject && (
+                                <button
+                                  onClick={() => onReject(id)}
+                                  className="bg-red-500 text-white px-2 py-1 rounded text-xs"
+                                >
+                                  Reject
+                                </button>
                               )}
-                              {id.status === 'Approved' && canReject && (
-                                <button onClick={() => onReject(id)} className="bg-red-500 text-white px-2 py-1 rounded text-xs">Reject</button>
+                              {id.status === "Approved" && canReject && (
+                                <button
+                                  onClick={() => onReject(id)}
+                                  className="bg-red-500 text-white px-2 py-1 rounded text-xs"
+                                >
+                                  Reject
+                                </button>
                               )}
-                              {id.status === 'Rejected' && canApprove && (
-                                <button onClick={() => onApprove(id)} className="bg-green-500 text-white px-2 py-1 rounded text-xs">Approve</button>
+                              {id.status === "Rejected" && canApprove && (
+                                <button
+                                  onClick={() => onApprove(id)}
+                                  className="bg-green-500 text-white px-2 py-1 rounded text-xs"
+                                >
+                                  Approve
+                                </button>
                               )}
                             </>
                           )}
@@ -74,7 +121,12 @@ export default function IDTable({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={showActions ? 5 : 4} className="p-4 text-gray-500 italic">No matching results.</td>
+                  <td
+                    colSpan={showActions ? 5 : 4}
+                    className="p-4 text-gray-500 italic"
+                  >
+                    No matching results.
+                  </td>
                 </tr>
               )}
             </tbody>

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import IDTable from '../components/GeneratedIDs/IDtable';
-import ViewPanel from '../components/GeneratedIDs/ViewPannel';
+import ViewPanel from '../components/GeneratedIDs/ViewPanel';
 import { idCardStore, idCardApproveStore, idCardRejectStore } from '../store/cardStore';
 import { fmtDate } from '../utils/dateFormatter';
 import { showMessageBox } from '../utils/messageBox';
@@ -15,7 +15,6 @@ export default function ApprovalHR() {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [sidebarExpanded, setSidebarExpanded] = useState(true);
 
   useEffect(() => {
     getIdCards();
@@ -85,14 +84,12 @@ export default function ApprovalHR() {
   }
 
   const err = error ? message : '';
+  const panelOpen = viewMode === 'view';
+  const sidebarExpanded = !panelOpen;
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar
-        expanded={sidebarExpanded}
-        onMouseEnter={() => setSidebarExpanded(true)}
-        onMouseLeave={() => setSidebarExpanded(false)}
-      />
+      <Sidebar expanded={sidebarExpanded} />
       <main className="flex-1 p-6 transition-all duration-300 custom-bg flex items-center justify-center min-h-screen relative">
         <div className="bg-white rounded-2xl shadow-md p-6 w-full max-w-6xl h-[85vh] overflow-hidden flex flex-col transition-all duration-500">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4">
@@ -154,7 +151,7 @@ export default function ApprovalHR() {
             statusBasedButtons
           />
         </div>
-        {viewMode === 'view' && selectedId && (
+        {panelOpen && selectedId && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
               <ViewPanel

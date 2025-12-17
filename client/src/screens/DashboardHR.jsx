@@ -8,12 +8,10 @@ import { idCardStore } from '../store/cardStore';
 
 export default function DashboardHR() {
   const { items, loading, error, message, getIdCards } = idCardStore();
-
   const [selectedId, setSelectedId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [sidebarHover, setSidebarHover] = useState(false);
 
   useEffect(() => { getIdCards(); }, [getIdCards]);
 
@@ -48,8 +46,7 @@ export default function DashboardHR() {
     });
   }, [rows, searchTerm, typeFilter, statusFilter]);
 
-  const previewMounted = Boolean(selectedId) && !sidebarHover;
-
+  const previewMounted = Boolean(selectedId);
   const stats = [
     { icon: <FaIdCard size={50} />, label: 'Total Generated IDs', count: total },
     { icon: <FaUserCheck size={50} />, label: 'Approved', count: approved },
@@ -61,12 +58,7 @@ export default function DashboardHR() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
-      <Sidebar
-        sidebarHover={sidebarHover}
-        setSidebarHover={setSidebarHover}
-        selectedId={selectedId}
-        role="approver"
-      />
+      <Sidebar expanded={!previewMounted} />
       <main className="flex-1 p-6 transition-all duration-300 custom-bg flex flex-col overflow-hidden">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, idx) => <StatCard key={idx} icon={stat.icon} label={stat.label} count={stat.count} />)}

@@ -95,8 +95,6 @@ export default function Admin_IDGenerator() {
     <div className="flex h-screen w-screen overflow-hidden">
       <Sidebar
         expanded={sidebarExpanded}
-        onMouseEnter={() => setSidebarHover(true)}
-        onMouseLeave={() => setSidebarHover(false)}
       />
 
       <main className="flex-1 custom-bg overflow-y-auto">

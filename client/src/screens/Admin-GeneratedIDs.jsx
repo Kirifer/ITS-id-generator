@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import Sidebar from "../components/Sidebar";
 import IDTable from "../components/GeneratedIDs/IDtable";
-import ViewPanel from "../components/GeneratedIDs/ViewPannel";
+import ViewPanel from "../components/GeneratedIDs/ViewPanel";
 import EditPanel from "../components/GeneratedIDs/EditPannel";
 import FilterBar from "../components/GeneratedIDs/FilterBar";
 import { showMessageBox } from "../utils/messageBox";
@@ -192,8 +192,6 @@ export default function Admin_GeneratedIDs() {
     <div className="flex h-screen w-screen font-inter">
       <Sidebar
         expanded={sidebarExpanded}
-        onMouseEnter={() => setSidebarHover(true)}
-        onMouseLeave={() => setSidebarHover(false)}
       />
       <main ref={mainRef} className="flex-1 overflow-auto">
         <div className="flex justify-center items-center min-h-screen p-6">
