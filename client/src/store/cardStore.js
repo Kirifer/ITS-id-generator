@@ -25,7 +25,8 @@ export const idCardStore = create(
         const response = await axios.get(`${baseUrl}/id-cards/`, {
           withCredentials: true,
         });
-        if (response.data) {
+        console.log(response)
+        if (response.status === 200 && response.data) {
           set({
             loading: false,
             success: true,
@@ -72,16 +73,20 @@ export const idCardApproveStore = create(
       });
 
       try {
-        const response = await axios.patch(`${baseUrl}/id-cards/${id}/approve`, {},{
-          withCredentials: true,
-        });
-        if (response.data) {
+        const response = await axios.patch(
+          `${baseUrl}/id-cards/${id}/approve`,
+          {},
+          {
+            withCredentials: true,
+          }
+        );
+
+        if (response.status === 200 && response.data) {
           set({
             loading: false,
             success: true,
             error: false,
             message: "User Approved",
-        
           });
         }
       } catch (err) {
@@ -104,7 +109,6 @@ export const idCardApproveStore = create(
   }))
 );
 
-
 export const idCardRejectStore = create(
   devtools((set) => ({
     loading: false,
@@ -121,17 +125,20 @@ export const idCardRejectStore = create(
       });
 
       try {
-        const response = await axios.patch(`${baseUrl}/id-cards/${id}/reject`, {},{
-          withCredentials: true,
-        });
-        console.log(response.data)
-        if (response.data) {
+        const response = await axios.patch(
+          `${baseUrl}/id-cards/${id}/reject`,
+          {},
+          {
+            withCredentials: true,
+          }
+        );
+
+        if (response.status === 200 && response.data) {
           set({
             loading: false,
             success: true,
             error: false,
             message: "User Rejected",
-        
           });
         }
       } catch (err) {
@@ -174,13 +181,13 @@ export const idCardDeleteStore = create(
         const response = await axios.delete(`${baseUrl}/id-cards/${id}`, {
           withCredentials: true,
         });
-        if (response.data) {
+
+        if (response.status === 200 && response.data) {
           set({
             loading: false,
             success: true,
             error: false,
             message: "User Deleted",
-        
           });
         }
       } catch (err) {
@@ -203,7 +210,6 @@ export const idCardDeleteStore = create(
   }))
 );
 
-
 export const idCardUpdateStore = create(
   devtools((set) => ({
     loading: false,
@@ -212,7 +218,7 @@ export const idCardUpdateStore = create(
     message: "",
     items: [],
 
-    idCardUpdate: async (credentials,id) => {
+    idCardUpdate: async (formData, id) => {
       set({
         loading: true,
         success: false,
@@ -221,16 +227,23 @@ export const idCardUpdateStore = create(
       });
 
       try {
-        const response = await axios.patch(`${baseUrl}/id-cards/${id}`, credentials,{
-          withCredentials: true,
-        });
-        if (response.data) {
+        const response = await axios.patch(
+          `${baseUrl}/id-cards/${id}`,
+          formData,
+          {
+            withCredentials: true,
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
+  
+        if (response.status === 200 && response.data) {
           set({
             loading: false,
             success: true,
             error: false,
             message: "User Updated",
-        
           });
         }
       } catch (err) {
@@ -253,34 +266,35 @@ export const idCardUpdateStore = create(
   }))
 );
 
-
 export const idCardPostStore = create(
   devtools((set) => ({
     loading: false,
     success: false,
     error: false,
     message: "",
+    idCardData: null,
 
     idCardPost: async (formData) => {
-      set({ loading: true, success: false, error: false, message: "" });
-      try {
-        const response = await axios.post(
-          `${baseUrl}/id-cards`,
-          formData,
-          {
-            withCredentials: true,
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          }
-        );
+      set({
+        loading: true,
+        success: false,
+        error: false,
+        message: "",
+        idCardData: null,
+      });
 
-        if (response.data) {
+      try {
+        const response = await axios.post(`${baseUrl}/id-cards`, formData, {
+          withCredentials: true
+        });
+
+        if (response.status === 201 && response.data) {
           set({
             loading: false,
             success: true,
             error: false,
-            message: 'ID Card created successfully',
+            message: "ID Card created successfully",
+            idCardData: response.data,
           });
         } else {
           set({
@@ -288,6 +302,7 @@ export const idCardPostStore = create(
             success: false,
             error: true,
             message: response.data?.message || "Creation failed",
+            idCardData: null,
           });
         }
       } catch (err) {
@@ -295,11 +310,22 @@ export const idCardPostStore = create(
           loading: false,
           success: false,
           error: true,
-          message: err.response?.data?.message || "Something went wrong",
+          message:
+            err.response?.data?.message ||
+            err.message ||
+            "Something went wrong",
+          idCardData: null,
         });
       }
     },
 
-    reset: () => set({ loading: false, success: false, error: false, message: "" }),
+    reset: () =>
+      set({
+        loading: false,
+        success: false,
+        error: false,
+        message: "",
+        idCardData: null,
+      }),
   }))
 );

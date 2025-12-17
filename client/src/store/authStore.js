@@ -64,7 +64,7 @@ export const authCheckStore = create(
         const response = await axios.get(`${baseUrl}/auth/check`, {
           withCredentials: true,
         });
-
+        
         if (response.data?.success) {
           set({
             loading: false,

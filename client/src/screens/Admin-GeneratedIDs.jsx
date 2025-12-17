@@ -1,14 +1,8 @@
-import React, {
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import IDTable from "../components/GeneratedIDs/IDtable";
 import ViewPanel from "../components/GeneratedIDs/ViewPanel";
-import EditPanel from "../components/GeneratedIDs/EditPannel";
+import EditPanel from "../components/GeneratedIDs/EditPanel";
 import FilterBar from "../components/GeneratedIDs/FilterBar";
 import { showMessageBox } from "../utils/messageBox";
 import { fmtDate } from "../utils/dateFormatter";
@@ -43,6 +37,7 @@ export default function Admin_GeneratedIDs() {
 
   const [tableHeight, setTableHeight] = useState(0);
   const [photo, setPhoto] = useState(null);
+  const [hrSignature, setHrSignature] = useState(null);
   const [panelMode, setPanelMode] = useState(null);
   const [sidebarHover, setSidebarHover] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -62,6 +57,7 @@ export default function Admin_GeneratedIDs() {
   useEffect(() => {
     getIdCards();
   }, [getIdCards]);
+  
   useEffect(() => {
     if (error && message) showMessageBox(message);
   }, [error, message]);
@@ -72,6 +68,7 @@ export default function Admin_GeneratedIDs() {
       updateReset();
       setPanelMode("view");
       setPhoto(null);
+      setHrSignature(null);
     }
     if (updateError && updateMessage) {
       showMessageBox(updateMessage);
@@ -102,17 +99,20 @@ export default function Admin_GeneratedIDs() {
         firstName: doc?.fullName?.firstName || "",
         middleInitial: doc?.fullName?.middleInitial || "",
         lastName: doc?.fullName?.lastName || "",
-        idNumber: doc?.idNumber || "",
+        employeeNumber: doc?.employeeNumber || "",
         position: doc?.position || "",
         type: doc?.type || "",
         status: doc?.status || "",
+        email: doc?.contactDetails?.email || "",
+        phone: doc?.contactDetails?.phone || "",
         date: fmtDate(doc?.createdAt),
-        emergencyFirstName: doc?.emergencyContact?.firstName || "",
-        emergencyMiddleInitial: doc?.emergencyContact?.middleInitial || "",
-        emergencyLastName: doc?.emergencyContact?.lastName || "",
-        emergencyContactNumber: doc?.emergencyContact?.phone || "",
-        generatedFrontImagePath:
-          doc?.generatedFrontImagePath || doc?.generatedImagePath || "",
+        emFirstName: doc?.emergencyContact?.firstName || "",
+        emMiddleInitial: doc?.emergencyContact?.middleInitial || "",
+        emLastName: doc?.emergencyContact?.lastName || "",
+        emPhone: doc?.emergencyContact?.phone || "",
+        hrName: doc?.hrDetails?.name || "",
+        hrPosition: doc?.hrDetails?.position || "",
+        generatedFrontImagePath: doc?.generatedFrontImagePath || doc?.generatedImagePath || "",
         generatedBackImagePath: doc?.generatedBackImagePath || "",
         photoPath: doc?.photoPath || "",
       })),
@@ -124,7 +124,7 @@ export default function Admin_GeneratedIDs() {
     return viewRows.filter((id) => {
       const matchesSearch =
         `${id.firstName} ${id.lastName}`.toLowerCase().includes(q) ||
-        String(id.idNumber).toLowerCase().includes(q) ||
+        String(id.employeeNumber).toLowerCase().includes(q) ||
         id.position.toLowerCase().includes(q);
       const matchesType = typeFilter === "All" || id.type === typeFilter;
       const matchesStatus =
@@ -137,40 +137,49 @@ export default function Admin_GeneratedIDs() {
     setSelectedId({ ...row });
     setPanelMode("view");
     setPhoto(null);
+    setHrSignature(null);
     mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
+  
   function onEdit(row) {
     setSelectedId({ ...row });
     setPanelMode("edit");
     setPhoto(null);
+    setHrSignature(null);
     mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
+  
   async function onSubmitUpdate(e) {
     e.preventDefault();
     if (!selectedId?._id) return;
-    const payload = {
-      fullName: {
-        firstName: selectedId.firstName,
-        middleInitial: selectedId.middleInitial,
-        lastName: selectedId.lastName,
-      },
-      idNumber: selectedId.idNumber,
-      position: selectedId.position,
-      type: selectedId.type,
-      emergencyContact: {
-        firstName: selectedId.emergencyFirstName,
-        middleInitial: selectedId.emergencyMiddleInitial,
-        lastName: selectedId.emergencyLastName,
-        phone: selectedId.emergencyContactNumber,
-      },
-    };
+
+    const formData = new FormData();
+    formData.append("firstName", selectedId.firstName);
+    formData.append("middleInitial", selectedId.middleInitial);
+    formData.append("lastName", selectedId.lastName);
+    formData.append("employeeNumber", selectedId.employeeNumber);
+    formData.append("position", selectedId.position);
+    formData.append("type", selectedId.type);
+    formData.append("email", selectedId.email);
+    formData.append("phone", selectedId.phone);
+    formData.append("emFirstName", selectedId.emFirstName);
+    formData.append("emMiddleInitial", selectedId.emMiddleInitial);
+    formData.append("emLastName", selectedId.emLastName);
+    formData.append("emPhone", selectedId.emPhone);
+    formData.append("hrName", selectedId.hrName);
+    formData.append("hrPosition", selectedId.hrPosition);
+    
+    if (photo) {
+      formData.append("photo", photo);
+    }
+    if (hrSignature) {
+      formData.append("hrSignature", hrSignature);
+    }
+
     try {
-      await idCardUpdate(payload, selectedId._id);
+      await idCardUpdate(formData, selectedId._id);
       const updatedItem = {
         ...selectedId,
-        ...payload,
-        fullName: payload.fullName,
-        emergencyContact: payload.emergencyContact,
       };
       idCardStore.setState((state) => ({
         items: state.items.map((d) =>
@@ -243,11 +252,14 @@ export default function Admin_GeneratedIDs() {
                   setSelectedId={setSelectedId}
                   photo={photo}
                   setPhoto={setPhoto}
+                  hrSignature={hrSignature}
+                  setHrSignature={setHrSignature} 
                   onSubmit={onSubmitUpdate}
                   onCancel={() => {
                     setSelectedId(null);
                     setPanelMode(null);
                     setPhoto(null);
+                    setHrSignature(null);
                   }}
                 />
               )}

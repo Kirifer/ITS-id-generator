@@ -1,4 +1,4 @@
-import { User, CreditCard, Briefcase, Tag, Phone, UploadCloud, ChevronDown } from 'lucide-react';
+import { User, CreditCard, Briefcase, Tag, Phone, UploadCloud, ChevronDown, FileSignature } from 'lucide-react';
 
 export default function IDGeneratorForm({
   formRef,
@@ -8,6 +8,10 @@ export default function IDGeneratorForm({
   setPhoto,
   photoError,
   setPhotoError,
+  hrSignature,
+  setHrSignature,
+  hrSignatureError,
+  setHrSignatureError,
   onSubmit
 }) {
   const handleChange = (field, value) => {
@@ -205,6 +209,41 @@ export default function IDGeneratorForm({
           </div>
         </div>
 
+        {/* HR Details */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="hrName" className="block text-sm font-semibold text-gray-800 mb-1">HR Name</label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="text"
+                id="hrName"
+                placeholder="Enter HR Name"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300 text-sm"
+                value={formData.hrName}
+                onChange={(e) => handleChange('hrName', e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="hrPosition" className="block text-sm font-semibold text-gray-800 mb-1">HR Position</label>
+            <div className="relative">
+              <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="text"
+                id="hrPosition"
+                placeholder="Enter HR Position"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300 text-sm"
+                value={formData.hrPosition}
+                onChange={(e) => handleChange('hrPosition', e.target.value)}
+                required
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Photo Upload */}
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">Photo</label>
@@ -241,6 +280,48 @@ export default function IDGeneratorForm({
                 }
                 setPhoto(selectedFile);
                 setPhotoError('');
+              }
+            }}
+            required
+          />
+        </div>
+
+        {/* HR Signature Upload */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-800 mb-1">HR Signature</label>
+          <label
+            htmlFor="hrSignatureUpload"
+            className={`flex flex-col items-center justify-center p-6 mb-3 border-2 border-dashed rounded-lg text-gray-500 cursor-pointer transition-colors duration-200
+              hover:border-purple-300 hover:text-purple-400 focus-within:border-purple-300 focus-within:text-purple-400`}
+            style={{ minHeight: '120px' }}
+          >
+            <FileSignature size={32} />
+            <p className={`mt-2 text-sm text-center ${hrSignature ? 'text-purple-600' : ''}`}>
+              {hrSignature ? `Selected: ${hrSignature.name}` : 'Click or drag a file to this area to upload.'}
+            </p>
+            <p className="text-xs text-center">Supported formats: JPEG & PNG. Max file size: 2MB.</p>
+            {hrSignatureError && <p className="text-xs text-center text-red-500 mt-2">{hrSignatureError}</p>}
+          </label>
+          <input
+            type="file"
+            id="hrSignatureUpload"
+            className="hidden"
+            accept=".jpeg,.jpg,.png"
+            onChange={(e) => {
+              const selectedFile = e.target.files[0];
+              if (selectedFile) {
+                if (!['image/jpeg', 'image/png', 'image/jpg'].includes(selectedFile.type)) {
+                  setHrSignature(null);
+                  setHrSignatureError('Invalid file type. Only JPEG and PNG are allowed.');
+                  return;
+                }
+                if (selectedFile.size > 2 * 1024 * 1024) {
+                  setHrSignature(null);
+                  setHrSignatureError('File too large. Max 2MB.');
+                  return;
+                }
+                setHrSignature(selectedFile);
+                setHrSignatureError('');
               }
             }}
             required

@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import InfoField from '../Common/InfoFile';
+import { getImageUrl } from '../../utils/imageUrl';
 
 export default function ViewPanel({ row, onEdit, onClose }) {
   const [side, setSide] = useState('front');
 
-  // We assume the paths in 'row' are now full, absolute URLs that the browser can use directly.
-  const path = side === 'back'
+  const relativePath = side === 'back'
     ? (row.generatedBackImagePath || '')
     : (row.generatedFrontImagePath || row.photoPath);
 
-  // Directly use the path as the source, without calling getAssetUrl(path)
-  const src = path;
-  const filenameBase = `${row.firstName || 'ID'}-${row.lastName || ''}-${row.idNumber || ''}`.replace(/\s+/g, '_');
+  const src = getImageUrl(relativePath);
+
+  const filenameBase = `${row.firstName || 'ID'}-${row.lastName || ''}-${row.employeeNumber || ''}`.replace(/\s+/g, '_');
 
   function printImage(url) {
     const w = window.open('', 'PRINT', 'height=700,width=900');
@@ -79,13 +79,17 @@ export default function ViewPanel({ row, onEdit, onClose }) {
 
       <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
         <InfoField label="Name" value={`${row.firstName} ${row.middleInitial ? row.middleInitial + '. ' : ''}${row.lastName}`} />
-        <InfoField label="ID Number" value={row.idNumber} />
+        <InfoField label="Employee Number" value={row.employeeNumber} />
         <InfoField label="Position" value={row.position} />
         <InfoField label="Type" value={row.type} />
+        <InfoField label="Email" value={row.email} />
+        <InfoField label="Phone" value={row.phone} />
         <InfoField label="Status" value={row.status} />
         <InfoField label="Date Generated" value={row.date} />
-        <InfoField label="Emergency Contact" value={`${row.emergencyFirstName} ${row.emergencyMiddleInitial ? row.emergencyMiddleInitial + '. ' : ''}${row.emergencyLastName}`} />
-        <InfoField label="Emergency Phone" value={row.emergencyContactNumber} />
+        <InfoField label="Emergency Contact" value={`${row.emFirstName} ${row.emMiddleInitial ? row.emMiddleInitial + '. ' : ''}${row.emLastName}`} />
+        <InfoField label="Emergency Phone" value={row.emPhone} />
+        <InfoField label="HR Name" value={row.hrName} />
+        <InfoField label="HR Position" value={row.hrPosition} />
       </div>
 
       <div className="mt-6 flex gap-3">
