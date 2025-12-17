@@ -2,7 +2,6 @@
 // CommonJS - Mongoose Model for e-Employee & Intern ID Generator
 
 const mongoose = require('mongoose');
-const crypto = require('crypto');
 
 /* ===========================
    SUB-SCHEMAS
@@ -70,7 +69,7 @@ const HrDetailsSchema = new mongoose.Schema(
       trim: true,
     },
     signaturePath: {
-      type: String, // uploaded image path
+      type: String,
       required: true,
       trim: true,
     },
@@ -85,24 +84,38 @@ const HrDetailsSchema = new mongoose.Schema(
 const IdCardSchema = new mongoose.Schema(
   {
     /* -------- Identity -------- */
+
     fullName: {
       type: FullNameSchema,
       required: true,
     },
 
+    /**
+     * Employee-facing ID
+     * Displayed on FRONT
+     * Example: ITS-00003
+     * Provided by HR / Admin
+     */
     employeeNumber: {
       type: String,
       required: true,
       unique: true,
+      trim: true,
       immutable: true,
-      default: () => crypto.randomUUID(),
     },
 
+    /**
+     * System-generated unique ID
+     * Used for BARCODE (BACK)
+     * Format: ITS-XXXXXXXXXX
+     * Generated in controller ONLY
+     */
     idNumber: {
       type: String,
       required: true,
       unique: true,
       trim: true,
+      immutable: true,
     },
 
     position: {
@@ -118,6 +131,7 @@ const IdCardSchema = new mongoose.Schema(
     },
 
     /* -------- Contact Details -------- */
+
     contactDetails: {
       email: {
         type: String,
@@ -137,16 +151,18 @@ const IdCardSchema = new mongoose.Schema(
       required: true,
     },
 
-    /* -------- HR / SIGNATORY (MANUAL INPUT) -------- */
+    /* -------- HR / SIGNATORY -------- */
+
     hrDetails: {
       type: HrDetailsSchema,
       required: true,
     },
 
     /* -------- Media -------- */
+
     photoPath: {
       type: String,
-      trim: true, // Uploaded by HR only
+      trim: true,
     },
 
     generatedFrontImagePath: {
@@ -159,18 +175,8 @@ const IdCardSchema = new mongoose.Schema(
       trim: true,
     },
 
-    /* -------- QR / Barcode -------- */
-    qrData: {
-      type: String, // encoded payload
-      trim: true,
-    },
-
-    barcodeData: {
-      type: String, // encoded payload
-      trim: true,
-    },
-
     /* -------- Validity -------- */
+
     issuedAt: {
       type: Date,
     },
@@ -179,13 +185,15 @@ const IdCardSchema = new mongoose.Schema(
       type: Date,
     },
 
-    /* -------- Template / Design -------- */
+    /* -------- Template -------- */
+
     templateVersion: {
-      type: String, // e.g. EMP_V1, INTERN_V1
+      type: String,
       trim: true,
     },
 
     /* -------- Workflow -------- */
+
     status: {
       type: String,
       enum: ['Pending', 'Approved', 'Rejected'],
@@ -194,26 +202,26 @@ const IdCardSchema = new mongoose.Schema(
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // Creator (admin)
+      ref: 'User',
       required: true,
     },
 
     approvedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // Approver (workflow only)
+      ref: 'User',
     },
   },
   {
-    timestamps: true, // createdAt, updatedAt
+    timestamps: true,
   }
 );
 
 /* ===========================
-   INDEXES
+   INDEXES (DATABASE GUARANTEE)
 =========================== */
 
-IdCardSchema.index({ idNumber: 1 }, { unique: true });
 IdCardSchema.index({ employeeNumber: 1 }, { unique: true });
+IdCardSchema.index({ idNumber: 1 }, { unique: true });
 IdCardSchema.index({ type: 1, status: 1 });
 
 /* ===========================

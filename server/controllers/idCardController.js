@@ -7,22 +7,46 @@ const mongoose = require("mongoose");
 const IdCard = require("../models/IdCard");
 
 /* =========================
+   HELPERS
+========================= */
+
+/**
+ * Generate UNIQUE idNumber
+ * Format: ITS-XXXXXXXXXX (10 digits)
+ */
+const generateUniqueIdNumber = async () => {
+  let idNumber;
+  let exists = true;
+
+  while (exists) {
+    const digits = Date.now().toString().slice(-10);
+    idNumber = `ITS-${digits}`;
+    exists = await IdCard.exists({ idNumber });
+  }
+
+  return idNumber;
+};
+
+/* =========================
    Public lookup (Approved IDs only)
+   Uses EMPLOYEE NUMBER (front of ID)
 ========================= */
 const getDetailIdCard = async (req, res) => {
   try {
     const item = await IdCard.findOne({
-      idNumber: req.params.idNumber,
+      employeeNumber: req.params.employeeNumber,
       status: "Approved",
     }).lean();
 
     if (!item) {
-      return res.status(404).json({ message: "No approved ID with that number" });
+      return res
+        .status(404)
+        .json({ message: "No approved ID with that employee number" });
     }
 
     res.json({
-      idNumber: item.idNumber,
       employeeNumber: item.employeeNumber,
+      idNumber: item.idNumber,
       fullName: item.fullName,
       position: item.position,
       type: item.type,
@@ -43,8 +67,9 @@ const postIdCard = async (req, res) => {
       firstName,
       middleInitial,
       lastName,
-      employeeNumber, // Auto generate UUID
-      idNumber, // ITS_N
+
+      employeeNumber, // FRONT (ITS-00003)
+
       position,
       type,
       email,
@@ -55,11 +80,10 @@ const postIdCard = async (req, res) => {
       emPhone,
     } = req.body || {};
 
-
     const required = {
       firstName,
       lastName,
-      idNumber,
+      employeeNumber,
       position,
       type,
       email,
@@ -77,9 +101,15 @@ const postIdCard = async (req, res) => {
       }
     }
 
-    if (await IdCard.findOne({ idNumber })) {
-      return res.status(400).json({ message: "ID number already exists" });
+    // Ensure employeeNumber uniqueness
+    if (await IdCard.exists({ employeeNumber })) {
+      return res.status(400).json({
+        message: "Employee number already exists",
+      });
     }
+
+    // 🔒 Auto-generate UNIQUE idNumber
+    const idNumber = await generateUniqueIdNumber();
 
     const photo = req.files?.photo?.[0];
     const hrSignature = req.files?.hrSignature?.[0];
@@ -101,21 +131,28 @@ const postIdCard = async (req, res) => {
 
     const doc = await IdCard.create({
       fullName: { firstName, middleInitial, lastName },
-      idNumber,
+
+      employeeNumber,
+      idNumber, // ✅ AUTO-GENERATED
+
       position,
       type,
+
       contactDetails: { email, phone },
+
       emergencyContact: {
         firstName: emFirstName,
         middleInitial: emMiddleInitial,
         lastName: emLastName,
         phone: emPhone,
       },
+
       hrDetails: {
         name: hrName,
         position: hrPosition,
         signaturePath: `/uploads/photos/${hrSignature.filename}`,
       },
+
       photoPath: `/uploads/photos/${photo.filename}`,
       status: "Pending",
       createdBy: req.user.id,
@@ -123,6 +160,11 @@ const postIdCard = async (req, res) => {
 
     res.status(201).json(doc);
   } catch (err) {
+    if (err.code === 11000) {
+      return res.status(409).json({
+        message: "Duplicate ID detected. Please retry.",
+      });
+    }
     res.status(500).json({ message: err.message });
   }
 };
@@ -144,7 +186,7 @@ const getIdCard = async (req, res) => {
 };
 
 /* =========================
-   Approve ID (Approver)
+   Approve / Reject
 ========================= */
 const patchIdCardApprove = async (req, res) => {
   try {
@@ -170,9 +212,6 @@ const patchIdCardApprove = async (req, res) => {
   }
 };
 
-/* =========================
-   Reject ID (Approver)
-========================= */
 const patchIdCardReject = async (req, res) => {
   try {
     const { id } = req.params;
@@ -182,10 +221,7 @@ const patchIdCardReject = async (req, res) => {
 
     const updated = await IdCard.findByIdAndUpdate(
       id,
-      {
-        status: "Rejected",
-        approvedBy: req.user.id,
-      },
+      { status: "Rejected", approvedBy: req.user.id },
       { new: true }
     );
 
@@ -197,7 +233,7 @@ const patchIdCardReject = async (req, res) => {
 };
 
 /* =========================
-   Update ID data (Admin only)
+   Update / Delete (unchanged)
 ========================= */
 const patchIdCardDetails = async (req, res) => {
   try {
@@ -215,14 +251,14 @@ const patchIdCardDetails = async (req, res) => {
     if (req.body.hrName) card.hrDetails.name = req.body.hrName;
     if (req.body.hrPosition) card.hrDetails.position = req.body.hrPosition;
 
-    if (hrSignature) {
-      await sharp(hrSignature.path).metadata();
-      card.hrDetails.signaturePath = `/uploads/photos/${hrSignature.filename}`;
-    }
-
     if (photo) {
       await sharp(photo.path).metadata();
       card.photoPath = `/uploads/photos/${photo.filename}`;
+    }
+
+    if (hrSignature) {
+      await sharp(hrSignature.path).metadata();
+      card.hrDetails.signaturePath = `/uploads/photos/${hrSignature.filename}`;
     }
 
     await card.save();
@@ -232,9 +268,6 @@ const patchIdCardDetails = async (req, res) => {
   }
 };
 
-/* =========================
-   Delete ID (Admin)
-========================= */
 const deleteIdCard = async (req, res) => {
   try {
     const { id } = req.params;

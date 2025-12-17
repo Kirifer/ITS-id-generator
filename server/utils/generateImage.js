@@ -148,7 +148,7 @@ async function renderSide(card, templateKey, suffix) {
 
     drawText(fullName, tpl.text.name);
     drawText(card.position, tpl.text.position);
-    drawText(card.idNumber, tpl.text.idNumber);
+    drawText(card.employeeNumber, tpl.text.idNumber);
   }
 
   /* ---------- BACK TEXT ---------- */

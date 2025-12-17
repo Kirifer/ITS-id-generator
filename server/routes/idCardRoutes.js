@@ -20,15 +20,20 @@ const { upload } = require("../service/upload");
 const idCardRoutes = express.Router();
 
 /* =========================
-   Public lookup (keep first)
-   ========================= */
-idCardRoutes.get("/by-id-number/:idNumber", getDetailIdCard);
+   Public lookup (Approved IDs only)
+   Uses EMPLOYEE NUMBER (front of ID)
+   Example: ITS-00003
+========================= */
+idCardRoutes.get(
+  "/by-employee-number/:employeeNumber",
+  getDetailIdCard
+);
 
 /* =========================
-   Create (Admin only)
+   Create ID (Admin only)
    - employee photo
    - HR signature
-   ========================= */
+========================= */
 idCardRoutes.post(
   "/",
   verifyToken,
@@ -41,8 +46,8 @@ idCardRoutes.post(
 );
 
 /* =========================
-   List (Admin or Approver)
-   ========================= */
+   List IDs (Admin or Approver)
+========================= */
 idCardRoutes.get(
   "/",
   verifyToken,
@@ -52,7 +57,7 @@ idCardRoutes.get(
 
 /* =========================
    Approvals (Approver only)
-   ========================= */
+========================= */
 idCardRoutes.patch(
   "/:id/approve",
   verifyToken,
@@ -68,8 +73,8 @@ idCardRoutes.patch(
 );
 
 /* =========================
-   Update fields (Admin only)
-   ========================= */
+   Update ID fields (Admin only)
+========================= */
 idCardRoutes.patch(
   "/:id",
   verifyToken,
@@ -82,8 +87,8 @@ idCardRoutes.patch(
 );
 
 /* =========================
-   Delete (Admin only)
-   ========================= */
+   Delete ID (Admin only)
+========================= */
 idCardRoutes.delete(
   "/:id",
   verifyToken,

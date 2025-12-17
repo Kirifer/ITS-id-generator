@@ -13,7 +13,8 @@ const { generateIDImages } = require("../utils/generateImage");
 
 const postIdGenerator = async (req, res) => {
   try {
-    const card = await IdCard.findById(req.params.id);
+    // 🔧 FIX: use cardId (Mongo ObjectId)
+    const card = await IdCard.findById(req.params.cardId);
 
     if (!card) {
       return res.status(404).json({ message: "ID Card not found" });
