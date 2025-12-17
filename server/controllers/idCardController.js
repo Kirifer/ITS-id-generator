@@ -74,10 +74,14 @@ const postIdCard = async (req, res) => {
       type,
       email,
       phone,
+
       emFirstName,
       emMiddleInitial,
       emLastName,
       emPhone,
+
+      hrName,        // ✅ FIX
+      hrPosition,    // ✅ FIX
     } = req.body || {};
 
     const required = {
@@ -133,7 +137,7 @@ const postIdCard = async (req, res) => {
       fullName: { firstName, middleInitial, lastName },
 
       employeeNumber,
-      idNumber, // ✅ AUTO-GENERATED
+      idNumber,
 
       position,
       type,
