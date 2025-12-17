@@ -1,20 +1,51 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import IDTable from '../components/GeneratedIDs/IDtable';
 import ViewPanel from '../components/GeneratedIDs/ViewPanel';
+import FilterBar from '../components/GeneratedIDs/FilterBar';
 import { idCardStore, idCardApproveStore, idCardRejectStore } from '../store/cardStore';
 import { fmtDate } from '../utils/dateFormatter';
 import { showMessageBox } from '../utils/messageBox';
 
 export default function ApprovalHR() {
+  const mainRef = useRef(null);
+  const formRef = useRef(null);
+  const tableRef = useRef(null);
+
   const { items, loading, error, message, getIdCards } = idCardStore();
-  const { idCardApprove } = idCardApproveStore();
-  const { idCardReject } = idCardRejectStore();
+  const { 
+    loading: approveLoading,
+    success: approveSuccess,
+    error: approveError,
+    message: approveMessage,
+    idCardApprove,
+    reset: approveReset 
+  } = idCardApproveStore();
+  const { 
+    loading: rejectLoading,
+    success: rejectSuccess,
+    error: rejectError,
+    message: rejectMessage,
+    idCardReject,
+    reset: rejectReset 
+  } = idCardRejectStore();
+
+  const [tableHeight, setTableHeight] = useState(0);
   const [selectedId, setSelectedId] = useState(null);
   const [viewMode, setViewMode] = useState(null);
+  const [sidebarHover, setSidebarHover] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+
+  useLayoutEffect(() => {
+    if (tableRef.current) {
+      const offsetTop = tableRef.current.getBoundingClientRect().top;
+      const viewportHeight = window.innerHeight;
+      const calculatedHeight = viewportHeight - offsetTop - 24;
+      setTableHeight(calculatedHeight);
+    }
+  }, [items, viewMode]);
 
   useEffect(() => {
     getIdCards();
@@ -24,8 +55,36 @@ export default function ApprovalHR() {
     if (error && message) showMessageBox(message);
   }, [error, message]);
 
+  useEffect(() => {
+    if (approveSuccess) {
+      showMessageBox(approveMessage);
+      approveReset();
+      getIdCards();
+      setSelectedId(null);
+      setViewMode(null);
+    }
+    if (approveError && approveMessage) {
+      showMessageBox(approveMessage);
+      approveReset();
+    }
+  }, [approveSuccess, approveError, approveMessage, approveReset, getIdCards]);
+
+  useEffect(() => {
+    if (rejectSuccess) {
+      showMessageBox(rejectMessage);
+      rejectReset();
+      getIdCards();
+      setSelectedId(null);
+      setViewMode(null);
+    }
+    if (rejectError && rejectMessage) {
+      showMessageBox(rejectMessage);
+      rejectReset();
+    }
+  }, [rejectSuccess, rejectError, rejectMessage, rejectReset, getIdCards]);
+
   const viewRows = useMemo(() =>
-    items.map((doc) => ({
+    items.map(doc => ({
       _id: doc._id,
       firstName: doc?.fullName?.firstName || '',
       middleInitial: doc?.fullName?.middleInitial || '',
@@ -47,7 +106,7 @@ export default function ApprovalHR() {
 
   const filteredData = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
-    return viewRows.filter((id) => {
+    return viewRows.filter(id => {
       const matchesSearch =
         `${id.firstName} ${id.lastName}`.toLowerCase().includes(q) ||
         String(id.idNumber).toLowerCase().includes(q) ||
@@ -59,23 +118,27 @@ export default function ApprovalHR() {
   }, [viewRows, searchTerm, typeFilter, statusFilter]);
 
   async function handleApprove(row) {
-    await idCardApprove(row._id);
-    getIdCards();
+    try {
+      await idCardApprove(row._id);
+    } catch (e) {}
   }
 
   async function handleReject(row) {
-    await idCardReject(row._id);
-    getIdCards();
+    try {
+      await idCardReject(row._id);
+    } catch (e) {}
   }
 
   function handleView(row) {
-    setSelectedId(row);
+    setSelectedId({ ...row });
     setViewMode('view');
+    mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function handleEdit(row) {
-    setSelectedId(row);
+    setSelectedId({ ...row });
     setViewMode('edit');
+    mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function handleClose() {
@@ -83,85 +146,55 @@ export default function ApprovalHR() {
     setViewMode(null);
   }
 
-  const err = error ? message : '';
-  const panelOpen = viewMode === 'view';
-  const sidebarExpanded = !panelOpen;
+  const sidebarExpanded = !selectedId || sidebarHover;
+  const isActionLoading = loading || approveLoading || rejectLoading;
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen w-screen font-inter overflow-hidden">
       <Sidebar expanded={sidebarExpanded} />
-      <main className="flex-1 p-6 transition-all duration-300 custom-bg flex items-center justify-center min-h-screen relative">
-        <div className="bg-white rounded-2xl shadow-md p-6 w-full max-w-6xl h-[85vh] overflow-hidden flex flex-col transition-all duration-500">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4">
-            <h2 className="text-2xl font-bold text-gray-800">Generated IDs</h2>
-            <div className="flex gap-4 flex-wrap items-center">
-              <select
-                className="border border-gray-300 rounded-lg px-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-              >
-                <option value="All">All Types</option>
-                <option value="Intern">Intern</option>
-                <option value="Employee">Employee</option>
-              </select>
-              <select
-                className="border border-gray-300 rounded-lg px-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="All">Status: All</option>
-                <option value="Approved">Approved</option>
-                <option value="Pending">Pending</option>
-                <option value="Rejected">Rejected</option>
-              </select>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search by name..."
-                  className="border border-gray-300 rounded-lg pl-8 pr-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <svg
-                  className="absolute left-2 top-1/2 -translate-y-1/2 text-purple-600 w-4 h-4 pointer-events-none"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <circle cx="11" cy="11" r="7" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-              </div>
-            </div>
-          </div>
-          <IDTable
-            loading={loading}
-            err={err}
-            filteredData={filteredData}
-            canView={true}
-            canEdit={false}
-            canDelete={false}
-            canApprove={true}
-            canReject={true}
-            onView={handleView}
-            onApprove={handleApprove}
-            onReject={handleReject}
-            statusBasedButtons
-          />
-        </div>
-        {panelOpen && selectedId && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-              <ViewPanel
-                row={selectedId}
-                onEdit={() => handleEdit(selectedId)}
-                onClose={handleClose}
+      <main ref={mainRef} className="flex-1 overflow-auto custom-bg">
+        <div className="p-6">
+          <div className="flex flex-col lg:flex-row gap-6 w-full max-w-screen-xl mx-auto items-start">
+            <div ref={tableRef} className={`lg:w-[60%] bg-white rounded-2xl shadow-md p-6 flex flex-col transition-all duration-300`} style={{ height: `${tableHeight}px` }}>
+              <FilterBar
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                typeFilter={typeFilter}
+                setTypeFilter={setTypeFilter}
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+              />
+              <IDTable
+                loading={isActionLoading}
+                err={error ? message : ''}
+                filteredData={filteredData}
+                canView={true}
+                canEdit={false}
+                canDelete={false}
+                canApprove={true}
+                canReject={true}
+                onView={handleView}
+                onApprove={handleApprove}
+                onReject={handleReject}
+                statusBasedButtons
               />
             </div>
+            <div ref={formRef} className="lg:w-[40%] bg-white rounded-2xl shadow-md p-6 overflow-auto" style={{ maxHeight: `${tableHeight}px` }}>
+              {viewMode === 'view' && selectedId && (
+                <ViewPanel
+                  row={selectedId}
+                  onEdit={() => handleEdit(selectedId)}
+                  onClose={handleClose}
+                />
+              )}
+              {!viewMode && (
+                <p className="text-gray-800 text-sm font-extrabold">
+                  Select an ID to view details.
+                </p>
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </main>
     </div>
   );

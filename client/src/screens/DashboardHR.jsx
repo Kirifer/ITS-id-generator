@@ -1,52 +1,86 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { FaIdCard, FaUserCheck, FaClipboardList, FaTasks } from 'react-icons/fa';
 import Sidebar from '../components/Sidebar';
 import StatCard from '../components/StatCard';
 import IDTable from '../components/GeneratedIDs/IDtable';
+import ViewPanel from '../components/GeneratedIDs/ViewPanel';
 import FilterBar from '../components/GeneratedIDs/FilterBar';
 import { idCardStore } from '../store/cardStore';
+import { fmtDate } from '../utils/dateFormatter';
 
 export default function DashboardHR() {
+  const mainRef = useRef(null);
+  const tableRef = useRef(null);
+
   const { items, loading, error, message, getIdCards } = idCardStore();
   const [selectedId, setSelectedId] = useState(null);
+  const [viewMode, setViewMode] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [tableHeight, setTableHeight] = useState(0);
 
-  useEffect(() => { getIdCards(); }, [getIdCards]);
-
-  const mapDocToRow = (d) => ({
-    _id: d._id,
-    firstName: d?.fullName?.firstName || '',
-    middleInitial: d?.fullName?.middleInitial || '',
-    lastName: d?.fullName?.lastName || '',
-    type: d?.type || '',
-    status: d?.status || '',
-    date: fmtDate(d?.createdAt),
-    generatedImagePath: d?.generatedImagePath || '',
-    photoPath: d?.photoPath || '',
-  });
+  useEffect(() => {
+    getIdCards();
+  }, [getIdCards]);
 
   const total = items.length;
   const approved = useMemo(() => items.filter(i => i.status === 'Approved').length, [items]);
   const pending = useMemo(() => items.filter(i => i.status === 'Pending').length, [items]);
-  const rejected = useMemo(() => items.filter(i => i.status === 'Rejected').length, [items]);
   const actions = pending;
 
-  const rows = useMemo(() => items.map(mapDocToRow), [items]);
+  const viewRows = useMemo(() =>
+    items.map(doc => ({
+      ...doc,
+      firstName: doc?.fullName?.firstName || '',
+      middleInitial: doc?.fullName?.middleInitial || '',
+      lastName: doc?.fullName?.lastName || '',
+      emergencyFirstName: doc?.emergencyContact?.firstName || '',
+      emergencyMiddleInitial: doc?.emergencyContact?.middleInitial || '',
+      emergencyLastName: doc?.emergencyContact?.lastName || '',
+      emergencyContactNumber: doc?.emergencyContact?.phone || '',
+      generatedFrontImagePath: doc?.generatedFrontImagePath || doc?.generatedImagePath || '',
+      generatedBackImagePath: doc?.generatedBackImagePath || '',
+      photoPath: doc?.photoPath || '',
+      date: fmtDate(doc?.createdAt),
+    }))
+  , [items]);
 
   const filteredData = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
-    return rows.filter((id) => {
-      const fullName = `${id.firstName} ${id.middleInitial} ${id.lastName}`.replace(/\s+/g, ' ').trim().toLowerCase();
-      const matchesSearch = fullName.includes(q);
+    return viewRows.filter(id => {
+      const matchesSearch =
+        `${id.firstName} ${id.lastName}`.toLowerCase().includes(q) ||
+        String(id.idNumber).toLowerCase().includes(q) ||
+        id.position.toLowerCase().includes(q);
       const matchesType = typeFilter === 'All' || id.type === typeFilter;
       const matchesStatus = statusFilter === 'All' || id.status === statusFilter;
       return matchesSearch && matchesType && matchesStatus;
     });
-  }, [rows, searchTerm, typeFilter, statusFilter]);
+  }, [viewRows, searchTerm, typeFilter, statusFilter]);
 
-  const previewMounted = Boolean(selectedId);
+  useEffect(() => {
+    if (tableRef.current) {
+      const offsetTop = tableRef.current.getBoundingClientRect().top;
+      const viewportHeight = window.innerHeight;
+      const calculatedHeight = viewportHeight - offsetTop - 24;
+      setTableHeight(calculatedHeight);
+    }
+  }, [filteredData, viewMode]);
+
+  const handleView = row => {
+    setSelectedId({ ...row });
+    setViewMode('view');
+    mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleClose = () => {
+    setSelectedId(null);
+    setViewMode(null);
+  };
+
+  const panelOpen = !!selectedId;
+  const sidebarExpanded = !panelOpen;
   const stats = [
     { icon: <FaIdCard size={50} />, label: 'Total Generated IDs', count: total },
     { icon: <FaUserCheck size={50} />, label: 'Approved', count: approved },
@@ -54,43 +88,42 @@ export default function DashboardHR() {
     { icon: <FaTasks size={50} />, label: 'Actions', count: actions },
   ];
 
-  const err = error ? message : '';
-
   return (
-    <div className="flex h-screen w-screen overflow-hidden">
-      <Sidebar expanded={!previewMounted} />
-      <main className="flex-1 p-6 transition-all duration-300 custom-bg flex flex-col overflow-hidden">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, idx) => <StatCard key={idx} icon={stat.icon} label={stat.label} count={stat.count} />)}
-        </div>
-        <div
-          className="bg-white rounded-2xl shadow-md p-6 flex flex-col flex-1 overflow-hidden transition-all duration-500"
-          style={{ marginRight: previewMounted ? '600px' : '0' }}
-        >
-          <FilterBar
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            typeFilter={typeFilter}
-            setTypeFilter={setTypeFilter}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-          />
-          <IDTable
-            loading={loading}
-            err={err}
-            filteredData={filteredData}
-            selectedId={selectedId}
-            setSelectedId={setSelectedId}
-            canView={true}
-          />
+    <div className="flex h-screen w-screen font-inter overflow-hidden">
+      <Sidebar expanded={sidebarExpanded} />
+      <main ref={mainRef} className="flex-1 overflow-auto custom-bg">
+        <div className="p-6">
+          <div className="flex flex-col gap-6 w-full max-w-screen-xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {stats.map((stat, idx) => <StatCard key={idx} icon={stat.icon} label={stat.label} count={stat.count} />)}
+            </div>
+            <div className="flex flex-col lg:flex-row gap-6 items-start">
+              <div ref={tableRef} className={`bg-white rounded-2xl shadow-md p-6 flex flex-col transition-all duration-300 ${panelOpen ? 'lg:w-[60%]' : 'w-full'}`} style={{ height: `${tableHeight}px` }}>
+                <FilterBar
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  typeFilter={typeFilter}
+                  setTypeFilter={setTypeFilter}
+                  statusFilter={statusFilter}
+                  setStatusFilter={setStatusFilter}
+                />
+                <IDTable
+                  loading={loading}
+                  err={error ? message : ''}
+                  filteredData={filteredData}
+                  canView={true}
+                  onView={handleView}
+                />
+              </div>
+              {panelOpen && selectedId && (
+                <div className="lg:w-[40%] bg-white rounded-2xl shadow-md p-6 overflow-auto" style={{ maxHeight: `${tableHeight}px` }}>
+                  <ViewPanel row={selectedId} onClose={handleClose} />
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </main>
     </div>
   );
-}
-
-function fmtDate(iso) {
-  const d = iso ? new Date(iso) : null;
-  if (!d || Number.isNaN(+d)) return '';
-  return d.toLocaleDateString(undefined, { month: '2-digit', day: '2-digit', year: 'numeric' });
 }

@@ -21,7 +21,7 @@ import {
 export default function Admin_GeneratedIDs() {
   const mainRef = useRef(null);
   const formRef = useRef(null);
-  const listRef = useRef(null);
+  const tableRef = useRef(null);
 
   const { items, loading, error, message, getIdCards } = idCardStore();
   const {
@@ -41,25 +41,27 @@ export default function Admin_GeneratedIDs() {
     reset: updateReset,
   } = idCardUpdateStore();
 
-  const [syncedHeight, setSyncedHeight] = useState(0);
+  const [tableHeight, setTableHeight] = useState(0);
   const [photo, setPhoto] = useState(null);
   const [panelMode, setPanelMode] = useState(null);
   const [sidebarHover, setSidebarHover] = useState(false);
-
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
-
   const [selectedId, setSelectedId] = useState(null);
 
   useLayoutEffect(() => {
-    if (formRef.current) setSyncedHeight(formRef.current.offsetHeight);
-  }, []);
+    if (tableRef.current) {
+      const offsetTop = tableRef.current.getBoundingClientRect().top;
+      const viewportHeight = window.innerHeight;
+      const calculatedHeight = viewportHeight - offsetTop - 24;
+      setTableHeight(calculatedHeight);
+    }
+  }, [items, panelMode]);
 
   useEffect(() => {
     getIdCards();
   }, [getIdCards]);
-
   useEffect(() => {
     if (error && message) showMessageBox(message);
   }, [error, message]);
@@ -93,27 +95,29 @@ export default function Admin_GeneratedIDs() {
     }
   }, [deleteSuccess, deleteError, deleteMessage, deleteReset, selectedId]);
 
-  const viewRows = useMemo(() =>
-    items.map((doc) => ({
-      _id: doc._id,
-      firstName: doc?.fullName?.firstName || "",
-      middleInitial: doc?.fullName?.middleInitial || "",
-      lastName: doc?.fullName?.lastName || "",
-      idNumber: doc?.idNumber || "",
-      position: doc?.position || "",
-      type: doc?.type || "",
-      status: doc?.status || "",
-      date: fmtDate(doc?.createdAt),
-      emergencyFirstName: doc?.emergencyContact?.firstName || "",
-      emergencyMiddleInitial: doc?.emergencyContact?.middleInitial || "",
-      emergencyLastName: doc?.emergencyContact?.lastName || "",
-      emergencyContactNumber: doc?.emergencyContact?.phone || "",
-      generatedFrontImagePath:
-        doc?.generatedFrontImagePath || doc?.generatedImagePath || "",
-      generatedBackImagePath: doc?.generatedBackImagePath || "",
-      photoPath: doc?.photoPath || "",
-    }))
-  , [items]);
+  const viewRows = useMemo(
+    () =>
+      items.map((doc) => ({
+        _id: doc._id,
+        firstName: doc?.fullName?.firstName || "",
+        middleInitial: doc?.fullName?.middleInitial || "",
+        lastName: doc?.fullName?.lastName || "",
+        idNumber: doc?.idNumber || "",
+        position: doc?.position || "",
+        type: doc?.type || "",
+        status: doc?.status || "",
+        date: fmtDate(doc?.createdAt),
+        emergencyFirstName: doc?.emergencyContact?.firstName || "",
+        emergencyMiddleInitial: doc?.emergencyContact?.middleInitial || "",
+        emergencyLastName: doc?.emergencyContact?.lastName || "",
+        emergencyContactNumber: doc?.emergencyContact?.phone || "",
+        generatedFrontImagePath:
+          doc?.generatedFrontImagePath || doc?.generatedImagePath || "",
+        generatedBackImagePath: doc?.generatedBackImagePath || "",
+        photoPath: doc?.photoPath || "",
+      })),
+    [items]
+  );
 
   const filteredData = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -123,7 +127,8 @@ export default function Admin_GeneratedIDs() {
         String(id.idNumber).toLowerCase().includes(q) ||
         id.position.toLowerCase().includes(q);
       const matchesType = typeFilter === "All" || id.type === typeFilter;
-      const matchesStatus = statusFilter === "All" || id.status === statusFilter;
+      const matchesStatus =
+        statusFilter === "All" || id.status === statusFilter;
       return matchesSearch && matchesType && matchesStatus;
     });
   }, [viewRows, searchTerm, typeFilter, statusFilter]);
@@ -134,14 +139,12 @@ export default function Admin_GeneratedIDs() {
     setPhoto(null);
     mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
-
   function onEdit(row) {
     setSelectedId({ ...row });
     setPanelMode("edit");
     setPhoto(null);
     mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
-
   async function onSubmitUpdate(e) {
     e.preventDefault();
     if (!selectedId?._id) return;
@@ -189,17 +192,15 @@ export default function Admin_GeneratedIDs() {
   const isActionLoading = loading || deleteLoading || updateLoading;
 
   return (
-    <div className="flex h-screen w-screen font-inter">
-      <Sidebar
-        expanded={sidebarExpanded}
-      />
-      <main ref={mainRef} className="flex-1 overflow-auto">
-        <div className="flex justify-center items-center min-h-screen p-6">
-          <div className="flex flex-col lg:flex-row gap-6 w-full max-w-screen-xl items-stretch">
+    <div className="flex h-screen w-screen font-inter overflow-hidden">
+      <Sidebar expanded={sidebarExpanded} />
+      <main ref={mainRef} className="flex-1 overflow-auto custom-bg">
+        <div className="p-6">
+          <div className="flex flex-col lg:flex-row gap-6 w-full max-w-screen-xl mx-auto items-start">
             <div
-              ref={listRef}
-              className="lg:w-[60%] bg-white rounded-2xl shadow-md p-6 flex flex-col h-full"
-              style={{ minHeight: `${syncedHeight || 741}px` }}
+              ref={tableRef}
+              className="lg:w-[60%] bg-white rounded-2xl shadow-md p-6 flex flex-col transition-all duration-300"
+              style={{ height: `${tableHeight}px` }}
             >
               <FilterBar
                 searchTerm={searchTerm}
@@ -213,9 +214,9 @@ export default function Admin_GeneratedIDs() {
                 loading={isActionLoading}
                 err={error ? message : ""}
                 filteredData={filteredData}
-                canView={true}
-                canEdit={true}
-                canDelete={true}
+                canView
+                canEdit
+                canDelete
                 onView={onView}
                 onEdit={onEdit}
                 onDelete={onDelete}
@@ -223,8 +224,8 @@ export default function Admin_GeneratedIDs() {
             </div>
             <div
               ref={formRef}
-              className="lg:w-[40%] bg-white rounded-2xl shadow-md p-6"
-              style={{ minHeight: `${syncedHeight}px` }}
+              className="lg:w-[40%] bg-white rounded-2xl shadow-md p-6 overflow-auto"
+              style={{ maxHeight: `${tableHeight}px` }}
             >
               {panelMode === "view" && selectedId && (
                 <ViewPanel

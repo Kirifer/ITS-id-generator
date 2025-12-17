@@ -1,104 +1,134 @@
-import { useEffect, useMemo, useState } from "react";
-import { FaIdCard, FaUserCheck, FaClipboardList, FaTasks } from "react-icons/fa";
-import Sidebar from "../components/Sidebar";
-import { idCardStore } from "../store/cardStore";
-import StatCard from "../components/StatCard";
-import IDTable from "../components/GeneratedIDs/IDtable";
-import FilterBar from "../components/GeneratedIDs/FilterBar";
-import ViewPanel from "../components/GeneratedIDs/ViewPanel";
-import SideModal from "../components/Common/ModalView";
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { FaIdCard, FaUserCheck, FaClipboardList, FaTasks } from 'react-icons/fa';
+import Sidebar from '../components/Sidebar';
+import StatCard from '../components/StatCard';
+import IDTable from '../components/GeneratedIDs/IDtable';
+import ViewPanel from '../components/GeneratedIDs/ViewPanel';
+import FilterBar from '../components/GeneratedIDs/FilterBar';
+import { idCardStore } from '../store/cardStore';
 
 export default function AdminDashboard() {
-  const { loading, error, items, getIdCards } = idCardStore((state) => state);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState("All");
-  const [statusFilter, setStatusFilter] = useState("All");
+  const mainRef = useRef(null);
+  const tableRef = useRef(null);
+
+  const { items, loading, error, getIdCards } = idCardStore();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
   const [viewRow, setViewRow] = useState(null);
-
-  const canView = true;
-  const canEdit = false;
-  const canDelete = false;
-  const canApprove = false;
-  const canReject = false;
-
-  const fmtDate = (iso) => {
-    const d = iso ? new Date(iso) : null;
-    if (!d || Number.isNaN(+d)) return "";
-    return d.toLocaleDateString(undefined, { month: "2-digit", day: "2-digit", year: "numeric" });
-  };
+  const [tableHeight, setTableHeight] = useState(0);
 
   useEffect(() => {
     getIdCards();
   }, [getIdCards]);
 
+  const fmtDate = (iso) => {
+    const d = iso ? new Date(iso) : null;
+    if (!d || Number.isNaN(+d)) return '';
+    return d.toLocaleDateString(undefined, { month: '2-digit', day: '2-digit', year: 'numeric' });
+  };
+
   const total = items.length;
-  const approvedCount = useMemo(() => items.filter((i) => i.status === "Approved").length, [items]);
-  const pendingCount = useMemo(() => items.filter((i) => i.status === "Pending").length, [items]);
+  const approvedCount = useMemo(() => items.filter((i) => i.status === 'Approved').length, [items]);
+  const pendingCount = useMemo(() => items.filter((i) => i.status === 'Pending').length, [items]);
   const actionsCount = pendingCount;
 
   const filteredData = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
     return items
       .filter((id) => {
-        const first = id?.fullName?.firstName || "";
-        const last = id?.fullName?.lastName || "";
+        const first = id?.fullName?.firstName || '';
+        const last = id?.fullName?.lastName || '';
         const fullName = `${first} ${last}`.trim().toLowerCase();
         const matchesSearch =
           fullName.includes(q) ||
-          String(id?.idNumber || "").toLowerCase().includes(q) ||
-          String(id?.position || "").toLowerCase().includes(q);
-        const matchesType = typeFilter === "All" || id.type === typeFilter;
-        const matchesStatus = statusFilter === "All" || id.status === statusFilter;
+          String(id?.idNumber || '').toLowerCase().includes(q) ||
+          String(id?.position || '').toLowerCase().includes(q);
+        const matchesType = typeFilter === 'All' || id.type === typeFilter;
+        const matchesStatus = statusFilter === 'All' || id.status === statusFilter;
         return matchesSearch && matchesType && matchesStatus;
       })
       .map((id) => ({
         ...id,
-        firstName: id?.fullName?.firstName || "",
-        lastName: id?.fullName?.lastName || "",
+        firstName: id?.fullName?.firstName || '',
+        middleInitial: id?.fullName?.middleInitial || '',
+        lastName: id?.fullName?.lastName || '',
+        emergencyFirstName: id?.emergencyContact?.firstName || '',
+        emergencyMiddleInitial: id?.emergencyContact?.middleInitial || '',
+        emergencyLastName: id?.emergencyContact?.lastName || '',
+        emergencyContactNumber: id?.emergencyContact?.phone || '',
+        generatedFrontImagePath: id?.generatedFrontImagePath || id?.generatedImagePath || '',
+        generatedBackImagePath: id?.generatedBackImagePath || '',
+        photoPath: id?.photoPath || '',
         date: fmtDate(id.createdAt),
       }));
   }, [items, searchTerm, typeFilter, statusFilter]);
 
-  const handleView = (id) => setViewRow(id);
+  useEffect(() => {
+    if (tableRef.current) {
+      const offsetTop = tableRef.current.getBoundingClientRect().top;
+      const viewportHeight = window.innerHeight;
+      const calculatedHeight = viewportHeight - offsetTop - 24;
+      setTableHeight(calculatedHeight);
+    }
+  }, [filteredData, viewRow]);
+
+  const handleView = (row) => {
+    setViewRow(row);
+    mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleClose = () => setViewRow(null);
 
   const panelOpen = !!viewRow;
   const sidebarExpanded = !panelOpen;
+  const stats = [
+    { icon: <FaIdCard size={50} />, label: 'Total Generated IDs', count: total },
+    { icon: <FaUserCheck size={50} />, label: 'Approved', count: approvedCount },
+    { icon: <FaClipboardList size={50} />, label: 'Pending', count: pendingCount },
+    { icon: <FaTasks size={50} />, label: 'Actions', count: actionsCount },
+  ];
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden">
+    <div className="flex h-screen w-screen font-inter overflow-hidden">
       <Sidebar expanded={sidebarExpanded} />
-      <main className={`flex-1 p-6 custom-bg flex flex-col overflow-hidden transition-all duration-300 ${panelOpen ? "mr-80" : ""}`}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard icon={<FaIdCard size={50} />} label="Total Generated IDs" count={total} />
-          <StatCard icon={<FaUserCheck size={50} />} label="Approved" count={approvedCount} />
-          <StatCard icon={<FaClipboardList size={50} />} label="Pending" count={pendingCount} />
-          <StatCard icon={<FaTasks size={50} />} label="Actions" count={actionsCount} />
-        </div>
-        <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col flex-1 overflow-hidden">
-          <FilterBar
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            typeFilter={typeFilter}
-            setTypeFilter={setTypeFilter}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-          />
-          <IDTable
-            loading={loading}
-            err={error}
-            filteredData={filteredData}
-            canView={canView}
-            canEdit={canEdit}
-            canDelete={canDelete}
-            canApprove={canApprove}
-            canReject={canReject}
-            onView={handleView}
-          />
+      <main ref={mainRef} className="flex-1 overflow-auto custom-bg">
+        <div className="p-6">
+          <div className="flex flex-col gap-6 w-full max-w-screen-xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {stats.map((stat, idx) => <StatCard key={idx} icon={stat.icon} label={stat.label} count={stat.count} />)}
+            </div>
+            <div className="flex flex-col lg:flex-row gap-6 items-start">
+              <div ref={tableRef} className={`bg-white rounded-2xl shadow-md p-6 flex flex-col transition-all duration-300 ${panelOpen ? 'lg:w-[60%]' : 'w-full'}`} style={{ height: `${tableHeight}px` }}>
+                <FilterBar
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  typeFilter={typeFilter}
+                  setTypeFilter={setTypeFilter}
+                  statusFilter={statusFilter}
+                  setStatusFilter={setStatusFilter}
+                />
+                <IDTable
+                  loading={loading}
+                  err={error}
+                  filteredData={filteredData}
+                  canView={true}
+                  canEdit={false}
+                  canDelete={false}
+                  canApprove={false}
+                  canReject={false}
+                  onView={handleView}
+                />
+              </div>
+              {panelOpen && viewRow && (
+                <div className="lg:w-[40%] bg-white rounded-2xl shadow-md p-6 overflow-auto" style={{ maxHeight: `${tableHeight}px` }}>
+                  <ViewPanel row={viewRow} onClose={handleClose} />
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </main>
-      <SideModal isOpen={panelOpen} onClose={() => setViewRow(null)} position="right">
-        {viewRow && <ViewPanel row={viewRow} onClose={() => setViewRow(null)} onEdit={() => console.log("Edit:", viewRow)} />}
-      </SideModal>
     </div>
   );
 }
