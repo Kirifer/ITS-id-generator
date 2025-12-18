@@ -15,7 +15,7 @@ const {
   patchIdCardDetails,
   deleteIdCard,
 } = require("../controllers/idCardController");
-const { upload } = require("../service/upload");
+const { upload, handleMulterError } = require("../service/upload");
 
 const idCardRoutes = express.Router();
 
@@ -41,7 +41,7 @@ idCardRoutes.post(
   upload.fields([
     { name: "photo", maxCount: 1 },
     { name: "hrSignature", maxCount: 1 },
-  ]),
+  ]), handleMulterError,
   postIdCard
 );
 

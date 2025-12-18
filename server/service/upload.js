@@ -2,9 +2,6 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-/* =========================
-   Upload config
-   ========================= */
 const PHOTOS_DIR = path.join(__dirname, "..", "uploads", "photos");
 fs.mkdirSync(PHOTOS_DIR, { recursive: true });
 
@@ -16,13 +13,27 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  limits: { fileSize: 4 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const ok = ["image/jpeg", "image/png", "image/jpg"].includes(file.mimetype);
-    // Rejecting the file (no server error) is better DX than throwing:
     if (!ok) return cb(new Error("Invalid file type"));
     cb(null, true);
   },
 });
 
-module.exports = {upload}
+const handleMulterError = (err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ message: "File too large. Maximum allowed file size is 4MB." });
+    }
+    return res.status(400).json({ message: err.message });
+  }
+  
+  if (err) {
+    return res.status(400).json({ message: err.message });
+  }
+  
+  next();
+};
+
+module.exports = { upload, handleMulterError };

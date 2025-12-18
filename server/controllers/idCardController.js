@@ -60,6 +60,8 @@ const getDetailIdCard = async (req, res) => {
 ========================= */
 const postIdCard = async (req, res) => {
   try {
+    console.log("req.body:", req.body);
+    console.log("req.files:", req.files);
     const {
       firstName,
       middleInitial,
@@ -241,16 +243,14 @@ const patchIdCardDetails = async (req, res) => {
     const hrSignature = req.files?.hrSignature?.[0];
 
     /* ===== UPDATE INTERN NAME ===== */
-    if (req.body.firstName)
-      card.fullName.firstName = req.body.firstName;
+    if (req.body.firstName) card.fullName.firstName = req.body.firstName;
 
     if (req.body.middleInitial !== undefined)
       card.fullName.middleInitial = req.body.middleInitial;
 
-    if (req.body.lastName)
-      card.fullName.lastName = req.body.lastName;
+    if (req.body.lastName) card.fullName.lastName = req.body.lastName;
 
-     /* =========================
+    /* =========================
        EMERGENCY CONTACT
     ========================= */
 
@@ -263,15 +263,12 @@ const patchIdCardDetails = async (req, res) => {
     if (req.body.emLastName)
       card.emergencyContact.lastName = req.body.emLastName;
 
-    if (req.body.emPhone)
-      card.emergencyContact.phone = req.body.emPhone;
+    if (req.body.emPhone) card.emergencyContact.phone = req.body.emPhone;
 
     /* ===== UPDATE HR DETAILS ===== */
-    if (req.body.hrName)
-      card.hrDetails.name = req.body.hrName;
+    if (req.body.hrName) card.hrDetails.name = req.body.hrName;
 
-    if (req.body.hrPosition)
-      card.hrDetails.position = req.body.hrPosition;
+    if (req.body.hrPosition) card.hrDetails.position = req.body.hrPosition;
 
     /* ===== UPDATE FILES ===== */
     if (photo) {
@@ -281,8 +278,7 @@ const patchIdCardDetails = async (req, res) => {
 
     if (hrSignature) {
       await sharp(hrSignature.path).metadata();
-      card.hrDetails.signaturePath =
-        `/uploads/photos/${hrSignature.filename}`;
+      card.hrDetails.signaturePath = `/uploads/photos/${hrSignature.filename}`;
     }
 
     await card.save();
@@ -312,7 +308,11 @@ const deleteIdCard = async (req, res) => {
 
     if (doc.hrDetails?.signaturePath)
       files.push(
-        path.join(__dirname, "..", doc.hrDetails.signaturePath.replace(/^\//, ""))
+        path.join(
+          __dirname,
+          "..",
+          doc.hrDetails.signaturePath.replace(/^\//, "")
+        )
       );
 
     if (doc.generatedFrontImagePath)
