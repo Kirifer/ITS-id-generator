@@ -1,5 +1,5 @@
 import React from "react";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2, FileCheck } from "lucide-react";
 
 export default function IDTable({
   loading,
@@ -10,15 +10,17 @@ export default function IDTable({
   canDelete,
   canApprove,
   canReject,
+  canGenerate,
   onView,
   onEdit,
   onDelete,
   onApprove,
   onReject,
+  onGenerate,
   statusBasedButtons,
 }) {
   const showActions =
-    canView || canEdit || canDelete || canApprove || canReject;
+    canView || canEdit || canDelete || canApprove || canReject || canGenerate;
 
   return (
     <div className="rounded-2xl overflow-hidden flex flex-col h-full">
@@ -78,6 +80,16 @@ export default function IDTable({
                               onClick={() => onDelete(id)}
                             />
                           )}
+                          {canGenerate &&
+                            id.status === "Approved" &&
+                            !id.generatedFrontImagePath &&
+                            !id.generatedBackImagePath && (
+                              <FileCheck
+                                size={16}
+                                className="cursor-pointer text-green-600"
+                                onClick={() => onGenerate(id)}
+                              />
+                            )}
                           {statusBasedButtons && (
                             <>
                               {id.status === "Pending" && canApprove && (

@@ -17,7 +17,7 @@ import {
   idCardDeleteStore,
   idCardUpdateStore,
 } from "../store/cardStore";
-
+import { generateIDStore } from "../store/generateStore";
 export default function Admin_GeneratedIDs() {
   const mainRef = useRef(null);
   const formRef = useRef(null);
@@ -40,6 +40,14 @@ export default function Admin_GeneratedIDs() {
     idCardUpdate,
     reset: updateReset,
   } = idCardUpdateStore();
+  const {
+    loading: generateLoading,
+    success: generateSuccess,
+    error: generateError,
+    message: generateMessage,
+    generateId,
+    reset: generateReset,
+  } = generateIDStore();
 
   const [tableHeight, setTableHeight] = useState(0);
   const [photo, setPhoto] = useState(null);
@@ -97,6 +105,39 @@ export default function Admin_GeneratedIDs() {
       deleteReset();
     }
   }, [deleteSuccess, deleteError, deleteMessage, deleteReset, selectedId]);
+
+  useEffect(() => {
+    if (generateSuccess) {
+      showMessageBox(generateMessage);
+      generateReset();
+      getIdCards();
+      if (selectedId) {
+        const updatedCard = items.find((item) => item._id === selectedId._id);
+        if (updatedCard) {
+          setSelectedId({
+            ...selectedId,
+            generatedFrontImagePath:
+              updatedCard.generatedFrontImagePath ||
+              updatedCard.generatedImagePath ||
+              "",
+            generatedBackImagePath: updatedCard.generatedBackImagePath || "",
+          });
+        }
+      }
+    }
+    if (generateError && generateMessage) {
+      showMessageBox(generateMessage);
+      generateReset();
+    }
+  }, [
+    generateSuccess,
+    generateError,
+    generateMessage,
+    generateReset,
+    getIdCards,
+    items,
+    selectedId,
+  ]);
 
   const viewRows = useMemo(
     () =>
@@ -187,6 +228,9 @@ export default function Admin_GeneratedIDs() {
       await idCardUpdate(formData, selectedId._id);
       const updatedItem = {
         ...selectedId,
+        status: "Pending",
+        generatedFrontImagePath: "",
+        generatedBackImagePath: "",
       };
       idCardStore.setState((state) => ({
         items: state.items.map((d) =>
@@ -209,12 +253,27 @@ export default function Admin_GeneratedIDs() {
         setPanelMode(null);
       }
     } catch (e) {
-      console.error(e)
+      console.error(e);
+    }
+  }
+
+  async function onGenerate(row) {
+    if (
+      !window.confirm(
+        `Generate ID for ${row.firstName} ${row.lastName}?`
+      )
+    )
+      return;
+    try {
+      await generateId({ cardId: row._id });
+    } catch (e) {
+      console.error(e);
     }
   }
 
   const sidebarExpanded = !selectedId || sidebarHover;
-  const isActionLoading = loading || deleteLoading || updateLoading;
+  const isActionLoading =
+    loading || deleteLoading || updateLoading || generateLoading;
 
   return (
     <div className="flex h-screen w-screen font-inter overflow-hidden">
@@ -242,9 +301,11 @@ export default function Admin_GeneratedIDs() {
                 canView
                 canEdit
                 canDelete
+                canGenerate
                 onView={onView}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onGenerate={onGenerate}
               />
             </div>
             <div

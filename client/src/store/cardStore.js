@@ -23,6 +23,7 @@ export const idCardStore = create(
         const response = await axiosInstance.get("/id-cards/", {
           withCredentials: true,
         });
+        console.log(response.data)
         if (response.status === 200 && response.data) {
           set({
             loading: false,

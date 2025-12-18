@@ -2,38 +2,33 @@ import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { axiosInstance } from "../api/axiosConfig";
 
-
 export const generateIDStore = create(
   devtools((set) => ({
     loading: false,
     success: false,
     error: false,
     message: "",
-
-    generateId: async (credentials) => {
+    generateId: async ({ cardId }) => {
       set({ loading: true, success: false, error: false, message: "" });
       try {
         const response = await axiosInstance.post(
-          "/id-cards",
-          credentials,
-          {
-            withCredentials: true,
-          }
+          `/id-generator/${cardId}/generate`,
+          {},
+          { withCredentials: true }
         );
-
         if (response.data?.success) {
           set({
             loading: false,
             success: true,
             error: false,
-            message: response.data.success,
+            message: "ID generated successfully",
           });
         } else {
           set({
             loading: false,
             success: false,
             error: true,
-            message: response.data?.error || "Login failed",
+            message: response.data?.error || "Generation failed",
           });
         }
       } catch (err) {
@@ -45,8 +40,7 @@ export const generateIDStore = create(
         });
       }
     },
-
-    reset: () => set({ loading: false, success: false, error: false, message: "" }),
+    reset: () =>
+      set({ loading: false, success: false, error: false, message: "" }),
   }))
 );
-

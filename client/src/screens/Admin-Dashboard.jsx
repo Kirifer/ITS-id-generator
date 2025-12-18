@@ -42,25 +42,33 @@ export default function AdminDashboard() {
         const fullName = `${first} ${last}`.trim().toLowerCase();
         const matchesSearch =
           fullName.includes(q) ||
-          String(id?.idNumber || '').toLowerCase().includes(q) ||
+          String(id?.employeeNumber || '').toLowerCase().includes(q) ||
           String(id?.position || '').toLowerCase().includes(q);
         const matchesType = typeFilter === 'All' || id.type === typeFilter;
         const matchesStatus = statusFilter === 'All' || id.status === statusFilter;
         return matchesSearch && matchesType && matchesStatus;
       })
       .map((id) => ({
-        ...id,
+        _id: id._id,
         firstName: id?.fullName?.firstName || '',
         middleInitial: id?.fullName?.middleInitial || '',
         lastName: id?.fullName?.lastName || '',
-        emergencyFirstName: id?.emergencyContact?.firstName || '',
-        emergencyMiddleInitial: id?.emergencyContact?.middleInitial || '',
-        emergencyLastName: id?.emergencyContact?.lastName || '',
-        emergencyContactNumber: id?.emergencyContact?.phone || '',
+        employeeNumber: id?.employeeNumber || '',
+        position: id?.position || '',
+        type: id?.type || '',
+        status: id?.status || '',
+        email: id?.contactDetails?.email || '',
+        phone: id?.contactDetails?.phone || '',
+        date: fmtDate(id.createdAt),
+        emFirstName: id?.emergencyContact?.firstName || '',
+        emMiddleInitial: id?.emergencyContact?.middleInitial || '',
+        emLastName: id?.emergencyContact?.lastName || '',
+        emPhone: id?.emergencyContact?.phone || '',
+        hrName: id?.hrDetails?.name || '',
+        hrPosition: id?.hrDetails?.position || '',
         generatedFrontImagePath: id?.generatedFrontImagePath || id?.generatedImagePath || '',
         generatedBackImagePath: id?.generatedBackImagePath || '',
         photoPath: id?.photoPath || '',
-        date: fmtDate(id.createdAt),
       }));
   }, [items, searchTerm, typeFilter, statusFilter]);
 

@@ -31,18 +31,26 @@ export default function DashboardHR() {
 
   const viewRows = useMemo(() =>
     items.map(doc => ({
-      ...doc,
+      _id: doc._id,
       firstName: doc?.fullName?.firstName || '',
       middleInitial: doc?.fullName?.middleInitial || '',
       lastName: doc?.fullName?.lastName || '',
-      emergencyFirstName: doc?.emergencyContact?.firstName || '',
-      emergencyMiddleInitial: doc?.emergencyContact?.middleInitial || '',
-      emergencyLastName: doc?.emergencyContact?.lastName || '',
-      emergencyContactNumber: doc?.emergencyContact?.phone || '',
+      employeeNumber: doc?.employeeNumber || '',
+      position: doc?.position || '',
+      type: doc?.type || '',
+      status: doc?.status || '',
+      email: doc?.contactDetails?.email || '',
+      phone: doc?.contactDetails?.phone || '',
+      date: fmtDate(doc?.createdAt),
+      emFirstName: doc?.emergencyContact?.firstName || '',
+      emMiddleInitial: doc?.emergencyContact?.middleInitial || '',
+      emLastName: doc?.emergencyContact?.lastName || '',
+      emPhone: doc?.emergencyContact?.phone || '',
+      hrName: doc?.hrDetails?.name || '',
+      hrPosition: doc?.hrDetails?.position || '',
       generatedFrontImagePath: doc?.generatedFrontImagePath || doc?.generatedImagePath || '',
       generatedBackImagePath: doc?.generatedBackImagePath || '',
       photoPath: doc?.photoPath || '',
-      date: fmtDate(doc?.createdAt),
     }))
   , [items]);
 
@@ -51,7 +59,7 @@ export default function DashboardHR() {
     return viewRows.filter(id => {
       const matchesSearch =
         `${id.firstName} ${id.lastName}`.toLowerCase().includes(q) ||
-        String(id.idNumber).toLowerCase().includes(q) ||
+        String(id.employeeNumber).toLowerCase().includes(q) ||
         id.position.toLowerCase().includes(q);
       const matchesType = typeFilter === 'All' || id.type === typeFilter;
       const matchesStatus = statusFilter === 'All' || id.status === statusFilter;
