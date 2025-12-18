@@ -1,61 +1,27 @@
-import React, { useEffect, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { authCheckStore } from "../store/authStore";
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
-  const [isChecking, setIsChecking] = useState(true);
-  const [authData, setAuthData] = useState(null);
-  const location = useLocation();
+  const { loading, success, message } = authCheckStore();
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const checkAuth = async () => {
-      try {
-        await authCheckStore.getState().authCheck();
-
-        if (isMounted) {
-          const state = authCheckStore.getState();
-          setAuthData(state);
-          setIsChecking(false);
-        }
-      } catch (error) {
-        if (isMounted) {
-          setIsChecking(false);
-        }
-      }
-    };
-
-    checkAuth();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  if (isChecking) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Checking authentication...</p>
-        </div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
       </div>
     );
   }
 
-  if (!authData?.success) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  if (!success) {
+    return <Navigate to="/login" replace />;
   }
 
-  const userRole = authData.message?.role;
+  const userRole = message?.role;
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
-    if (userRole === "Admin") {
-      return <Navigate to="/dashboard" replace />;
-    } else if (userRole === "Approver") {
+    if (userRole === "Admin") return <Navigate to="/dashboard" replace />;
+    if (userRole === "Approver")
       return <Navigate to="/approver-dashboard" replace />;
-    }
     return <Navigate to="/login" replace />;
   }
 

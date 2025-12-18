@@ -1,8 +1,7 @@
-import axios from "axios";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
+import { axiosInstance } from "../api/axiosConfig";
 
-const baseUrl = process.env.REACT_APP_SERVER_BASE_URL;
 
 export const loginStore = create(
   devtools((set) => ({
@@ -14,13 +13,9 @@ export const loginStore = create(
     login: async (credentials) => {
       set({ loading: true, success: false, error: false, message: "" });
       try {
-        const response = await axios.post(
-          `${baseUrl}/auth/login`,
-          credentials,
-          {
-            withCredentials: true,
-          }
-        );
+        const response = await axiosInstance.post("/auth/login", credentials, {
+          withCredentials: true,
+        });
 
         if (response.data?.success) {
           set({
@@ -47,7 +42,8 @@ export const loginStore = create(
       }
     },
 
-    reset: () => set({ loading: false, success: false, error: false, message: "" }),
+    reset: () =>
+      set({ loading: false, success: false, error: false, message: "" }),
   }))
 );
 
@@ -61,10 +57,9 @@ export const authCheckStore = create(
     authCheck: async () => {
       set({ loading: true, success: false, error: false, message: "" });
       try {
-        const response = await axios.get(`${baseUrl}/auth/check`, {
+        const response = await axiosInstance.get("/auth/check", {
           withCredentials: true,
         });
-        
         if (response.data?.success) {
           set({
             loading: false,
@@ -90,7 +85,8 @@ export const authCheckStore = create(
       }
     },
 
-    reset: () => set({ loading: false, success: false, error: false, message: "" }),
+    reset: () =>
+      set({ loading: false, success: false, error: false, message: "" }),
   }))
 );
 
@@ -105,8 +101,8 @@ export const logoutStore = create(
       set({ loading: true, success: false, error: false, message: "" });
 
       try {
-        const response = await axios.post(
-          `${baseUrl}/auth/logout`,
+        const response = await axiosInstance.post(
+          "/auth/logout",
           {},
           { withCredentials: true }
         );
@@ -114,7 +110,7 @@ export const logoutStore = create(
         if (response.data?.success) {
           loginStore.getState().reset();
           authCheckStore.getState().reset();
-          
+
           set({
             loading: false,
             success: true,
@@ -132,6 +128,47 @@ export const logoutStore = create(
       }
     },
 
-    reset: () => set({ loading: false, success: false, error: false, message: "" }),
+    reset: () =>
+      set({ loading: false, success: false, error: false, message: "" }),
+  }))
+);
+
+export const refreshStore = create(
+  devtools((set) => ({
+    loading: false,
+    success: false,
+    error: false,
+    message: "",
+
+    refreshToken: async () => {
+      set({ loading: true, success: false, error: false, message: "" });
+
+      try {
+        const response = await axiosInstance.post(
+          "/auth/refresh-token",
+          {},
+          { withCredentials: true }
+        );
+
+        if (response.data?.success) {
+          set({
+            loading: false,
+            success: true,
+            error: false,
+            message: "Token refreshed successfully",
+          });
+        }
+      } catch (err) {
+        set({
+          loading: false,
+          success: false,
+          error: true,
+          message: err.response?.data?.error || "Something went wrong",
+        });
+      }
+    },
+
+    reset: () =>
+      set({ loading: false, success: false, error: false, message: "" }),
   }))
 );

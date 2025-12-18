@@ -1,8 +1,6 @@
-import axios from "axios";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-
-const baseUrl = process.env.REACT_APP_SERVER_BASE_URL;
+import { axiosInstance } from "../api/axiosConfig";
 
 export const idCardStore = create(
   devtools((set) => ({
@@ -22,10 +20,9 @@ export const idCardStore = create(
       });
 
       try {
-        const response = await axios.get(`${baseUrl}/id-cards/`, {
+        const response = await axiosInstance.get("/id-cards/", {
           withCredentials: true,
         });
-        console.log(response)
         if (response.status === 200 && response.data) {
           set({
             loading: false,
@@ -73,8 +70,8 @@ export const idCardApproveStore = create(
       });
 
       try {
-        const response = await axios.patch(
-          `${baseUrl}/id-cards/${id}/approve`,
+        const response = await axiosInstance.patch(
+          `/id-cards/${id}/approve`,
           {},
           {
             withCredentials: true,
@@ -125,8 +122,8 @@ export const idCardRejectStore = create(
       });
 
       try {
-        const response = await axios.patch(
-          `${baseUrl}/id-cards/${id}/reject`,
+        const response = await axiosInstance.patch(
+          `/id-cards/${id}/reject`,
           {},
           {
             withCredentials: true,
@@ -178,7 +175,7 @@ export const idCardDeleteStore = create(
       });
 
       try {
-        const response = await axios.delete(`${baseUrl}/id-cards/${id}`, {
+        const response = await axiosInstance.delete(`/id-cards/${id}`, {
           withCredentials: true,
         });
 
@@ -227,8 +224,8 @@ export const idCardUpdateStore = create(
       });
 
       try {
-        const response = await axios.patch(
-          `${baseUrl}/id-cards/${id}`,
+        const response = await axiosInstance.patch(
+          `/id-cards/${id}`,
           formData,
           {
             withCredentials: true,
@@ -284,7 +281,7 @@ export const idCardPostStore = create(
       });
 
       try {
-        const response = await axios.post(`${baseUrl}/id-cards`, formData, {
+        const response = await axiosInstance.post(`/id-cards`, formData, {
           withCredentials: true
         });
 

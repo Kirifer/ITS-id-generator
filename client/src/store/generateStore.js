@@ -1,8 +1,7 @@
-import axios from "axios";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
+import { axiosInstance } from "../api/axiosConfig";
 
-const baseUrl = process.env.REACT_APP_SERVER_BASE_URL;
 
 export const generateIDStore = create(
   devtools((set) => ({
@@ -14,8 +13,8 @@ export const generateIDStore = create(
     generateId: async (credentials) => {
       set({ loading: true, success: false, error: false, message: "" });
       try {
-        const response = await axios.post(
-          `${baseUrl}/id-cards`,
+        const response = await axiosInstance.post(
+          "/id-cards",
           credentials,
           {
             withCredentials: true,
