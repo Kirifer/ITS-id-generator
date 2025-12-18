@@ -1,7 +1,7 @@
 // server/models/IdCard.js
 // CommonJS - Mongoose Model for e-Employee & Intern ID Generator
 
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 /* ===========================
    SUB-SCHEMAS
@@ -16,7 +16,7 @@ const FullNameSchema = new mongoose.Schema(
     },
     middleInitial: {
       type: String,
-      default: '',
+      default: "",
       trim: true,
       maxlength: 2,
     },
@@ -38,7 +38,7 @@ const EmergencyContactSchema = new mongoose.Schema(
     },
     middleInitial: {
       type: String,
-      default: '',
+      default: "",
       trim: true,
       maxlength: 2,
     },
@@ -51,6 +51,12 @@ const EmergencyContactSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      validate: {
+        validator: v =>
+          /^(09\d{9}|\+639\d{9})$/.test(v),
+        message:
+          "Invalid phone number format. Use 09XXXXXXXXX or +639XXXXXXXXX",
+      },
     },
   },
   { _id: false }
@@ -78,6 +84,31 @@ const HrDetailsSchema = new mongoose.Schema(
 );
 
 /* ===========================
+   VALIDATORS
+=========================== */
+
+const employeeNumberValidator = {
+  validator: function (value) {
+    if (this.type === "Employee") {
+      return /^ITS-\d{5}$/.test(value);
+    }
+    if (this.type === "Intern") {
+      return /^ITSIN-\d{5}$/.test(value);
+    }
+    return false;
+  },
+  message:
+    "Employee number must be ITS-XXXXX (Employee) or ITSIN-XXXXX (Intern)",
+};
+
+const phoneValidator = {
+  validator: v =>
+    /^(09\d{9}|\+639\d{9})$/.test(v),
+  message:
+    "Invalid phone number format. Use 09XXXXXXXXX or +639XXXXXXXXX",
+};
+
+/* ===========================
    MAIN ID CARD SCHEMA
 =========================== */
 
@@ -93,8 +124,8 @@ const IdCardSchema = new mongoose.Schema(
     /**
      * Employee-facing ID
      * Displayed on FRONT
-     * Example: ITS-00003
-     * Provided by HR / Admin
+     * Employee: ITS-XXXXX
+     * Intern:   ITSIN-XXXXX
      */
     employeeNumber: {
       type: String,
@@ -102,13 +133,13 @@ const IdCardSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       immutable: true,
+      validate: employeeNumberValidator,
     },
 
     /**
      * System-generated unique ID
      * Used for BARCODE (BACK)
      * Format: ITS-XXXXXXXXXX
-     * Generated in controller ONLY
      */
     idNumber: {
       type: String,
@@ -126,7 +157,7 @@ const IdCardSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ['Employee', 'Intern'],
+      enum: ["Employee", "Intern"],
       required: true,
     },
 
@@ -143,6 +174,7 @@ const IdCardSchema = new mongoose.Schema(
         type: String,
         required: true,
         trim: true,
+        validate: phoneValidator,
       },
     },
 
@@ -196,19 +228,19 @@ const IdCardSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['Pending', 'Approved', 'Rejected'],
-      default: 'Pending',
+      enum: ["Pending", "Approved", "Rejected"],
+      default: "Pending",
     },
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
 
     approvedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
     },
   },
   {
@@ -228,4 +260,4 @@ IdCardSchema.index({ type: 1, status: 1 });
    EXPORT
 =========================== */
 
-module.exports = mongoose.model('IdCard', IdCardSchema);
+module.exports = mongoose.model("IdCard", IdCardSchema);

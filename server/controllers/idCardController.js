@@ -1,3 +1,5 @@
+// server/controllers/idCardController.js
+
 const path = require("path");
 const fs = require("fs");
 const sharp = require("sharp");
@@ -7,6 +9,29 @@ const IdCard = require("../models/IdCard");
 /* =========================
    HELPERS
 ========================= */
+
+/**
+ * Normalize PH phone
+ * Accepts: 09XXXXXXXXX | +639XXXXXXXXX
+ * Stores:  09XXXXXXXXX
+ */
+const normalizePhone = (value) => {
+  if (!value) return value;
+
+  const phone = value.replace(/[^\d+]/g, "");
+
+  if (phone.startsWith("+639")) {
+    return "0" + phone.slice(3);
+  }
+
+  if (/^09\d{9}$/.test(phone)) {
+    return phone;
+  }
+
+  throw new Error(
+    "Invalid phone number format. Use 09XXXXXXXXX or +639XXXXXXXXX."
+  );
+};
 
 /**
  * Generate UNIQUE idNumber
@@ -51,7 +76,7 @@ const getDetailIdCard = async (req, res) => {
       generatedBackImagePath: item.generatedBackImagePath,
     });
   } catch (e) {
-    res.status(500).json({ message: e.message });
+    return res.status(500).json({ message: e.message });
   }
 };
 
@@ -60,24 +85,19 @@ const getDetailIdCard = async (req, res) => {
 ========================= */
 const postIdCard = async (req, res) => {
   try {
-    console.log("req.body:", req.body);
-    console.log("req.files:", req.files);
     const {
       firstName,
       middleInitial,
       lastName,
-
       employeeNumber,
       position,
       type,
       email,
       phone,
-
       emFirstName,
       emMiddleInitial,
       emLastName,
       emPhone,
-
       hrName,
       hrPosition,
     } = req.body || {};
@@ -109,6 +129,14 @@ const postIdCard = async (req, res) => {
       });
     }
 
+    let phoneLocal, emPhoneLocal;
+    try {
+      phoneLocal = normalizePhone(phone);
+      emPhoneLocal = normalizePhone(emPhone);
+    } catch (e) {
+      return res.status(400).json({ message: e.message });
+    }
+
     const idNumber = await generateUniqueIdNumber();
 
     const photo = req.files?.photo?.[0];
@@ -135,12 +163,12 @@ const postIdCard = async (req, res) => {
       idNumber,
       position,
       type,
-      contactDetails: { email, phone },
+      contactDetails: { email, phone: phoneLocal },
       emergencyContact: {
         firstName: emFirstName,
         middleInitial: emMiddleInitial,
         lastName: emLastName,
-        phone: emPhone,
+        phone: emPhoneLocal,
       },
       hrDetails: {
         name: hrName,
@@ -154,12 +182,25 @@ const postIdCard = async (req, res) => {
 
     res.status(201).json(doc);
   } catch (err) {
+    if (err.name === "ValidationError") {
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: Object.fromEntries(
+          Object.entries(err.errors).map(([key, val]) => [
+            key,
+            val.message,
+          ])
+        ),
+      });
+    }
+
     if (err.code === 11000) {
       return res.status(409).json({
         message: "Duplicate ID detected. Please retry.",
       });
     }
-    res.status(500).json({ message: err.message });
+
+    return res.status(500).json({ message: err.message });
   }
 };
 
@@ -175,7 +216,7 @@ const getIdCard = async (req, res) => {
     const items = await IdCard.find(filter).sort({ createdAt: -1 });
     res.json(items);
   } catch (e) {
-    res.status(500).json({ message: e.message });
+    return res.status(500).json({ message: e.message });
   }
 };
 
@@ -202,7 +243,7 @@ const patchIdCardApprove = async (req, res) => {
     if (!updated) return res.status(404).json({ message: "Not found" });
     res.json(updated);
   } catch (e) {
-    res.status(500).json({ message: e.message });
+    return res.status(500).json({ message: e.message });
   }
 };
 
@@ -222,12 +263,12 @@ const patchIdCardReject = async (req, res) => {
     if (!updated) return res.status(404).json({ message: "Not found" });
     res.json(updated);
   } catch (e) {
-    res.status(500).json({ message: e.message });
+    return res.status(500).json({ message: e.message });
   }
 };
 
 /* =========================
-   PATCH ID DETAILS (✅ UPDATED)
+   PATCH ID DETAILS
 ========================= */
 const patchIdCardDetails = async (req, res) => {
   try {
@@ -236,15 +277,20 @@ const patchIdCardDetails = async (req, res) => {
       return res.status(400).json({ message: "Invalid ID" });
     }
 
+    if ("employeeNumber" in req.body) {
+      return res
+        .status(400)
+        .json({ message: "Employee number cannot be modified" });
+    }
+
     const card = await IdCard.findById(id);
     if (!card) return res.status(404).json({ message: "Not found" });
 
     const photo = req.files?.photo?.[0];
     const hrSignature = req.files?.hrSignature?.[0];
 
-    let updated = false; // flag to detect changes
+    let updated = false;
 
-    /* ===== UPDATE INTERN NAME ===== */
     if (req.body.firstName) {
       card.fullName.firstName = req.body.firstName;
       updated = true;
@@ -258,9 +304,6 @@ const patchIdCardDetails = async (req, res) => {
       updated = true;
     }
 
-    /* =========================
-       EMERGENCY CONTACT
-    ========================= */
     if (req.body.emFirstName) {
       card.emergencyContact.firstName = req.body.emFirstName;
       updated = true;
@@ -274,11 +317,10 @@ const patchIdCardDetails = async (req, res) => {
       updated = true;
     }
     if (req.body.emPhone) {
-      card.emergencyContact.phone = req.body.emPhone;
+      card.emergencyContact.phone = normalizePhone(req.body.emPhone);
       updated = true;
     }
 
-    /* ===== UPDATE HR DETAILS ===== */
     if (req.body.hrName) {
       card.hrDetails.name = req.body.hrName;
       updated = true;
@@ -288,7 +330,6 @@ const patchIdCardDetails = async (req, res) => {
       updated = true;
     }
 
-    /* ===== UPDATE FILES ===== */
     if (photo) {
       await sharp(photo.path).metadata();
       card.photoPath = `/uploads/photos/${photo.filename}`;
@@ -300,17 +341,28 @@ const patchIdCardDetails = async (req, res) => {
       updated = true;
     }
 
-    /* ===== RESET STATUS IF UPDATED ===== */
     if (updated) {
-      card.status = "Pending"; // reset approval status
-      card.generatedFrontImagePath = null; // reset generated ID images
+      card.status = "Pending";
+      card.generatedFrontImagePath = null;
       card.generatedBackImagePath = null;
     }
 
     await card.save();
     res.json(card);
   } catch (e) {
-    res.status(500).json({ message: e.message });
+    if (e.name === "ValidationError") {
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: Object.fromEntries(
+          Object.entries(e.errors).map(([key, val]) => [
+            key,
+            val.message,
+          ])
+        ),
+      });
+    }
+
+    return res.status(500).json({ message: e.message });
   }
 };
 
@@ -363,7 +415,7 @@ const deleteIdCard = async (req, res) => {
 
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ message: e.message });
+    return res.status(500).json({ message: e.message });
   }
 };
 
