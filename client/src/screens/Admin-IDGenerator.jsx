@@ -1,9 +1,7 @@
 import React, { useEffect, useState, useLayoutEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { generateIDStore } from "../store/generateStore";
+import { idCardPostStore } from "../store/cardStore";
 import Sidebar from "../components/Sidebar";
 import IDGeneratorForm from "../components/IDGenerator/IDGenerator";
-import IDPreview from "../components/IDGenerator/IDPreview";
 import { showMessageBoxIdGen } from "../utils/messageBoxIDGen";
 
 export default function Admin_IDGenerator() {
@@ -27,48 +25,69 @@ export default function Admin_IDGenerator() {
     emMiddleInitial: "",
     emLastName: "",
     emPhone: "",
+    hrName: "",
+    hrPosition: "",
   });
 
   const [photo, setPhoto] = useState(null);
   const [photoError, setPhotoError] = useState("");
+  const [hrSignature, setHrSignature] = useState(null);
+  const [hrSignatureError, setHrSignatureError] = useState("");
 
-  const { loading, success, error, message, generateId, reset } =
-    generateIDStore();
+  const { loading, success, error, message, idCardPost, reset } =
+    idCardPostStore();
 
   useLayoutEffect(() => {
     if (formRef.current) setFormHeight(formRef.current.offsetHeight);
-  }, [formData, photo, previewUrl]);
+  }, [formData, photo, hrSignature, previewUrl]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (photo) {
-      if (!["image/jpeg", "image/png", "image/jpg"].includes(photo.type)) {
-        showMessageBoxIdGen(
-          "Invalid file type. Only JPEG and PNG are allowed."
-        );
-        return;
-      }
-      if (photo.size > 2 * 1024 * 1024) {
-        showMessageBoxIdGen(
-          "File too large. Maximum allowed file size is 2MB."
-        );
-        return;
-      }
+    if (!photo) {
+      showMessageBoxIdGen("Please upload a photo.");
+      return;
     }
 
-    try {
-      const credentials = { ...formData, photo };
+    if (!hrSignature) {
+      showMessageBoxIdGen("Please upload HR signature.");
+      return;
+    }
 
-      await generateId(credentials);
+    if (!["image/jpeg", "image/png", "image/jpg"].includes(photo.type)) {
+      showMessageBoxIdGen("Invalid photo file type. Only JPEG and PNG are allowed.");
+      return;
+    }
 
-      if (success) {
-        showMessageBoxIdGen("ID generated and saved (Pending)!");
-        setPreviewUrl(message);
-      } else {
-        showMessageBoxIdGen(message || "ID generation failed!");
-      }
+    if (photo.size > 4 * 1024 * 1024) {
+      showMessageBoxIdGen("Photo file too large. Maximum allowed file size is 4MB.");
+      return;
+    }
 
+    if (!["image/jpeg", "image/png", "image/jpg"].includes(hrSignature.type)) {
+      showMessageBoxIdGen("Invalid HR signature file type. Only JPEG and PNG are allowed.");
+      return;
+    }
+
+    if (hrSignature.size > 4 * 1024 * 1024) {
+      showMessageBoxIdGen("HR signature file too large. Maximum allowed file size is 4MB.");
+      return;
+    }
+
+    const formDataToSend = new FormData();
+    
+    Object.keys(formData).forEach(key => {
+      formDataToSend.append(key, formData[key]);
+    });
+    
+    formDataToSend.append('photo', photo);
+    formDataToSend.append('hrSignature', hrSignature);
+
+    const result = await idCardPost(formDataToSend);
+
+    if (result) {
+      showMessageBoxIdGen("ID generated and saved (Pending)!");
+      
       reset();
       setFormData({
         firstName: "",
@@ -83,11 +102,15 @@ export default function Admin_IDGenerator() {
         emMiddleInitial: "",
         emLastName: "",
         emPhone: "",
+        hrName: "",
+        hrPosition: "",
       });
       setPhoto(null);
       setPhotoError("");
-    } catch (err) {
-      showMessageBoxIdGen("Something went wrong during ID generation.");
+      setHrSignature(null);
+      setHrSignatureError("");
+    } else {
+      showMessageBoxIdGen(message || "ID generation failed!");
     }
   };
 
@@ -109,12 +132,13 @@ export default function Admin_IDGenerator() {
                 setPhoto={setPhoto}
                 photoError={photoError}
                 setPhotoError={setPhotoError}
+                hrSignature={hrSignature}
+                setHrSignature={setHrSignature}
+                hrSignatureError={hrSignatureError}
+                setHrSignatureError={setHrSignatureError}
                 onSubmit={handleSubmit}
               />
             </div>
-            {/* <div className="w-full md:flex-1">
-              <IDPreview previewUrl={previewUrl} formHeight={formHeight} />
-            </div> */}
           </div>
         </div>
       </main>

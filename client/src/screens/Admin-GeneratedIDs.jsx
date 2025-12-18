@@ -1,4 +1,10 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Sidebar from "../components/Sidebar";
 import IDTable from "../components/GeneratedIDs/IDtable";
 import ViewPanel from "../components/GeneratedIDs/ViewPanel";
@@ -57,7 +63,7 @@ export default function Admin_GeneratedIDs() {
   useEffect(() => {
     getIdCards();
   }, [getIdCards]);
-  
+
   useEffect(() => {
     if (error && message) showMessageBox(message);
   }, [error, message]);
@@ -112,7 +118,8 @@ export default function Admin_GeneratedIDs() {
         emPhone: doc?.emergencyContact?.phone || "",
         hrName: doc?.hrDetails?.name || "",
         hrPosition: doc?.hrDetails?.position || "",
-        generatedFrontImagePath: doc?.generatedFrontImagePath || doc?.generatedImagePath || "",
+        generatedFrontImagePath:
+          doc?.generatedFrontImagePath || doc?.generatedImagePath || "",
         generatedBackImagePath: doc?.generatedBackImagePath || "",
         photoPath: doc?.photoPath || "",
       })),
@@ -140,7 +147,7 @@ export default function Admin_GeneratedIDs() {
     setHrSignature(null);
     mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
-  
+
   function onEdit(row) {
     setSelectedId({ ...row });
     setPanelMode("edit");
@@ -148,7 +155,7 @@ export default function Admin_GeneratedIDs() {
     setHrSignature(null);
     mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
-  
+
   async function onSubmitUpdate(e) {
     e.preventDefault();
     if (!selectedId?._id) return;
@@ -168,7 +175,7 @@ export default function Admin_GeneratedIDs() {
     formData.append("emPhone", selectedId.emPhone);
     formData.append("hrName", selectedId.hrName);
     formData.append("hrPosition", selectedId.hrPosition);
-    
+
     if (photo) {
       formData.append("photo", photo);
     }
@@ -194,7 +201,16 @@ export default function Admin_GeneratedIDs() {
     if (!window.confirm(`Delete ${row.firstName} ${row.lastName}?`)) return;
     try {
       await idCardDelete(row._id);
-    } catch (e) {}
+      idCardStore.setState((state) => ({
+        items: state.items.filter((d) => d._id !== row._id),
+      }));
+      if (selectedId?._id === row._id) {
+        setSelectedId(null);
+        setPanelMode(null);
+      }
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   const sidebarExpanded = !selectedId || sidebarHover;
@@ -253,7 +269,7 @@ export default function Admin_GeneratedIDs() {
                   photo={photo}
                   setPhoto={setPhoto}
                   hrSignature={hrSignature}
-                  setHrSignature={setHrSignature} 
+                  setHrSignature={setHrSignature}
                   onSubmit={onSubmitUpdate}
                   onCancel={() => {
                     setSelectedId(null);

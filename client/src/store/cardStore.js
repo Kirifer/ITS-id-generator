@@ -282,10 +282,13 @@ export const idCardPostStore = create(
 
       try {
         const response = await axiosInstance.post(`/id-cards`, formData, {
-          withCredentials: true
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         });
 
-        if (response.status === 201 && response.data) {
+        if (response.status === 201) {
           set({
             loading: false,
             success: true,
@@ -293,14 +296,7 @@ export const idCardPostStore = create(
             message: "ID Card created successfully",
             idCardData: response.data,
           });
-        } else {
-          set({
-            loading: false,
-            success: false,
-            error: true,
-            message: response.data?.message || "Creation failed",
-            idCardData: null,
-          });
+          return true;
         }
       } catch (err) {
         set({
@@ -313,6 +309,7 @@ export const idCardPostStore = create(
             "Something went wrong",
           idCardData: null,
         });
+        return false;
       }
     },
 
