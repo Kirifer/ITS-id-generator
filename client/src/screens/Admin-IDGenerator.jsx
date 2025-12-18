@@ -112,9 +112,9 @@ export default function Admin_IDGenerator() {
                 onSubmit={handleSubmit}
               />
             </div>
-            <div className="w-full md:flex-1">
+            {/* <div className="w-full md:flex-1">
               <IDPreview previewUrl={previewUrl} formHeight={formHeight} />
-            </div>
+            </div> */}
           </div>
         </div>
       </main>
