@@ -70,28 +70,35 @@ const login = async (req, res) => {
 const refresher = async (req, res) => {
   try {
     const token = req.cookies?.refreshToken;
-
-    if (!token)
+    console.log("refresh: ", token)
+    if (!token || token === undefined) {
+      res.clearCookie("refreshToken");
+      res.clearCookie("accessToken");
       return res.status(401).json({ error: "No refresh token found." });
+    }
 
     let payload;
     try {
       payload = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
     } catch (err) {
-      return res
-        .status(403)
-        .json({ error: "Invalid or expire refresh token." });
+      res.clearCookie("refreshToken");
+      res.clearCookie("accessToken");
+      return res.status(403).json({ error: "Invalid or expired refresh token." });
     }
 
     const user = await User.findById(payload.id).select("+refreshToken");
 
     if (!user || !user.refreshToken) {
+      res.clearCookie("refreshToken");
+      res.clearCookie("accessToken");
       return res.status(403).json({ error: "Refresh token not found in DB." });
     }
 
     const isValid = await bcrypt.compare(token, user.refreshToken);
 
     if (!isValid) {
+      res.clearCookie("refreshToken");
+      res.clearCookie("accessToken");
       return res.status(403).json({ error: "Invalid refresh token." });
     }
 
@@ -100,6 +107,7 @@ const refresher = async (req, res) => {
       process.env.JWT_ACCESS_SECRET,
       { expiresIn: "15m" }
     );
+
     return res
       .cookie("accessToken", accessToken, {
         httpOnly: true,
@@ -111,9 +119,12 @@ const refresher = async (req, res) => {
       .json({ success: true });
   } catch (err) {
     console.log(err);
+    res.clearCookie("refreshToken");
+    res.clearCookie("accessToken");
     return res.status(500).json({ error: "Something went wrong." });
   }
 };
+
 
 const checkAuth = async (req, res) => {
   try {
@@ -134,7 +145,7 @@ const checkAuth = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    console.log("TRIGGER!!!!")
+
     const user = await User.findById(req.user.id).select("_id");
 
     if (!user) {
