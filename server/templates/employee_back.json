@@ -1,44 +1,57 @@
 {
   "background": "Employee-Rear-Template.png",
   "designSize": {
-    "width": 1200,
-    "height": 750
+    "width": 750,
+    "height": 1200
   },
-  "forceOutputToDesignSize": false,
-  "backgroundFit": "contain",
 
   "text": {
     "emName": {
-      "x": 600,
-      "y": 420,
+      "x": 375,
+      "y": 300,
       "align": "center",
       "fontSize": 30,
       "fill": "#111",
       "weight": 700
     },
     "emPhone": {
-      "x": 600,
-      "y": 470,
+      "x": 375,
+      "y": 350,
       "align": "center",
       "fontSize": 28,
       "fill": "#111",
       "weight": 600
     },
-    "ceoName": {
-      "x": 950,
-      "y": 650,
+
+    "hrName": {
+      "x": 375,
+      "y": 750,
       "align": "center",
       "fontSize": 26,
       "fill": "#111",
-      "weight": 700,
-      "value": "CEO Name"
+      "weight": 700
+    },
+    "hrTitle": {
+      "x": 375,
+      "y": 800,
+      "align": "center",
+      "fontSize": 22,
+      "fill": "#111",
+      "weight": 600
     }
   },
 
+  "signature": {
+    "x": 300,
+    "y": 670,
+    "width": 150,
+    "height": 55
+  },
+
   "barcode": {
-    "x": 450,
-    "y": 520,
+    "x": 225,
+    "y": 850,
     "width": 300,
-    "height": 80
+    "height": 95
   }
 }

@@ -8,10 +8,10 @@
   "backgroundFit": "contain",
 
   "photo": {
-    "left": 450,
-    "top": 170,
-    "width": 300,
-    "height": 360,
+    "left": 475,
+    "top": 195,
+    "width": 250,
+    "height": 320,
     "radius": 16
   },
 
