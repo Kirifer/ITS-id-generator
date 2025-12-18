@@ -66,12 +66,11 @@ export const setupInterceptors = () => {
           }
         } catch (refreshError) {
           processQueue(refreshError);
-
           loginStore.getState().reset();
           authCheckStore.getState().reset();
           refreshStore.getState().reset();
           logoutStore.getState().reset();
-          localStorage.removeItem("role");
+ 
 
           if (navigate) navigate("/login");
 
@@ -86,7 +85,7 @@ export const setupInterceptors = () => {
         authCheckStore.getState().reset();
         refreshStore.getState().reset();
         logoutStore.getState().reset();
-        localStorage.removeItem("role");
+
 
         if (navigate) navigate("/login");
       }

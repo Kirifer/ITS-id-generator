@@ -1,14 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { LayoutGrid, Contact, NotebookText, Loader } from "lucide-react";
 import { FaSignOutAlt } from "react-icons/fa";
 import logo from "../assets/images/logo.png";
-import { logoutStore } from "../store/authStore";
+import { logoutStore, authCheckStore } from "../store/authStore";
 
 export default function Sidebar({ expanded, onMouseEnter, onMouseLeave }) {
-  const { logout, loading, success, error, message, reset } = logoutStore();
+  const { logout, loading, success, error, message: logoutMsg, reset } = logoutStore();
+  const { message: authData } = authCheckStore(); // Get user data from our auth check
   const navigate = useNavigate();
-  const [role, setRole] = useState(localStorage.getItem("role"));
+
+  // Get role directly from the store instead of localStorage
+  const userRole = authData?.role;
 
   const handleLogout = async () => {
     await logout();
@@ -16,15 +19,14 @@ export default function Sidebar({ expanded, onMouseEnter, onMouseLeave }) {
 
   useEffect(() => {
     if (success) {
-      // remove role from localStorage on logout
-      localStorage.removeItem("role");
       reset();
+      // We don't need to manually clear localStorage anymore
       navigate("/login", { replace: true });
     }
     if (error) {
-      console.error(message);
+      console.error(logoutMsg);
     }
-  }, [success, error, message, navigate, reset]);
+  }, [success, error, logoutMsg, navigate, reset]);
 
   return (
     <aside
@@ -34,7 +36,7 @@ export default function Sidebar({ expanded, onMouseEnter, onMouseLeave }) {
     >
       <div className="space-y-6">
         <SidebarLogo expanded={expanded} />
-        <SidebarNav expanded={expanded} role={role} />
+        <SidebarNav expanded={expanded} role={userRole} />
       </div>
       <SidebarFooter
         expanded={expanded}
@@ -44,6 +46,35 @@ export default function Sidebar({ expanded, onMouseEnter, onMouseLeave }) {
     </aside>
   );
 }
+
+function SidebarNav({ expanded, role }) {
+  // Define items based on role
+  let navItems = [];
+
+  if (role === "Admin") {
+    navItems = [
+      { to: "/dashboard", icon: <LayoutGrid size={20} />, label: "Dashboard" },
+      { to: "/id-generator", icon: <Contact size={20} />, label: "ID Generator" },
+      { to: "/generated-ids", icon: <NotebookText size={20} />, label: "Generated IDs" },
+    ];
+  } else if (role === "Approver") {
+    navItems = [
+      { to: "/approver-dashboard", icon: <LayoutGrid size={20} />, label: "Dashboard" },
+      { to: "/approver-generated-ids", icon: <NotebookText size={20} />, label: "Generated IDs" },
+    ];
+  }
+
+  return (
+    <nav className="space-y-3">
+      {navItems.map(({ to, icon, label }) => (
+        <NavItem key={to} to={to} icon={icon} label={label} expanded={expanded} />
+      ))}
+    </nav>
+  );
+}
+
+// SidebarLogo, SidebarFooter, and NavItem remain mostly the same...
+// (Code omitted for brevity, but ensure NavItem uses the same logic)
 
 function SidebarLogo({ expanded }) {
   return (
@@ -58,29 +89,6 @@ function SidebarLogo({ expanded }) {
   );
 }
 
-function SidebarNav({ expanded, role }) {
-  const navItems = [
-    { to: "/dashboard", icon: <LayoutGrid size={20} />, label: "Dashboard" },
-    { to: "/id-generator", icon: <Contact size={20} />, label: "ID Generator" },
-    { to: "/generated-ids", icon: <NotebookText size={20} />, label: "Generated IDs" },
-  ];
-
-  if (role === "Approver") {
-    navItems.splice(0, navItems.length,
-      { to: "/approver-dashboard", icon: <LayoutGrid size={20} />, label: "Dashboard" },
-      { to: "/approver-generated-ids", icon: <NotebookText size={20} />, label: "Generated IDs" }
-    );
-  }
-
-  return (
-    <nav className="space-y-3">
-      {navItems.map(({ to, icon, label }) => (
-        <NavItem key={to} to={to} icon={icon} label={label} expanded={expanded} />
-      ))}
-    </nav>
-  );
-}
-
 function SidebarFooter({ expanded, handleLogout, loading }) {
   return (
     <div className="pt-6 border-t border-gray-600">
@@ -91,13 +99,11 @@ function SidebarFooter({ expanded, handleLogout, loading }) {
         disabled={loading}
       >
         {loading ? (
-          <span>
-            <Loader className="animate-spin" />
-          </span>
+          <Loader className="animate-spin" size={18} />
         ) : (
           <FaSignOutAlt />
         )}
-        <span className={expanded ? "" : "sr-only"}>Logout</span>
+        <span className={expanded ? "block" : "hidden"}>Logout</span>
       </button>
     </div>
   );
@@ -113,7 +119,7 @@ function NavItem({ icon, label, to, expanded }) {
       }
     >
       {icon}
-      <span className={expanded ? "" : "sr-only"}>{label}</span>
+      <span className={expanded ? "block" : "hidden"}>{label}</span>
     </NavLink>
   );
 }

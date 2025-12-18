@@ -23,11 +23,10 @@ function AppRoutes() {
     setNavigate(navigate);
     setupInterceptors();
     if (!hasChecked.current) {
-      const hasAccessToken = document.cookie.includes("accessToken");
-      if (hasAccessToken) authCheck();
+      authCheck();
       hasChecked.current = true;
     }
-  }, [navigate]);
+  }, [authCheck, navigate]);
 
   return (
     <div className="App min-h-screen custom-bg">

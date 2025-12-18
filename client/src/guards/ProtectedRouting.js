@@ -1,3 +1,4 @@
+import React from "react";
 import { Navigate } from "react-router-dom";
 import { authCheckStore } from "../store/authStore";
 
@@ -19,9 +20,12 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const userRole = message?.role;
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
-    if (userRole === "Admin") return <Navigate to="/dashboard" replace />;
-    if (userRole === "Approver")
+    if (userRole === "Admin") {
+      return <Navigate to="/dashboard" replace />;
+    }
+    if (userRole === "Approver") {
       return <Navigate to="/approver-dashboard" replace />;
+    }
     return <Navigate to="/login" replace />;
   }
 

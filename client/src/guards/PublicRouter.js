@@ -3,11 +3,9 @@ import { Navigate } from "react-router-dom";
 import { authCheckStore } from "../store/authStore";
 
 const PublicRoute = ({ children }) => {
+  const { loading, success, message } = authCheckStore();
 
-  const { loading, success, error, message } = authCheckStore();
-
-
-  if (loading && !error) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -18,13 +16,11 @@ const PublicRoute = ({ children }) => {
     );
   }
 
-
   if (success && message?.role) {
     const userRole = message.role;
     if (userRole === "Admin") return <Navigate to="/dashboard" replace />;
     if (userRole === "Approver") return <Navigate to="/approver-dashboard" replace />;
   }
-
 
   return children;
 };

@@ -28,8 +28,7 @@ const Login = () => {
         await authCheckStore.getState().authCheck();
         
         const userRole = authCheckStore.getState().message?.role;
-
-        if (userRole) localStorage.setItem("role", userRole);
+     
         
         if (mounted) {
           if (userRole === "Admin") {

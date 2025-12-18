@@ -46,16 +46,15 @@ export const loginStore = create(
       set({ loading: false, success: false, error: false, message: "" }),
   }))
 );
-
 export const authCheckStore = create(
   devtools((set) => ({
-    loading: false,
+    loading: true,
     success: false,
     error: false,
-    message: "",
+    message: null,
 
     authCheck: async () => {
-      set({ loading: true, success: false, error: false, message: "" });
+      set({ loading: true, success: false, error: false });
       try {
         const response = await axiosInstance.get("/auth/check", {
           withCredentials: true,
@@ -89,7 +88,6 @@ export const authCheckStore = create(
       set({ loading: false, success: false, error: false, message: "" }),
   }))
 );
-
 export const logoutStore = create(
   devtools((set) => ({
     loading: false,
