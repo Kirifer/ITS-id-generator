@@ -25,6 +25,9 @@ const postIdGenerator = async (req, res) => {
         message: "ID must be approved before generation",
       });
     }
+    if (card.generatedFrontImagePath && card.generatedBackImagePath) {
+      return res.status(400).json({ message: "ID already generated" });
+    }
 
     if (!card.photoPath) {
       return res.status(400).json({
@@ -52,7 +55,7 @@ const postIdGenerator = async (req, res) => {
     card.generatedFrontImagePath = front;
     card.generatedBackImagePath = back;
     card.templateVersion = `${card.type}_V1`;
-
+    card.issuedAt = new Date();
     await card.save();
 
     res.json({

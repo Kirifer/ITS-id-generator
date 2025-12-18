@@ -242,43 +242,69 @@ const patchIdCardDetails = async (req, res) => {
     const photo = req.files?.photo?.[0];
     const hrSignature = req.files?.hrSignature?.[0];
 
+    let updated = false; // flag to detect changes
+
     /* ===== UPDATE INTERN NAME ===== */
-    if (req.body.firstName) card.fullName.firstName = req.body.firstName;
-
-    if (req.body.middleInitial !== undefined)
+    if (req.body.firstName) {
+      card.fullName.firstName = req.body.firstName;
+      updated = true;
+    }
+    if (req.body.middleInitial !== undefined) {
       card.fullName.middleInitial = req.body.middleInitial;
-
-    if (req.body.lastName) card.fullName.lastName = req.body.lastName;
+      updated = true;
+    }
+    if (req.body.lastName) {
+      card.fullName.lastName = req.body.lastName;
+      updated = true;
+    }
 
     /* =========================
        EMERGENCY CONTACT
     ========================= */
-
-    if (req.body.emFirstName)
+    if (req.body.emFirstName) {
       card.emergencyContact.firstName = req.body.emFirstName;
-
-    if (req.body.emMiddleInitial !== undefined)
+      updated = true;
+    }
+    if (req.body.emMiddleInitial !== undefined) {
       card.emergencyContact.middleInitial = req.body.emMiddleInitial;
-
-    if (req.body.emLastName)
+      updated = true;
+    }
+    if (req.body.emLastName) {
       card.emergencyContact.lastName = req.body.emLastName;
-
-    if (req.body.emPhone) card.emergencyContact.phone = req.body.emPhone;
+      updated = true;
+    }
+    if (req.body.emPhone) {
+      card.emergencyContact.phone = req.body.emPhone;
+      updated = true;
+    }
 
     /* ===== UPDATE HR DETAILS ===== */
-    if (req.body.hrName) card.hrDetails.name = req.body.hrName;
-
-    if (req.body.hrPosition) card.hrDetails.position = req.body.hrPosition;
+    if (req.body.hrName) {
+      card.hrDetails.name = req.body.hrName;
+      updated = true;
+    }
+    if (req.body.hrPosition) {
+      card.hrDetails.position = req.body.hrPosition;
+      updated = true;
+    }
 
     /* ===== UPDATE FILES ===== */
     if (photo) {
       await sharp(photo.path).metadata();
       card.photoPath = `/uploads/photos/${photo.filename}`;
+      updated = true;
     }
-
     if (hrSignature) {
       await sharp(hrSignature.path).metadata();
       card.hrDetails.signaturePath = `/uploads/photos/${hrSignature.filename}`;
+      updated = true;
+    }
+
+    /* ===== RESET STATUS IF UPDATED ===== */
+    if (updated) {
+      card.status = "Pending"; // reset approval status
+      card.generatedFrontImagePath = null; // reset generated ID images
+      card.generatedBackImagePath = null;
     }
 
     await card.save();

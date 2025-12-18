@@ -49,13 +49,13 @@ app.use("/uploads", express.static(primaryUploads));
 // app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Logger
-app.use((req, res, next) => {
-  console.log("=== Incoming Request ===");
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  console.log("Headers:", req.headers);
-  console.log("Body:", req.body);
-  next();
-});
+// app.use((req, res, next) => {
+//   console.log("=== Incoming Request ===");
+//   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+//   console.log("Headers:", req.headers);
+//   console.log("Body:", req.body);
+//   next();
+// });
 
 // ===== ROUTES =====
 app.use("/api/auth", authRoutes);
