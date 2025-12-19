@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import InfoField from "../Common/InfoFile";
 import { getImageUrl } from "../../utils/imageUrl";
+import { saveAs } from "file-saver";
 
 export default function ViewPanel({ row, onEdit, onClose }) {
   const [side, setSide] = useState("front");
@@ -19,11 +20,32 @@ export default function ViewPanel({ row, onEdit, onClose }) {
   function printImage(url) {
     const w = window.open("", "PRINT", "height=700,width=900");
     if (!w) return;
-    w.document
-      .write(`<html><head><title>Print ${filenameBase}</title></head><body style="margin:0">
-      <img src="${url}" style="width:100%;max-width:100%" onload="window.focus();window.print();window.close();" />
-    </body></html>`);
+    w.document.write(`
+      <html>
+        <head><title>Print ${filenameBase}</title></head>
+        <body style="margin:0">
+          <img
+            src="${url}"
+            style="width:100%;max-width:100%"
+            onload="window.focus();window.print();window.close();"
+          />
+        </body>
+      </html>
+    `);
     w.document.close();
+  }
+
+  // ✅ File-Saver download handler
+  async function downloadImage() {
+    if (!src) return;
+
+    try {
+      const response = await fetch(src);
+      const blob = await response.blob();
+      saveAs(blob, `${filenameBase}-${side}.png`);
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
   }
 
   const backAvailable = Boolean(row.generatedBackImagePath);
@@ -78,14 +100,14 @@ export default function ViewPanel({ row, onEdit, onClose }) {
       <div className="mt-3 flex gap-3">
         {src && (
           <>
-            <a
-              href={src}
-              download={`${filenameBase}-${side}.png`}
+            <button
+              onClick={downloadImage}
               className="flex-1 inline-flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 rounded-md"
               title="Download"
             >
               Download ({side})
-            </a>
+            </button>
+
             <button
               onClick={() => printImage(src)}
               className="flex-1 inline-flex items-center justify-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-md"
