@@ -18,6 +18,7 @@ import {
   idCardUpdateStore,
 } from "../store/cardStore";
 import { generateIDStore } from "../store/generateStore";
+
 export default function Admin_GeneratedIDs() {
   const mainRef = useRef(null);
   const formRef = useRef(null);
@@ -80,6 +81,7 @@ export default function Admin_GeneratedIDs() {
     if (updateSuccess) {
       showMessageBox(updateMessage);
       updateReset();
+      getIdCards();
       setPanelMode("view");
       setPhoto(null);
       setHrSignature(null);
@@ -88,7 +90,7 @@ export default function Admin_GeneratedIDs() {
       showMessageBox(updateMessage);
       updateReset();
     }
-  }, [updateSuccess, updateError, updateMessage, updateReset]);
+  }, [updateSuccess, updateError, updateMessage, updateReset, getIdCards]);
 
   useEffect(() => {
     if (deleteSuccess) {
@@ -205,7 +207,6 @@ export default function Admin_GeneratedIDs() {
     formData.append("firstName", selectedId.firstName);
     formData.append("middleInitial", selectedId.middleInitial);
     formData.append("lastName", selectedId.lastName);
-    formData.append("employeeNumber", selectedId.employeeNumber);
     formData.append("position", selectedId.position);
     formData.append("type", selectedId.type);
     formData.append("email", selectedId.email);
@@ -226,18 +227,6 @@ export default function Admin_GeneratedIDs() {
 
     try {
       await idCardUpdate(formData, selectedId._id);
-      const updatedItem = {
-        ...selectedId,
-        status: "Pending",
-        generatedFrontImagePath: "",
-        generatedBackImagePath: "",
-      };
-      idCardStore.setState((state) => ({
-        items: state.items.map((d) =>
-          d._id === selectedId._id ? updatedItem : d
-        ),
-      }));
-      setSelectedId(updatedItem);
     } catch (e) {}
   }
 
