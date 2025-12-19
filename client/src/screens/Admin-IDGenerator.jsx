@@ -110,6 +110,7 @@ export default function Admin_IDGenerator() {
       setHrSignature(null);
       setHrSignatureError("");
     } else {
+      console.log(message)
       showMessageBoxIdGen(message || "ID generation failed!");
     }
   };
