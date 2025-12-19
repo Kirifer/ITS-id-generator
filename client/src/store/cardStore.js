@@ -324,3 +324,44 @@ export const idCardPostStore = create(
       }),
   }))
 );
+
+
+export const idCardDetailStore = create(
+  devtools((set) => ({
+    loading: false,
+    success: false,
+    error: false,
+    message: "",
+    data: null,
+
+    getIdCardDetail: async (employeeNumber) => {
+      set({ loading: true, success: false, error: false, message: "" });
+
+      try {
+        const response = await axiosInstance.get(
+          `/id-cards/by-employee-number/${employeeNumber}`,
+          { withCredentials: true }
+        );
+
+        set({
+          loading: false,
+          success: true,
+          error: false,
+          message: "ID card fetched successfully",
+          data: response.data,
+        });
+      } catch (err) {
+        set({
+          loading: false,
+          success: false,
+          error: true,
+          message: err.response?.data?.message || "Something went wrong",
+          data: null,
+        });
+      }
+    },
+
+    reset: () =>
+      set({ loading: false, success: false, error: false, message: "", data: null }),
+  }))
+);

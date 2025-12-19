@@ -1,49 +1,42 @@
-// src/components/Viewing.jsx
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-
-const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000/api";
-const ASSET_BASE = (API_BASE || "").replace(/\/api$/, "");
+import { idCardDetailStore } from "../store/cardStore";
+import { getImageUrl } from "../utils/imageUrl";
+import { saveAs } from "file-saver";
 
 export default function GeneratedID() {
   const { idNumber } = useParams();
-  const [data, setData] = useState(null);
-  const [err, setErr] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  const imgUrl = useMemo(() => {
-    if (!data?.generatedImagePath) return "";
-    return ASSET_BASE + data.generatedImagePath;
-  }, [data]);
+  const { data, loading, error, message, getIdCardDetail } = idCardDetailStore();
+  const [side, setSide] = useState("front");
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setErr("");
-      try {
-        const res = await fetch(`${API_BASE}/id-cards/by-id-number/${encodeURIComponent(idNumber)}`);
-        if (!res.ok) {
-          const j = await res.json().catch(() => ({}));
-          throw new Error(j.message || `Lookup failed (${res.status})`);
-        }
-        const j = await res.json();
-        if (!cancelled) setData(j);
-      } catch (e) {
-        if (!cancelled) setErr(e.message || "Unable to load ID");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [idNumber]);
+    if (idNumber) {
+      getIdCardDetail(idNumber);
+    }
+  }, [idNumber, getIdCardDetail]);
+
+  const imgUrl = useMemo(() => {
+    if (!data) return "";
+    const path =
+      side === "back"
+        ? data.generatedBackImagePath
+        : data.generatedFrontImagePath;
+    return path ? getImageUrl(path) : "";
+  }, [data, side]);
+
+  const handleDownload = () => {
+    if (!imgUrl) return;
+    saveAs(imgUrl, `ID-${idNumber}-${side}.png`);
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen custom-bg p-6">
       <div className="bg-white rounded-3xl shadow-lg p-8 w-full max-w-3xl">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-extrabold text-gray-800">View Generated ID</h1>
-          <Link to="/view-login" className="text-sm text-purple-600 hover:underline">Back</Link>
+          <Link to="/view-login" className="text-sm text-purple-600 hover:underline">
+            Back
+          </Link>
         </div>
 
         <div className="mb-4 text-gray-600 text-sm">
@@ -52,10 +45,29 @@ export default function GeneratedID() {
 
         {loading ? (
           <div className="text-gray-600">Loading…</div>
-        ) : err ? (
-          <div className="text-red-600">{err}</div>
+        ) : error ? (
+          <div className="text-red-600">{message}</div>
         ) : (
           <>
+            <div className="flex gap-2 mb-3">
+              <button
+                onClick={() => setSide("front")}
+                className={`px-3 py-1 rounded ${
+                  side === "front" ? "bg-purple-600 text-white" : "bg-gray-200"
+                }`}
+              >
+                Front
+              </button>
+              <button
+                onClick={() => setSide("back")}
+                className={`px-3 py-1 rounded ${
+                  side === "back" ? "bg-purple-600 text-white" : "bg-gray-200"
+                }`}
+              >
+                Back
+              </button>
+            </div>
+
             <div className="border rounded-xl p-3 bg-gray-50 mb-6">
               {imgUrl ? (
                 <img
@@ -79,13 +91,12 @@ export default function GeneratedID() {
 
             {imgUrl && (
               <div className="mt-6 flex gap-3">
-                <a
-                  href={imgUrl}
-                  download={`ID-${idNumber}.png`}
+                <button
+                  onClick={handleDownload}
                   className="flex-1 text-center bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 rounded-md"
                 >
                   Download
-                </a>
+                </button>
                 <button
                   onClick={() => window.print()}
                   className="flex-1 bg-gray-300 hover:bg-gray-400 text-white font-semibold py-2 rounded-md"
@@ -105,7 +116,9 @@ function Info({ label, value }) {
   return (
     <div>
       <div className="text-gray-500 text-xs">{label}</div>
-      <div className="font-medium text-gray-800 break-words">{value || "—"}</div>
+      <div className="font-medium text-gray-800 break-words">
+        {value || "—"}
+      </div>
     </div>
   );
 }

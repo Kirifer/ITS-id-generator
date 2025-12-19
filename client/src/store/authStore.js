@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { axiosInstance } from "../api/axiosConfig";
 
-
 export const loginStore = create(
   devtools((set) => ({
     loading: false,
@@ -54,38 +53,21 @@ export const authCheckStore = create(
     message: null,
 
     authCheck: async () => {
-      set({ loading: true, success: false, error: false });
+      set({ loading: true });
       try {
-        const response = await axiosInstance.get("/auth/check", {
-          withCredentials: true,
-        });
+        const response = await axiosInstance.get("/auth/check");
         if (response.data?.success) {
-          set({
-            loading: false,
-            success: true,
-            error: false,
-            message: response.data,
-          });
+          set({ loading: false, success: true, message: response.data });
         } else {
-          set({
-            loading: false,
-            success: false,
-            error: true,
-            message: response.data?.error || "Auth check failed",
-          });
+          set({ loading: false, success: false, message: null });
         }
       } catch (err) {
-        set({
-          loading: false,
-          success: false,
-          error: true,
-          message: err.response?.data?.error || "Something went wrong",
-        });
+        set({ loading: false, success: false, error: true });
       }
     },
 
     reset: () =>
-      set({ loading: false, success: false, error: false, message: "" }),
+      set({ loading: false, success: false, message: null, error: false }),
   }))
 );
 export const logoutStore = create(
@@ -170,3 +152,4 @@ export const refreshStore = create(
       set({ loading: false, success: false, error: false, message: "" }),
   }))
 );
+
