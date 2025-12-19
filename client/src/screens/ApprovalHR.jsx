@@ -90,17 +90,30 @@ export default function ApprovalHR() {
       middleInitial: doc?.fullName?.middleInitial || '',
       lastName: doc?.fullName?.lastName || '',
       idNumber: doc?.idNumber || '',
+      employeeNumber: doc?.employeeNumber || '',
       position: doc?.position || '',
       type: doc?.type || '',
       status: doc?.status || '',
+      templateVersion: doc?.templateVersion || '',
       date: fmtDate(doc?.createdAt),
-      emergencyFirstName: doc?.emergencyContact?.firstName || '',
-      emergencyMiddleInitial: doc?.emergencyContact?.middleInitial || '',
-      emergencyLastName: doc?.emergencyContact?.lastName || '',
-      emergencyContactNumber: doc?.emergencyContact?.phone || '',
+      issuedAt: doc?.issuedAt ? fmtDate(doc.issuedAt) : '',
+      email: doc?.contactDetails?.email || '',
+      phone: doc?.contactDetails?.phone || '',
+      // Fixed property names to match ViewPanel expectations
+      emFirstName: doc?.emergencyContact?.firstName || '',
+      emMiddleInitial: doc?.emergencyContact?.middleInitial || '',
+      emLastName: doc?.emergencyContact?.lastName || '',
+      emPhone: doc?.emergencyContact?.phone || '',
       generatedFrontImagePath: doc?.generatedFrontImagePath || doc?.generatedImagePath || '',
       generatedBackImagePath: doc?.generatedBackImagePath || '',
       photoPath: doc?.photoPath || '',
+      hrName: doc?.hrDetails?.name || '',
+      hrPosition: doc?.hrDetails?.position || '',
+      hrSignaturePath: doc?.hrDetails?.signaturePath || '',
+      approvedBy: doc?.approvedBy || '',
+      createdBy: doc?.createdBy || '',
+      createdAt: doc?.createdAt || '',
+      updatedAt: doc?.updatedAt || '',
     }))
   , [items]);
 
@@ -183,7 +196,6 @@ export default function ApprovalHR() {
               {viewMode === 'view' && selectedId && (
                 <ViewPanel
                   row={selectedId}
-                  onEdit={() => handleEdit(selectedId)}
                   onClose={handleClose}
                 />
               )}
