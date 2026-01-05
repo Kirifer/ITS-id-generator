@@ -1,8 +1,9 @@
 {
   "background": "Intern-Front-Template.png",
-  "designSize": { "width": 1200, "height": 750 },
-  "forceOutputToDesignSize": false,
-  "backgroundFit": "contain",
+  "designSize": {
+    "width": 1200,
+    "height": 750
+  },
 
   "photo": {
     "left": 475,
@@ -18,22 +19,29 @@
       "y": 560,
       "align": "center",
       "fontSize": 40,
+      "minFontSize": 18,
+      "maxWidth": 420,
       "fill": "#111",
       "weight": 700
     },
+
     "position": {
       "x": 600,
       "y": 610,
       "align": "center",
       "fontSize": 30,
+      "minFontSize": 18,
+      "maxWidth": 480,
       "fill": "#2f6cb4",
       "weight": 600
     },
+
     "idNumber": {
       "x": 600,
       "y": 655,
       "align": "center",
       "fontSize": 28,
+      "maxWidth": 400,
       "fill": "#111",
       "weight": 500
     }

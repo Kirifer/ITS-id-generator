@@ -11,14 +11,18 @@
       "y": 300,
       "align": "center",
       "fontSize": 30,
+      "minFontSize": 18,
+      "maxWidth": 520,
       "fill": "#111",
       "weight": 700
     },
+
     "emPhone": {
       "x": 375,
       "y": 350,
       "align": "center",
       "fontSize": 28,
+      "maxWidth": 420,
       "fill": "#111",
       "weight": 600
     },
@@ -28,14 +32,19 @@
       "y": 750,
       "align": "center",
       "fontSize": 26,
+      "minFontSize": 16,
+      "maxWidth": 480,
       "fill": "#111",
       "weight": 700
     },
+
     "hrTitle": {
       "x": 375,
       "y": 800,
       "align": "center",
       "fontSize": 22,
+      "minFontSize": 14,
+      "maxWidth": 460,
       "fill": "#111",
       "weight": 600
     }

@@ -88,12 +88,10 @@ async function renderSide(card, templateKey, suffix) {
 
   /* ---------- BACKGROUND ---------- */
   const scale = Math.min(tpl.designW / tpl.bgW, tpl.designH / tpl.bgH);
-
   const bgDrawW = tpl.bgW * scale;
   const bgDrawH = tpl.bgH * scale;
   const bgX = (tpl.designW - bgDrawW) / 2;
   const bgY = (tpl.designH - bgDrawH) / 2;
-
   ctx.drawImage(tpl.bgImage, bgX, bgY, bgDrawW, bgDrawH);
 
   /* ---------- PHOTO (FRONT ONLY) ---------- */
@@ -123,20 +121,33 @@ async function renderSide(card, templateKey, suffix) {
     ctx.drawImage(barcodeImg, bx, by, bw, bh);
   }
 
-  /* ---------- TEXT ---------- */
+  /* ---------- TEXT (AUTO SHRINK) ---------- */
   const drawText = (value, spec) => {
     if (!value || !spec) return;
 
-    ctx.fillStyle = spec.fill || "#000";
-    ctx.font = `${spec.weight || 700} ${spec.fontSize || 30}px Arial`;
+    const x = toPx(spec.x, tpl.designW);
+    const y = toPx(spec.y, tpl.designH);
+    const maxWidth = spec.maxWidth
+      ? toPx(spec.maxWidth, tpl.designW)
+      : null;
+
+    let fontSize = spec.fontSize || 30;
+    const minFontSize = spec.minFontSize || 14;
+
     ctx.textAlign = spec.align || "left";
     ctx.textBaseline = "top";
+    ctx.fillStyle = spec.fill || "#000";
 
-    ctx.fillText(
-      value,
-      toPx(spec.x, tpl.designW),
-      toPx(spec.y, tpl.designH)
-    );
+    while (fontSize >= minFontSize) {
+      ctx.font = `${spec.weight || 700} ${fontSize}px Arial`;
+
+      if (!maxWidth) break;
+
+      if (ctx.measureText(value).width <= maxWidth) break;
+      fontSize--;
+    }
+
+    ctx.fillText(value, x, y);
   };
 
   /* ---------- FRONT TEXT ---------- */
@@ -164,11 +175,9 @@ async function renderSide(card, templateKey, suffix) {
       );
     }
 
-    /* ✅ HR TEXT (MANUAL INPUT) */
     drawText(card.hrDetails.name, tpl.text.hrName);
     drawText(card.hrDetails.position, tpl.text.hrTitle);
 
-    /* ✅ HR SIGNATURE (IMAGE) */
     if (tpl.signature && card.hrDetails.signaturePath) {
       const sigImg = await loadImage(
         path.join(SERVER_ROOT, card.hrDetails.signaturePath.replace(/^\//, ""))
