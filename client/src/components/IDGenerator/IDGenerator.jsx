@@ -79,9 +79,9 @@ export default function IDGeneratorForm({
       setError("Invalid file type. Only JPEG and PNG are allowed.");
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
+    if (file.size > 4 * 1024 * 1024) {
       setFile(null);
-      setError("File too large. Max 2MB.");
+      setError("File too large. Max 4MB.");
       return;
     }
     setFile(file);

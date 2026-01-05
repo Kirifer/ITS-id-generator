@@ -24,7 +24,7 @@ export default function FileUpload({
           }
         </p>
         <p className="text-xs text-center">
-          Supported formats: JPEG & PNG. Max file size: 2MB.
+          Supported formats: JPEG & PNG. Max file size: 4MB.
         </p>
         {error && (
           <p className="text-xs text-center text-red-500 mt-2">
