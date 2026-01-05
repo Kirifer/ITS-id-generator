@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import logo from "../assets/images/logo.png";
 import { Eye, EyeOff, User, Lock } from "lucide-react";
 import { loginStore, authCheckStore } from "../store/authStore";
+import { toast } from "sonner";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -24,19 +25,18 @@ const Login = () => {
     const handleSuccess = async () => {
       if (success && mounted) {
         authCheckStore.getState().reset();
-        
+
         await authCheckStore.getState().authCheck();
-        
+
         const userRole = authCheckStore.getState().message?.role;
-     
-        
+
         if (mounted) {
           if (userRole === "Admin") {
             navigate("/dashboard", { replace: true });
           } else if (userRole === "Approver") {
             navigate("/approver-dashboard", { replace: true });
           }
-          
+
           reset();
         }
       }
@@ -51,9 +51,10 @@ const Login = () => {
 
   useEffect(() => {
     if (error && message) {
-      alert(message);
+      toast.error(message);
+      reset();
     }
-  }, [error, message]);
+  }, [error, message, reset]);
 
   return (
     <div className="flex custom-bg items-center justify-center min-h-screen p-6 font-poppins bg-gray-50">

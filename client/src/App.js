@@ -19,6 +19,7 @@ import Approver_Dashboard from "./screens/DashboardHR";
 import Approver_GeneratedIDs from "./screens/ApprovalHR";
 import IDViewer from "./screens/Login2";
 import GeneratedID from "./screens/Viewing";
+import { Toaster } from "sonner";
 
 function AppRoutes() {
   const { authCheck, loading } = authCheckStore();
@@ -116,6 +117,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <Router>
+      <Toaster richColors position="top-right" />
       <AppRoutes />
     </Router>
   );

@@ -32,11 +32,12 @@ export const loginStore = create(
           });
         }
       } catch (err) {
+
         set({
           loading: false,
           success: false,
           error: true,
-          message: err.response?.data?.error || "Something went wrong",
+          message: err.response?.data?.message || "Something went wrong",
         });
       }
     },
@@ -99,6 +100,7 @@ export const logoutStore = create(
           });
         }
       } catch (err) {
+  
         set({
           loading: false,
           success: false,

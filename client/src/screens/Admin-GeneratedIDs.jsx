@@ -10,6 +10,8 @@ import IDTable from "../components/GeneratedIDs/IDtable";
 import ViewPanel from "../components/GeneratedIDs/ViewPanel";
 import EditPanel from "../components/GeneratedIDs/EditPanel";
 import FilterBar from "../components/GeneratedIDs/FilterBar";
+import DeleteConfirmModal from "../components/Modal/DeleteConfirmModal";
+import GenerateConfirmModal from "../components/Modal/GenerateConfirmModal";
 import { showMessageBox } from "../utils/messageBox";
 import { fmtDate } from "../utils/dateFormatter";
 import {
@@ -59,6 +61,10 @@ export default function Admin_GeneratedIDs() {
   const [typeFilter, setTypeFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedId, setSelectedId] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [generateModalOpen, setGenerateModalOpen] = useState(false);
+  const [pendingDeleteRow, setPendingDeleteRow] = useState(null);
+  const [pendingGenerateRow, setPendingGenerateRow] = useState(null);
 
   useLayoutEffect(() => {
     if (tableRef.current) {
@@ -101,10 +107,14 @@ export default function Admin_GeneratedIDs() {
       }));
       setSelectedId(null);
       setPanelMode(null);
+      setDeleteModalOpen(false);
+      setPendingDeleteRow(null);
     }
     if (deleteError && deleteMessage) {
       showMessageBox(deleteMessage);
       deleteReset();
+      setDeleteModalOpen(false);
+      setPendingDeleteRow(null);
     }
   }, [deleteSuccess, deleteError, deleteMessage, deleteReset, selectedId]);
 
@@ -126,10 +136,14 @@ export default function Admin_GeneratedIDs() {
           });
         }
       }
+      setGenerateModalOpen(false);
+      setPendingGenerateRow(null);
     }
     if (generateError && generateMessage) {
       showMessageBox(generateMessage);
       generateReset();
+      setGenerateModalOpen(false);
+      setPendingGenerateRow(null);
     }
   }, [
     generateSuccess,
@@ -230,14 +244,19 @@ export default function Admin_GeneratedIDs() {
     } catch (e) {}
   }
 
-  async function onDelete(row) {
-    if (!window.confirm(`Delete ${row.firstName} ${row.lastName}?`)) return;
+  function onDelete(row) {
+    setPendingDeleteRow(row);
+    setDeleteModalOpen(true);
+  }
+
+  async function handleConfirmDelete() {
+    if (!pendingDeleteRow) return;
     try {
-      await idCardDelete(row._id);
+      await idCardDelete(pendingDeleteRow._id);
       idCardStore.setState((state) => ({
-        items: state.items.filter((d) => d._id !== row._id),
+        items: state.items.filter((d) => d._id !== pendingDeleteRow._id),
       }));
-      if (selectedId?._id === row._id) {
+      if (selectedId?._id === pendingDeleteRow._id) {
         setSelectedId(null);
         setPanelMode(null);
       }
@@ -246,18 +265,28 @@ export default function Admin_GeneratedIDs() {
     }
   }
 
-  async function onGenerate(row) {
-    if (
-      !window.confirm(
-        `Generate ID for ${row.firstName} ${row.lastName}?`
-      )
-    )
-      return;
+  function handleCancelDelete() {
+    setDeleteModalOpen(false);
+    setPendingDeleteRow(null);
+  }
+
+  function onGenerate(row) {
+    setPendingGenerateRow(row);
+    setGenerateModalOpen(true);
+  }
+
+  async function handleConfirmGenerate() {
+    if (!pendingGenerateRow) return;
     try {
-      await generateId({ cardId: row._id });
+      await generateId({ cardId: pendingGenerateRow._id });
     } catch (e) {
       console.error(e);
     }
+  }
+
+  function handleCancelGenerate() {
+    setGenerateModalOpen(false);
+    setPendingGenerateRow(null);
   }
 
   const sidebarExpanded = !selectedId || sidebarHover;
@@ -338,6 +367,22 @@ export default function Admin_GeneratedIDs() {
           </div>
         </div>
       </main>
+      <DeleteConfirmModal
+        isOpen={deleteModalOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        firstName={pendingDeleteRow?.firstName || ""}
+        lastName={pendingDeleteRow?.lastName || ""}
+        isLoading={deleteLoading}
+      />
+      <GenerateConfirmModal
+        isOpen={generateModalOpen}
+        onClose={handleCancelGenerate}
+        onConfirm={handleConfirmGenerate}
+        firstName={pendingGenerateRow?.firstName || ""}
+        lastName={pendingGenerateRow?.lastName || ""}
+        isLoading={generateLoading}
+      />
     </div>
   );
 }
