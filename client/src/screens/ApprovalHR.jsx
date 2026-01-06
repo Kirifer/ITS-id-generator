@@ -1,11 +1,11 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import Sidebar from '../components/Sidebar';
-import IDTable from '../components/GeneratedIDs/IDtable';
-import ViewPanel from '../components/GeneratedIDs/ViewPanel';
-import FilterBar from '../components/GeneratedIDs/FilterBar';
-import { idCardApproveStore, idCardRejectStore } from '../store/cardStore';
-import { idCardFilterStore } from '../store/filterStore';
-import { showMessageBox } from '../utils/messageBox';
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import Sidebar from "../components/Sidebar";
+import IDTable from "../components/GeneratedIDs/IDtable";
+import ViewPanel from "../components/GeneratedIDs/ViewPanel";
+import FilterBar from "../components/GeneratedIDs/FilterBar";
+import { idCardApproveStore, idCardRejectStore } from "../store/cardStore";
+import { idCardFilterStore } from "../store/filterStore";
+import { showMessageBox } from "../utils/messageBox";
 
 export default function ApprovalHR() {
   const mainRef = useRef(null);
@@ -16,21 +16,21 @@ export default function ApprovalHR() {
   const items = idCardFilterStore((state) => state.data);
   const fetchIdCards = idCardFilterStore((state) => state.fetchIdCards);
 
-  const { 
+  const {
     loading: approveLoading,
     success: approveSuccess,
     error: approveError,
     message: approveMessage,
     idCardApprove,
-    reset: approveReset 
+    reset: approveReset,
   } = idCardApproveStore();
-  const { 
+  const {
     loading: rejectLoading,
     success: rejectSuccess,
     error: rejectError,
     message: rejectMessage,
     idCardReject,
-    reset: rejectReset 
+    reset: rejectReset,
   } = idCardRejectStore();
 
   const [tableHeight, setTableHeight] = useState(0);
@@ -40,7 +40,6 @@ export default function ApprovalHR() {
 
   useEffect(() => {
     if (!hasFetched.current) {
-      console.log("[APPROVAL_HR] Initial fetch");
       hasFetched.current = true;
       fetchIdCards();
     }
@@ -67,7 +66,13 @@ export default function ApprovalHR() {
       showMessageBox(approveMessage);
       approveReset();
     }
-  }, [approveSuccess, approveError, approveMessage, approveReset, fetchIdCards]);
+  }, [
+    approveSuccess,
+    approveError,
+    approveMessage,
+    approveReset,
+    fetchIdCards,
+  ]);
 
   useEffect(() => {
     if (rejectSuccess) {
@@ -97,8 +102,8 @@ export default function ApprovalHR() {
 
   function handleView(row) {
     setSelectedId({ ...row });
-    setViewMode('view');
-    mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    setViewMode("view");
+    mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function handleClose() {
@@ -115,7 +120,11 @@ export default function ApprovalHR() {
       <main ref={mainRef} className="flex-1 overflow-auto custom-bg">
         <div className="p-6">
           <div className="flex flex-col lg:flex-row gap-6 w-full max-w-screen-xl mx-auto items-start">
-            <div ref={tableRef} className="lg:w-[60%] bg-white rounded-2xl shadow-md p-6 flex flex-col transition-all duration-300" style={{ height: `${tableHeight}px` }}>
+            <div
+              ref={tableRef}
+              className="lg:w-[60%] bg-white rounded-2xl shadow-md p-6 flex flex-col transition-all duration-300"
+              style={{ height: `${tableHeight}px` }}
+            >
               <FilterBar />
               <IDTable
                 canView={true}
@@ -130,12 +139,13 @@ export default function ApprovalHR() {
                 externalLoading={isActionLoading}
               />
             </div>
-            <div ref={formRef} className="lg:w-[40%] bg-white rounded-2xl shadow-md p-6 overflow-auto" style={{ maxHeight: `${tableHeight}px` }}>
-              {viewMode === 'view' && selectedId && (
-                <ViewPanel
-                  row={selectedId}
-                  onClose={handleClose}
-                />
+            <div
+              ref={formRef}
+              className="lg:w-[40%] bg-white rounded-2xl shadow-md p-6 overflow-auto"
+              style={{ maxHeight: `${tableHeight}px` }}
+            >
+              {viewMode === "view" && selectedId && (
+                <ViewPanel row={selectedId} onClose={handleClose} />
               )}
               {!viewMode && (
                 <p className="text-gray-800 text-sm font-extrabold">

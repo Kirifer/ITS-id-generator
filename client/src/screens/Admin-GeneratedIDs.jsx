@@ -19,7 +19,7 @@ export default function Admin_GeneratedIDs() {
 
   const items = idCardFilterStore((state) => state.data);
   const fetchIdCards = idCardFilterStore((state) => state.fetchIdCards);
-  
+
   const {
     loading: deleteLoading,
     success: deleteSuccess,
@@ -58,7 +58,6 @@ export default function Admin_GeneratedIDs() {
 
   useEffect(() => {
     if (!hasFetched.current) {
-      console.log("[ADMIN_GENERATED_IDS] Initial fetch");
       hasFetched.current = true;
       fetchIdCards();
     }
@@ -120,7 +119,13 @@ export default function Admin_GeneratedIDs() {
       setGenerateModalOpen(false);
       setPendingGenerateRow(null);
     }
-  }, [generateSuccess, generateError, generateMessage, generateReset, fetchIdCards]);
+  }, [
+    generateSuccess,
+    generateError,
+    generateMessage,
+    generateReset,
+    fetchIdCards,
+  ]);
 
   function onView(row) {
     setSelectedId({ ...row });

@@ -19,19 +19,19 @@ export default function FilterBar() {
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
-    console.log("[FILTERBAR] Search change:", value);
+
     setFilter("search", value);
   };
 
   const handleTypeChange = (e) => {
     const value = e.target.value === "All" ? "" : e.target.value;
-    console.log("[FILTERBAR] Type change:", value);
+ 
     setFilter("type", value);
   };
 
   const handleStatusChange = (e) => {
     const value = e.target.value === "All" ? "" : e.target.value;
-    console.log("[FILTERBAR] Status change:", value);
+   
     setFilter("status", value);
   };
 
@@ -41,25 +41,19 @@ export default function FilterBar() {
       prevFiltersRef.current.type !== filters.type ||
       prevFiltersRef.current.status !== filters.status;
 
-    console.log("[FILTERBAR] Effect triggered", {
-      initialized,
-      filtersChanged,
-      prevFilters: prevFiltersRef.current,
-      currentFilters: filters
-    });
 
     if (!initialized) {
-      console.log("[FILTERBAR] Not initialized yet - skipping");
+      
       prevFiltersRef.current = filters;
       return;
     }
 
     if (!filtersChanged) {
-      console.log("[FILTERBAR] Filters haven't changed - skipping");
+ 
       return;
     }
 
-    console.log("[FILTERBAR] Filter changed, scheduling debounced fetch");
+  
     prevFiltersRef.current = filters;
     
     if (debounceRef.current) {
@@ -67,7 +61,7 @@ export default function FilterBar() {
     }
 
     debounceRef.current = setTimeout(() => {
-      console.log("[FILTERBAR] Debounce timeout - calling fetchIdCards");
+
       fetchRef.current();
     }, 500);
 

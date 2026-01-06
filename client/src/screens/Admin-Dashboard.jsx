@@ -19,7 +19,7 @@ export default function AdminDashboard() {
 
   const items = idCardFilterStore((state) => state.data);
   const fetchIdCards = idCardFilterStore((state) => state.fetchIdCards);
-  
+
   const [viewRow, setViewRow] = useState(null);
   const [tableHeight, setTableHeight] = useState(0);
 
@@ -36,7 +36,6 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!hasFetched.current) {
-      console.log("[DASHBOARD] Initial fetch");
       hasFetched.current = true;
       fetchIdCards();
     }

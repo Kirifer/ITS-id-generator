@@ -21,7 +21,7 @@ export default function IDTable({
   const items = idCardFilterStore((state) => state.data);
   const loading = idCardFilterStore((state) => state.loading);
   const error = idCardFilterStore((state) => state.error);
-  
+
   const isLoading = externalLoading || loading;
 
   const fmtDate = (iso) => {
@@ -35,7 +35,6 @@ export default function IDTable({
   };
 
   const filteredData = useMemo(() => {
-    console.log("[IDTABLE] Recalculating filteredData, items count:", items.length);
     return items.map((id) => ({
       _id: id._id,
       firstName: id?.fullName?.firstName || "",

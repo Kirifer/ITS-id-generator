@@ -17,7 +17,6 @@ export const idCardFilterStore = create(
     },
 
     setFilter: (key, value) => {
-      console.log(`[STORE] setFilter called: ${key} = ${value}`);
       set((state) => ({
         filters: {
           ...state.filters,
@@ -27,7 +26,6 @@ export const idCardFilterStore = create(
     },
 
     fetchIdCards: async () => {
-      console.log("[STORE] fetchIdCards CALLED");
       set({ loading: true, error: false, message: "", initialized: true });
 
       try {
@@ -38,18 +36,16 @@ export const idCardFilterStore = create(
         if (status) params.status = status;
         if (search) params.search = search;
 
-        console.log("[STORE] Fetching with params:", params);
         const res = await axiosInstance.get("/filter/", {
           params,
           withCredentials: true,
         });
-        console.log("[STORE] Fetch response:", res);
+
         set({
           loading: false,
           data: res.data,
         });
       } catch (err) {
-        console.error("[STORE] Fetch error:", err);
         set({
           loading: false,
           error: true,
