@@ -7,7 +7,6 @@ import FilterBar from "../components/GeneratedIDs/FilterBar";
 import DeleteConfirmModal from "../components/Modal/DeleteConfirmModal";
 import GenerateConfirmModal from "../components/Modal/GenerateConfirmModal";
 import { showMessageBox } from "../utils/messageBox";
-import { fmtDate } from "../utils/dateFormatter";
 import { idCardDeleteStore, idCardUpdateStore } from "../store/cardStore";
 import { generateIDStore } from "../store/generateStore";
 import { idCardFilterStore } from "../store/filterStore";
@@ -17,13 +16,7 @@ export default function Admin_GeneratedIDs() {
   const formRef = useRef(null);
   const tableRef = useRef(null);
 
-  const {
-    data: items,
-    loading,
-    error,
-    message,
-    fetchIdCards,
-  } = idCardFilterStore();
+  const { data: items } = idCardFilterStore();
   const {
     loading: deleteLoading,
     success: deleteSuccess,
@@ -70,18 +63,9 @@ export default function Admin_GeneratedIDs() {
   }, [items, panelMode]);
 
   useEffect(() => {
-    fetchIdCards();
-  }, [fetchIdCards]);
-
-  useEffect(() => {
-    if (error && message) showMessageBox(message);
-  }, [error, message]);
-
-  useEffect(() => {
     if (updateSuccess) {
       showMessageBox(updateMessage);
       updateReset();
-      fetchIdCards();
       setPanelMode("view");
       setPhoto(null);
       setHrSignature(null);
@@ -90,7 +74,7 @@ export default function Admin_GeneratedIDs() {
       showMessageBox(updateMessage);
       updateReset();
     }
-  }, [updateSuccess, updateError, updateMessage, updateReset, fetchIdCards]);
+  }, [updateSuccess, updateError, updateMessage, updateReset]);
 
   useEffect(() => {
     if (deleteSuccess) {
@@ -116,7 +100,6 @@ export default function Admin_GeneratedIDs() {
     if (generateSuccess) {
       showMessageBox(generateMessage);
       generateReset();
-      fetchIdCards();
       if (selectedId) {
         const updatedCard = items.find((item) => item._id === selectedId._id);
         if (updatedCard) {
@@ -144,34 +127,9 @@ export default function Admin_GeneratedIDs() {
     generateError,
     generateMessage,
     generateReset,
-    fetchIdCards,
     items,
     selectedId,
   ]);
-
-  const tableData = items.map((doc) => ({
-    _id: doc._id,
-    firstName: doc?.fullName?.firstName || "",
-    middleInitial: doc?.fullName?.middleInitial || "",
-    lastName: doc?.fullName?.lastName || "",
-    employeeNumber: doc?.employeeNumber || "",
-    position: doc?.position || "",
-    type: doc?.type || "",
-    status: doc?.status || "",
-    email: doc?.contactDetails?.email || "",
-    phone: doc?.contactDetails?.phone || "",
-    date: fmtDate(doc?.createdAt),
-    emFirstName: doc?.emergencyContact?.firstName || "",
-    emMiddleInitial: doc?.emergencyContact?.middleInitial || "",
-    emLastName: doc?.emergencyContact?.lastName || "",
-    emPhone: doc?.emergencyContact?.phone || "",
-    hrName: doc?.hrDetails?.name || "",
-    hrPosition: doc?.hrDetails?.position || "",
-    generatedFrontImagePath:
-      doc?.generatedFrontImagePath || doc?.generatedImagePath || "",
-    generatedBackImagePath: doc?.generatedBackImagePath || "",
-    photoPath: doc?.photoPath || "",
-  }));
 
   function onView(row) {
     setSelectedId({ ...row });
@@ -266,8 +224,7 @@ export default function Admin_GeneratedIDs() {
   }
 
   const sidebarExpanded = !selectedId || sidebarHover;
-  const isActionLoading =
-    loading || deleteLoading || updateLoading || generateLoading;
+  const isActionLoading = deleteLoading || updateLoading || generateLoading;
 
   return (
     <div className="flex h-screen w-screen font-inter overflow-hidden">
@@ -282,9 +239,6 @@ export default function Admin_GeneratedIDs() {
             >
               <FilterBar />
               <IDTable
-                loading={isActionLoading}
-                err={error ? message : ""}
-                filteredData={tableData}
                 canView
                 canEdit
                 canDelete
@@ -293,6 +247,7 @@ export default function Admin_GeneratedIDs() {
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onGenerate={onGenerate}
+                externalLoading={isActionLoading}
               />
             </div>
             <div

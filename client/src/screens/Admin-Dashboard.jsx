@@ -16,23 +16,9 @@ export default function AdminDashboard() {
   const mainRef = useRef(null);
   const tableRef = useRef(null);
 
-  const { data: items, loading, error, fetchIdCards } = idCardFilterStore();
+  const { data: items } = idCardFilterStore();
   const [viewRow, setViewRow] = useState(null);
   const [tableHeight, setTableHeight] = useState(0);
-
-  useEffect(() => {
-    fetchIdCards();
-  }, [fetchIdCards]);
-
-  const fmtDate = (iso) => {
-    const d = iso ? new Date(iso) : null;
-    if (!d || Number.isNaN(+d)) return "";
-    return d.toLocaleDateString(undefined, {
-      month: "2-digit",
-      day: "2-digit",
-      year: "numeric",
-    });
-  };
 
   const total = items.length;
   const approvedCount = useMemo(
@@ -45,32 +31,6 @@ export default function AdminDashboard() {
   );
   const actionsCount = pendingCount;
 
-  const tableData = useMemo(() => {
-    return items.map((id) => ({
-      _id: id._id,
-      firstName: id?.fullName?.firstName || "",
-      middleInitial: id?.fullName?.middleInitial || "",
-      lastName: id?.fullName?.lastName || "",
-      employeeNumber: id?.employeeNumber || "",
-      position: id?.position || "",
-      type: id?.type || "",
-      status: id?.status || "",
-      email: id?.contactDetails?.email || "",
-      phone: id?.contactDetails?.phone || "",
-      date: fmtDate(id.createdAt),
-      emFirstName: id?.emergencyContact?.firstName || "",
-      emMiddleInitial: id?.emergencyContact?.middleInitial || "",
-      emLastName: id?.emergencyContact?.lastName || "",
-      emPhone: id?.emergencyContact?.phone || "",
-      hrName: id?.hrDetails?.name || "",
-      hrPosition: id?.hrDetails?.position || "",
-      generatedFrontImagePath:
-        id?.generatedFrontImagePath || id?.generatedImagePath || "",
-      generatedBackImagePath: id?.generatedBackImagePath || "",
-      photoPath: id?.photoPath || "",
-    }));
-  }, [items]);
-
   useEffect(() => {
     if (tableRef.current) {
       const offsetTop = tableRef.current.getBoundingClientRect().top;
@@ -78,7 +38,7 @@ export default function AdminDashboard() {
       const calculatedHeight = viewportHeight - offsetTop - 24;
       setTableHeight(calculatedHeight);
     }
-  }, [tableData, viewRow]);
+  }, [viewRow]);
 
   const handleView = (row) => {
     setViewRow(row);
@@ -134,9 +94,6 @@ export default function AdminDashboard() {
               >
                 <FilterBar />
                 <IDTable
-                  loading={loading}
-                  err={error}
-                  filteredData={tableData}
                   canView={true}
                   canEdit={false}
                   canDelete={false}

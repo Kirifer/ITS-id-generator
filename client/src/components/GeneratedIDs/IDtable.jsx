@@ -1,10 +1,8 @@
-import React from "react";
+import React, { useEffect, useMemo } from "react";
 import { Eye, Pencil, Trash2, FileCheck } from "lucide-react";
+import { idCardFilterStore } from "../../store/filterStore";
 
 export default function IDTable({
-  loading,
-  err,
-  filteredData,
   canView,
   canEdit,
   canDelete,
@@ -18,7 +16,51 @@ export default function IDTable({
   onReject,
   onGenerate,
   statusBasedButtons,
+  externalLoading,
 }) {
+  const { data: items, loading, error, fetchIdCards } = idCardFilterStore();
+  const isLoading = externalLoading || loading;
+
+  useEffect(() => {
+    fetchIdCards();
+  }, [fetchIdCards]);
+
+  const fmtDate = (iso) => {
+    const d = iso ? new Date(iso) : null;
+    if (!d || Number.isNaN(+d)) return "";
+    return d.toLocaleDateString(undefined, {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  const filteredData = useMemo(() => {
+    return items.map((id) => ({
+      _id: id._id,
+      firstName: id?.fullName?.firstName || "",
+      middleInitial: id?.fullName?.middleInitial || "",
+      lastName: id?.fullName?.lastName || "",
+      employeeNumber: id?.employeeNumber || "",
+      position: id?.position || "",
+      type: id?.type || "",
+      status: id?.status || "",
+      email: id?.contactDetails?.email || "",
+      phone: id?.contactDetails?.phone || "",
+      date: fmtDate(id.createdAt),
+      emFirstName: id?.emergencyContact?.firstName || "",
+      emMiddleInitial: id?.emergencyContact?.middleInitial || "",
+      emLastName: id?.emergencyContact?.lastName || "",
+      emPhone: id?.emergencyContact?.phone || "",
+      hrName: id?.hrDetails?.name || "",
+      hrPosition: id?.hrDetails?.position || "",
+      generatedFrontImagePath:
+        id?.generatedFrontImagePath || id?.generatedImagePath || "",
+      generatedBackImagePath: id?.generatedBackImagePath || "",
+      photoPath: id?.photoPath || "",
+    }));
+  }, [items]);
+
   const showActions =
     canView || canEdit || canDelete || canApprove || canReject || canGenerate;
 
@@ -28,10 +70,10 @@ export default function IDTable({
         className="overflow-y-auto custom-scrollbar"
         style={{ height: "630px" }}
       >
-        {loading ? (
+        {isLoading ? (
           <div className="p-6 text-gray-600 text-sm">Loading…</div>
-        ) : err ? (
-          <div className="p-6 text-red-600 text-sm">{err}</div>
+        ) : error ? (
+          <div className="p-6 text-red-600 text-sm">{error}</div>
         ) : (
           <table className="min-w-full text-sm text-center border-separate border-spacing-0">
             <thead className="sticky top-0 z-10 bg-[#D0CAF3] text-gray-800 font-extrabold">
