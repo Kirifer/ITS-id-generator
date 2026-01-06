@@ -6,11 +6,12 @@ import {
   Phone,
   UploadCloud,
   FileSignature,
-} from "lucide-react";
-import { useEffect } from "react";
-import InputField from "../Forms/InputField";
-import SelectField from "../Forms/SelectField";
-import FileUpload from "../Forms/FileUpload";
+} from "lucide-react"
+import { useEffect, useState } from "react"
+import { removeBackground } from "@imgly/background-removal"
+import InputField from "../Forms/InputField"
+import SelectField from "../Forms/SelectField"
+import FileUpload from "../Forms/FileUpload"
 
 export default function IDGeneratorForm({
   formRef,
@@ -26,67 +27,91 @@ export default function IDGeneratorForm({
   setHrSignatureError,
   onSubmit,
 }) {
+  const [photoProcessing, setPhotoProcessing] = useState(false)
+
   const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+    setFormData((prev) => ({ ...prev, [field]: value }))
+  }
 
   useEffect(() => {
     if (!formData.phone || formData.phone === "") {
-      setFormData((prev) => ({ ...prev, phone: "+639" }));
+      setFormData((prev) => ({ ...prev, phone: "+639" }))
     }
     if (!formData.emPhone || formData.emPhone === "") {
-      setFormData((prev) => ({ ...prev, emPhone: "+639" }));
+      setFormData((prev) => ({ ...prev, emPhone: "+639" }))
     }
-  }, []);
+  }, [])
 
   const handlePhoneChange = (field, value) => {
-    if (!value.startsWith("+639")) value = "+639";
-    const digits = value.slice(4).replace(/\D/g, "");
-    const limitedDigits = digits.slice(0, 9);
-    handleChange(field, "+639" + limitedDigits);
-  };
+    if (!value.startsWith("+639")) value = "+639"
+    const digits = value.slice(4).replace(/\D/g, "")
+    const limitedDigits = digits.slice(0, 9)
+    handleChange(field, "+639" + limitedDigits)
+  }
 
   const getEmployeePrefix = () => {
-    if (formData.type === "Intern") return "ITSIN-";
-    if (formData.type === "Employee") return "ITS-";
-    return "";
-  };
+    if (formData.type === "Intern") return "ITSIN-"
+    if (formData.type === "Employee") return "ITS-"
+    return ""
+  }
 
   const handleEmployeeNumberChange = (value) => {
-    const numericValue = value.replace(/\D/g, "").slice(0, 5);
-    handleChange("employeeNumber", getEmployeePrefix() + numericValue);
-  };
+    const numericValue = value.replace(/\D/g, "").slice(0, 5)
+    handleChange("employeeNumber", getEmployeePrefix() + numericValue)
+  }
 
   const getDisplayNumber = () => {
-    const prefix = getEmployeePrefix();
+    const prefix = getEmployeePrefix()
     if (formData.employeeNumber.startsWith(prefix)) {
-      return formData.employeeNumber.slice(prefix.length);
+      return formData.employeeNumber.slice(prefix.length)
     }
-    return formData.employeeNumber.replace(/^(ITS-|ITSIN-)/, "");
-  };
+    return formData.employeeNumber.replace(/^(ITS-|ITSIN-)/, "")
+  }
 
   useEffect(() => {
     if (formData.type && formData.employeeNumber) {
-      const displayNum = getDisplayNumber();
-      handleChange("employeeNumber", getEmployeePrefix() + displayNum);
+      const displayNum = getDisplayNumber()
+      handleChange("employeeNumber", getEmployeePrefix() + displayNum)
     }
-  }, [formData.type]);
+  }, [formData.type])
 
-  const handleFileUpload = (file, setFile, setError) => {
-    if (!file) return;
+  const validateFile = (file, setFile, setError) => {
+    if (!file) return false
     if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
-      setFile(null);
-      setError("Invalid file type. Only JPEG and PNG are allowed.");
-      return;
+      setFile(null)
+      setError("Invalid file type. Only JPEG and PNG are allowed.")
+      return false
     }
     if (file.size > 4 * 1024 * 1024) {
-      setFile(null);
-      setError("File too large. Max 4MB.");
-      return;
+      setFile(null)
+      setError("File too large. Max 4MB.")
+      return false
     }
-    setFile(file);
-    setError("");
-  };
+    setError("")
+    return true
+  }
+
+  const handlePhotoUpload = async (file) => {
+    if (!validateFile(file, setPhoto, setPhotoError)) return
+    setPhotoProcessing(true)
+    try {
+      const image = await removeBackground(file)
+      const blob = image instanceof Blob ? image : await image.blob()
+      const processedFile = new File([blob], file.name, { type: "image/png" })
+      setPhoto(processedFile)
+      setPhotoError("")
+    } catch {
+      setPhoto(null)
+      setPhotoError("Failed to remove background.")
+    } finally {
+      setPhotoProcessing(false)
+    }
+  }
+
+  const handleSignatureUpload = (file) => {
+    if (!validateFile(file, setHrSignature, setHrSignatureError)) return
+    setHrSignature(file)
+  }
 
   return (
     <div
@@ -172,7 +197,6 @@ export default function IDGeneratorForm({
               minLength={5}
               maxLength={5}
               pattern="[0-9]{5}"
-              title="Employee number must be exactly 5 digits"
             />
           </div>
         </div>
@@ -303,33 +327,27 @@ export default function IDGeneratorForm({
           icon={UploadCloud}
           file={photo}
           error={photoError}
-          onFileChange={(e) =>
-            handleFileUpload(e.target.files[0], setPhoto, setPhotoError)
-          }
-          label="Photo"
+          onFileChange={(e) => handlePhotoUpload(e.target.files[0])}
+          label={photoProcessing ? "Processing Photo..." : "Photo"}
         />
+
         <FileUpload
           id="hrSignatureUpload"
           icon={FileSignature}
           file={hrSignature}
           error={hrSignatureError}
-          onFileChange={(e) =>
-            handleFileUpload(
-              e.target.files[0],
-              setHrSignature,
-              setHrSignatureError
-            )
-          }
+          onFileChange={(e) => handleSignatureUpload(e.target.files[0])}
           label="HR Signature"
         />
 
         <button
           type="submit"
-          className="w-full bg-purple-400 hover:bg-purple-500 text-white font-semibold py-3 rounded-md transition duration-200 text-lg"
+          disabled={photoProcessing}
+          className="w-full bg-purple-400 hover:bg-purple-500 disabled:bg-purple-300 text-white font-semibold py-3 rounded-md transition duration-200 text-lg"
         >
           Generate
         </button>
       </form>
     </div>
-  );
+  )
 }
