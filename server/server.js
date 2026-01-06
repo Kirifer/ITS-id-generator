@@ -7,6 +7,7 @@ const authRoutes = require("./routes/authRoutes");
 const idCardsRouter = require("./routes/idCardRoutes");
 const cookieParser = require("cookie-parser");
 const idGeneratorRoutes = require("./routes/idGeneratorRoutes");
+const filterRoutes = require("./routes/filterRoutes");
 dotenv.config();
 
 if (
@@ -61,6 +62,7 @@ app.use("/uploads", express.static(primaryUploads));
 app.use("/api/auth", authRoutes);
 app.use("/api/id-cards", idCardsRouter);
 app.use('/api/id-generator', idGeneratorRoutes);
+app.use("/api/filter", filterRoutes)
 
 
 // 404 Handler

@@ -1,42 +1,49 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import Sidebar from '../components/Sidebar';
-import IDTable from '../components/GeneratedIDs/IDtable';
-import ViewPanel from '../components/GeneratedIDs/ViewPanel';
-import FilterBar from '../components/GeneratedIDs/FilterBar';
-import { idCardStore, idCardApproveStore, idCardRejectStore } from '../store/cardStore';
-import { fmtDate } from '../utils/dateFormatter';
-import { showMessageBox } from '../utils/messageBox';
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import Sidebar from "../components/Sidebar";
+import IDTable from "../components/GeneratedIDs/IDtable";
+import ViewPanel from "../components/GeneratedIDs/ViewPanel";
+import FilterBar from "../components/GeneratedIDs/FilterBar";
+import { idCardApproveStore, idCardRejectStore } from "../store/cardStore";
+import { idCardFilterStore } from "../store/filterStore";
+import { showMessageBox } from "../utils/messageBox";
 
 export default function ApprovalHR() {
   const mainRef = useRef(null);
   const formRef = useRef(null);
   const tableRef = useRef(null);
+  const hasFetched = useRef(false);
 
-  const { items, loading, error, message, getIdCards } = idCardStore();
-  const { 
+  const items = idCardFilterStore((state) => state.data);
+  const fetchIdCards = idCardFilterStore((state) => state.fetchIdCards);
+
+  const {
     loading: approveLoading,
     success: approveSuccess,
     error: approveError,
     message: approveMessage,
     idCardApprove,
-    reset: approveReset 
+    reset: approveReset,
   } = idCardApproveStore();
-  const { 
+  const {
     loading: rejectLoading,
     success: rejectSuccess,
     error: rejectError,
     message: rejectMessage,
     idCardReject,
-    reset: rejectReset 
+    reset: rejectReset,
   } = idCardRejectStore();
 
   const [tableHeight, setTableHeight] = useState(0);
   const [selectedId, setSelectedId] = useState(null);
   const [viewMode, setViewMode] = useState(null);
   const [sidebarHover, setSidebarHover] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState('All');
-  const [statusFilter, setStatusFilter] = useState('All');
+
+  useEffect(() => {
+    if (!hasFetched.current) {
+      hasFetched.current = true;
+      fetchIdCards();
+    }
+  }, []);
 
   useLayoutEffect(() => {
     if (tableRef.current) {
@@ -48,18 +55,10 @@ export default function ApprovalHR() {
   }, [items, viewMode]);
 
   useEffect(() => {
-    getIdCards();
-  }, [getIdCards]);
-
-  useEffect(() => {
-    if (error && message) showMessageBox(message);
-  }, [error, message]);
-
-  useEffect(() => {
     if (approveSuccess) {
       showMessageBox(approveMessage);
       approveReset();
-      getIdCards();
+      fetchIdCards();
       setSelectedId(null);
       setViewMode(null);
     }
@@ -67,13 +66,19 @@ export default function ApprovalHR() {
       showMessageBox(approveMessage);
       approveReset();
     }
-  }, [approveSuccess, approveError, approveMessage, approveReset, getIdCards]);
+  }, [
+    approveSuccess,
+    approveError,
+    approveMessage,
+    approveReset,
+    fetchIdCards,
+  ]);
 
   useEffect(() => {
     if (rejectSuccess) {
       showMessageBox(rejectMessage);
       rejectReset();
-      getIdCards();
+      fetchIdCards();
       setSelectedId(null);
       setViewMode(null);
     }
@@ -81,54 +86,7 @@ export default function ApprovalHR() {
       showMessageBox(rejectMessage);
       rejectReset();
     }
-  }, [rejectSuccess, rejectError, rejectMessage, rejectReset, getIdCards]);
-
-  const viewRows = useMemo(() =>
-    items.map(doc => ({
-      _id: doc._id,
-      firstName: doc?.fullName?.firstName || '',
-      middleInitial: doc?.fullName?.middleInitial || '',
-      lastName: doc?.fullName?.lastName || '',
-      idNumber: doc?.idNumber || '',
-      employeeNumber: doc?.employeeNumber || '',
-      position: doc?.position || '',
-      type: doc?.type || '',
-      status: doc?.status || '',
-      templateVersion: doc?.templateVersion || '',
-      date: fmtDate(doc?.createdAt),
-      issuedAt: doc?.issuedAt ? fmtDate(doc.issuedAt) : '',
-      email: doc?.contactDetails?.email || '',
-      phone: doc?.contactDetails?.phone || '',
-      // Fixed property names to match ViewPanel expectations
-      emFirstName: doc?.emergencyContact?.firstName || '',
-      emMiddleInitial: doc?.emergencyContact?.middleInitial || '',
-      emLastName: doc?.emergencyContact?.lastName || '',
-      emPhone: doc?.emergencyContact?.phone || '',
-      generatedFrontImagePath: doc?.generatedFrontImagePath || doc?.generatedImagePath || '',
-      generatedBackImagePath: doc?.generatedBackImagePath || '',
-      photoPath: doc?.photoPath || '',
-      hrName: doc?.hrDetails?.name || '',
-      hrPosition: doc?.hrDetails?.position || '',
-      hrSignaturePath: doc?.hrDetails?.signaturePath || '',
-      approvedBy: doc?.approvedBy || '',
-      createdBy: doc?.createdBy || '',
-      createdAt: doc?.createdAt || '',
-      updatedAt: doc?.updatedAt || '',
-    }))
-  , [items]);
-
-  const filteredData = useMemo(() => {
-    const q = searchTerm.trim().toLowerCase();
-    return viewRows.filter(id => {
-      const matchesSearch =
-        `${id.firstName} ${id.lastName}`.toLowerCase().includes(q) ||
-        String(id.idNumber).toLowerCase().includes(q) ||
-        id.position.toLowerCase().includes(q);
-      const matchesType = typeFilter === 'All' || id.type === typeFilter;
-      const matchesStatus = statusFilter === 'All' || id.status === statusFilter;
-      return matchesSearch && matchesType && matchesStatus;
-    });
-  }, [viewRows, searchTerm, typeFilter, statusFilter]);
+  }, [rejectSuccess, rejectError, rejectMessage, rejectReset, fetchIdCards]);
 
   async function handleApprove(row) {
     try {
@@ -144,14 +102,8 @@ export default function ApprovalHR() {
 
   function handleView(row) {
     setSelectedId({ ...row });
-    setViewMode('view');
-    mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function handleEdit(row) {
-    setSelectedId({ ...row });
-    setViewMode('edit');
-    mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    setViewMode("view");
+    mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function handleClose() {
@@ -160,7 +112,7 @@ export default function ApprovalHR() {
   }
 
   const sidebarExpanded = !selectedId || sidebarHover;
-  const isActionLoading = loading || approveLoading || rejectLoading;
+  const isActionLoading = approveLoading || rejectLoading;
 
   return (
     <div className="flex h-screen w-screen font-inter overflow-hidden">
@@ -168,19 +120,13 @@ export default function ApprovalHR() {
       <main ref={mainRef} className="flex-1 overflow-auto custom-bg">
         <div className="p-6">
           <div className="flex flex-col lg:flex-row gap-6 w-full max-w-screen-xl mx-auto items-start">
-            <div ref={tableRef} className={`lg:w-[60%] bg-white rounded-2xl shadow-md p-6 flex flex-col transition-all duration-300`} style={{ height: `${tableHeight}px` }}>
-              <FilterBar
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                typeFilter={typeFilter}
-                setTypeFilter={setTypeFilter}
-                statusFilter={statusFilter}
-                setStatusFilter={setStatusFilter}
-              />
+            <div
+              ref={tableRef}
+              className="lg:w-[60%] bg-white rounded-2xl shadow-md p-6 flex flex-col transition-all duration-300"
+              style={{ height: `${tableHeight}px` }}
+            >
+              <FilterBar />
               <IDTable
-                loading={isActionLoading}
-                err={error ? message : ''}
-                filteredData={filteredData}
                 canView={true}
                 canEdit={false}
                 canDelete={false}
@@ -190,14 +136,16 @@ export default function ApprovalHR() {
                 onApprove={handleApprove}
                 onReject={handleReject}
                 statusBasedButtons
+                externalLoading={isActionLoading}
               />
             </div>
-            <div ref={formRef} className="lg:w-[40%] bg-white rounded-2xl shadow-md p-6 overflow-auto" style={{ maxHeight: `${tableHeight}px` }}>
-              {viewMode === 'view' && selectedId && (
-                <ViewPanel
-                  row={selectedId}
-                  onClose={handleClose}
-                />
+            <div
+              ref={formRef}
+              className="lg:w-[40%] bg-white rounded-2xl shadow-md p-6 overflow-auto"
+              style={{ maxHeight: `${tableHeight}px` }}
+            >
+              {viewMode === "view" && selectedId && (
+                <ViewPanel row={selectedId} onClose={handleClose} />
               )}
               {!viewMode && (
                 <p className="text-gray-800 text-sm font-extrabold">

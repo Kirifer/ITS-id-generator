@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import IDTable from "../components/GeneratedIDs/IDtable";
 import ViewPanel from "../components/GeneratedIDs/ViewPanel";
@@ -13,20 +7,19 @@ import FilterBar from "../components/GeneratedIDs/FilterBar";
 import DeleteConfirmModal from "../components/Modal/DeleteConfirmModal";
 import GenerateConfirmModal from "../components/Modal/GenerateConfirmModal";
 import { showMessageBox } from "../utils/messageBox";
-import { fmtDate } from "../utils/dateFormatter";
-import {
-  idCardStore,
-  idCardDeleteStore,
-  idCardUpdateStore,
-} from "../store/cardStore";
+import { idCardDeleteStore, idCardUpdateStore } from "../store/cardStore";
 import { generateIDStore } from "../store/generateStore";
+import { idCardFilterStore } from "../store/filterStore";
 
 export default function Admin_GeneratedIDs() {
   const mainRef = useRef(null);
   const formRef = useRef(null);
   const tableRef = useRef(null);
+  const hasFetched = useRef(false);
 
-  const { items, loading, error, message, getIdCards } = idCardStore();
+  const items = idCardFilterStore((state) => state.data);
+  const fetchIdCards = idCardFilterStore((state) => state.fetchIdCards);
+
   const {
     loading: deleteLoading,
     success: deleteSuccess,
@@ -57,14 +50,18 @@ export default function Admin_GeneratedIDs() {
   const [hrSignature, setHrSignature] = useState(null);
   const [panelMode, setPanelMode] = useState(null);
   const [sidebarHover, setSidebarHover] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState("All");
-  const [statusFilter, setStatusFilter] = useState("All");
   const [selectedId, setSelectedId] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [generateModalOpen, setGenerateModalOpen] = useState(false);
   const [pendingDeleteRow, setPendingDeleteRow] = useState(null);
   const [pendingGenerateRow, setPendingGenerateRow] = useState(null);
+
+  useEffect(() => {
+    if (!hasFetched.current) {
+      hasFetched.current = true;
+      fetchIdCards();
+    }
+  }, []);
 
   useLayoutEffect(() => {
     if (tableRef.current) {
@@ -76,35 +73,25 @@ export default function Admin_GeneratedIDs() {
   }, [items, panelMode]);
 
   useEffect(() => {
-    getIdCards();
-  }, [getIdCards]);
-
-  useEffect(() => {
-    if (error && message) showMessageBox(message);
-  }, [error, message]);
-
-  useEffect(() => {
     if (updateSuccess) {
       showMessageBox(updateMessage);
       updateReset();
-      getIdCards();
       setPanelMode("view");
       setPhoto(null);
       setHrSignature(null);
+      fetchIdCards();
     }
     if (updateError && updateMessage) {
       showMessageBox(updateMessage);
       updateReset();
     }
-  }, [updateSuccess, updateError, updateMessage, updateReset, getIdCards]);
+  }, [updateSuccess, updateError, updateMessage, updateReset, fetchIdCards]);
 
   useEffect(() => {
     if (deleteSuccess) {
       showMessageBox(deleteMessage);
       deleteReset();
-      idCardStore.setState((state) => ({
-        items: state.items.filter((d) => d._id !== selectedId?._id),
-      }));
+      fetchIdCards();
       setSelectedId(null);
       setPanelMode(null);
       setDeleteModalOpen(false);
@@ -116,26 +103,13 @@ export default function Admin_GeneratedIDs() {
       setDeleteModalOpen(false);
       setPendingDeleteRow(null);
     }
-  }, [deleteSuccess, deleteError, deleteMessage, deleteReset, selectedId]);
+  }, [deleteSuccess, deleteError, deleteMessage, deleteReset, fetchIdCards]);
 
   useEffect(() => {
     if (generateSuccess) {
       showMessageBox(generateMessage);
       generateReset();
-      getIdCards();
-      if (selectedId) {
-        const updatedCard = items.find((item) => item._id === selectedId._id);
-        if (updatedCard) {
-          setSelectedId({
-            ...selectedId,
-            generatedFrontImagePath:
-              updatedCard.generatedFrontImagePath ||
-              updatedCard.generatedImagePath ||
-              "",
-            generatedBackImagePath: updatedCard.generatedBackImagePath || "",
-          });
-        }
-      }
+      fetchIdCards();
       setGenerateModalOpen(false);
       setPendingGenerateRow(null);
     }
@@ -150,52 +124,8 @@ export default function Admin_GeneratedIDs() {
     generateError,
     generateMessage,
     generateReset,
-    getIdCards,
-    items,
-    selectedId,
+    fetchIdCards,
   ]);
-
-  const viewRows = useMemo(
-    () =>
-      items.map((doc) => ({
-        _id: doc._id,
-        firstName: doc?.fullName?.firstName || "",
-        middleInitial: doc?.fullName?.middleInitial || "",
-        lastName: doc?.fullName?.lastName || "",
-        employeeNumber: doc?.employeeNumber || "",
-        position: doc?.position || "",
-        type: doc?.type || "",
-        status: doc?.status || "",
-        email: doc?.contactDetails?.email || "",
-        phone: doc?.contactDetails?.phone || "",
-        date: fmtDate(doc?.createdAt),
-        emFirstName: doc?.emergencyContact?.firstName || "",
-        emMiddleInitial: doc?.emergencyContact?.middleInitial || "",
-        emLastName: doc?.emergencyContact?.lastName || "",
-        emPhone: doc?.emergencyContact?.phone || "",
-        hrName: doc?.hrDetails?.name || "",
-        hrPosition: doc?.hrDetails?.position || "",
-        generatedFrontImagePath:
-          doc?.generatedFrontImagePath || doc?.generatedImagePath || "",
-        generatedBackImagePath: doc?.generatedBackImagePath || "",
-        photoPath: doc?.photoPath || "",
-      })),
-    [items]
-  );
-
-  const filteredData = useMemo(() => {
-    const q = searchTerm.trim().toLowerCase();
-    return viewRows.filter((id) => {
-      const matchesSearch =
-        `${id.firstName} ${id.lastName}`.toLowerCase().includes(q) ||
-        String(id.employeeNumber).toLowerCase().includes(q) ||
-        id.position.toLowerCase().includes(q);
-      const matchesType = typeFilter === "All" || id.type === typeFilter;
-      const matchesStatus =
-        statusFilter === "All" || id.status === statusFilter;
-      return matchesSearch && matchesType && matchesStatus;
-    });
-  }, [viewRows, searchTerm, typeFilter, statusFilter]);
 
   function onView(row) {
     setSelectedId({ ...row });
@@ -253,9 +183,6 @@ export default function Admin_GeneratedIDs() {
     if (!pendingDeleteRow) return;
     try {
       await idCardDelete(pendingDeleteRow._id);
-      idCardStore.setState((state) => ({
-        items: state.items.filter((d) => d._id !== pendingDeleteRow._id),
-      }));
       if (selectedId?._id === pendingDeleteRow._id) {
         setSelectedId(null);
         setPanelMode(null);
@@ -290,8 +217,7 @@ export default function Admin_GeneratedIDs() {
   }
 
   const sidebarExpanded = !selectedId || sidebarHover;
-  const isActionLoading =
-    loading || deleteLoading || updateLoading || generateLoading;
+  const isActionLoading = deleteLoading || updateLoading || generateLoading;
 
   return (
     <div className="flex h-screen w-screen font-inter overflow-hidden">
@@ -304,18 +230,8 @@ export default function Admin_GeneratedIDs() {
               className="lg:w-[60%] bg-white rounded-2xl shadow-md p-6 flex flex-col transition-all duration-300"
               style={{ height: `${tableHeight}px` }}
             >
-              <FilterBar
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                typeFilter={typeFilter}
-                setTypeFilter={setTypeFilter}
-                statusFilter={statusFilter}
-                setStatusFilter={setStatusFilter}
-              />
+              <FilterBar />
               <IDTable
-                loading={isActionLoading}
-                err={error ? message : ""}
-                filteredData={filteredData}
                 canView
                 canEdit
                 canDelete
@@ -324,6 +240,7 @@ export default function Admin_GeneratedIDs() {
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onGenerate={onGenerate}
+                externalLoading={isActionLoading}
               />
             </div>
             <div
