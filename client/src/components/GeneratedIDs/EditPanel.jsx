@@ -1,4 +1,4 @@
-import React from "react";
+import React from "react"
 import {
   User,
   CreditCard,
@@ -8,10 +8,11 @@ import {
   Mail,
   UploadCloud,
   FileSignature,
-} from "lucide-react";
-import InputWithIcon from "../Common/InputWithIcon";
-import SelectWithIcon from "../Common/SelectWithIcon";
-import FileUpload from "../Forms/FileUpload";
+} from "lucide-react"
+import { removeBackground } from "@imgly/background-removal"
+import InputWithIcon from "../Common/InputWithIcon"
+import SelectWithIcon from "../Common/SelectWithIcon"
+import FileUpload from "../Forms/FileUpload"
 
 export default function EditPanel({
   selectedId,
@@ -23,24 +24,45 @@ export default function EditPanel({
   onSubmit,
   onCancel,
 }) {
-  const [photoError, setPhotoError] = React.useState("");
-  const [hrSignatureError, setHrSignatureError] = React.useState("");
+  const [photoError, setPhotoError] = React.useState("")
+  const [hrSignatureError, setHrSignatureError] = React.useState("")
+  const [photoProcessing, setPhotoProcessing] = React.useState(false)
 
-  const handleFileUpload = (file, setFile, setError) => {
-    if (!file) return;
+  const validateFile = (file, setError) => {
+    if (!file) return false
     if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
-      setFile(null);
-      setError("Invalid file type. Only JPEG and PNG are allowed.");
-      return;
+      setError("Invalid file type. Only JPEG and PNG are allowed.")
+      return false
     }
     if (file.size > 4 * 1024 * 1024) {
-      setFile(null);
-      setError("File too large. Max 4MB.");
-      return;
+      setError("File too large. Max 4MB.")
+      return false
     }
-    setFile(file);
-    setError("");
-  };
+    setError("")
+    return true
+  }
+
+  const handlePhotoUpload = async (file) => {
+    if (!validateFile(file, setPhotoError)) return
+    setPhotoProcessing(true)
+    try {
+      const result = await removeBackground(file)
+      const blob = result instanceof Blob ? result : await result.blob()
+      const processedFile = new File([blob], file.name, { type: "image/png" })
+      setPhoto(processedFile)
+      setPhotoError("")
+    } catch {
+      setPhoto(null)
+      setPhotoError("Failed to remove background.")
+    } finally {
+      setPhotoProcessing(false)
+    }
+  }
+
+  const handleSignatureUpload = (file) => {
+    if (!validateFile(file, setHrSignatureError)) return
+    setHrSignature(file)
+  }
 
   return (
     <>
@@ -50,7 +72,8 @@ export default function EditPanel({
           Please provide the required information below.
         </p>
       </div>
-      <form className="space-y-4" onSubmit={onSubmit}>
+
+      <form className="space-y-4" onSubmit={onSubmit} noValidate>
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Full Name
@@ -250,10 +273,8 @@ export default function EditPanel({
           icon={UploadCloud}
           file={photo}
           error={photoError}
-          onFileChange={(e) =>
-            handleFileUpload(e.target.files[0], setPhoto, setPhotoError)
-          }
-          label="Photo"
+          onFileChange={(e) => handlePhotoUpload(e.target.files[0])}
+          label={photoProcessing ? "Processing Photo..." : "Photo"}
         />
 
         <FileUpload
@@ -261,20 +282,15 @@ export default function EditPanel({
           icon={FileSignature}
           file={hrSignature}
           error={hrSignatureError}
-          onFileChange={(e) =>
-            handleFileUpload(
-              e.target.files[0],
-              setHrSignature,
-              setHrSignatureError
-            )
-          }
+          onFileChange={(e) => handleSignatureUpload(e.target.files[0])}
           label="HR Signature"
         />
 
         <div className="mt-6 flex gap-4">
           <button
             type="submit"
-            className="flex-1 bg-purple-400 hover:bg-purple-500 text-white font-semibold py-3 rounded-md transition duration-200 text-lg"
+            disabled={photoProcessing}
+            className="flex-1 bg-purple-400 hover:bg-purple-500 disabled:bg-purple-300 text-white font-semibold py-3 rounded-md transition duration-200 text-lg"
           >
             Update
           </button>
@@ -288,5 +304,5 @@ export default function EditPanel({
         </div>
       </form>
     </>
-  );
+  )
 }
