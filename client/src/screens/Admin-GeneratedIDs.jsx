@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import IDTable from "../components/GeneratedIDs/IDtable";
 import ViewPanel from "../components/GeneratedIDs/ViewPanel";
@@ -14,19 +8,22 @@ import DeleteConfirmModal from "../components/Modal/DeleteConfirmModal";
 import GenerateConfirmModal from "../components/Modal/GenerateConfirmModal";
 import { showMessageBox } from "../utils/messageBox";
 import { fmtDate } from "../utils/dateFormatter";
-import {
-  idCardStore,
-  idCardDeleteStore,
-  idCardUpdateStore,
-} from "../store/cardStore";
+import { idCardDeleteStore, idCardUpdateStore } from "../store/cardStore";
 import { generateIDStore } from "../store/generateStore";
+import { idCardFilterStore } from "../store/filterStore";
 
 export default function Admin_GeneratedIDs() {
   const mainRef = useRef(null);
   const formRef = useRef(null);
   const tableRef = useRef(null);
 
-  const { items, loading, error, message, getIdCards } = idCardStore();
+  const {
+    data: items,
+    loading,
+    error,
+    message,
+    fetchIdCards,
+  } = idCardFilterStore();
   const {
     loading: deleteLoading,
     success: deleteSuccess,
@@ -57,9 +54,6 @@ export default function Admin_GeneratedIDs() {
   const [hrSignature, setHrSignature] = useState(null);
   const [panelMode, setPanelMode] = useState(null);
   const [sidebarHover, setSidebarHover] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState("All");
-  const [statusFilter, setStatusFilter] = useState("All");
   const [selectedId, setSelectedId] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [generateModalOpen, setGenerateModalOpen] = useState(false);
@@ -76,8 +70,8 @@ export default function Admin_GeneratedIDs() {
   }, [items, panelMode]);
 
   useEffect(() => {
-    getIdCards();
-  }, [getIdCards]);
+    fetchIdCards();
+  }, [fetchIdCards]);
 
   useEffect(() => {
     if (error && message) showMessageBox(message);
@@ -87,7 +81,7 @@ export default function Admin_GeneratedIDs() {
     if (updateSuccess) {
       showMessageBox(updateMessage);
       updateReset();
-      getIdCards();
+      fetchIdCards();
       setPanelMode("view");
       setPhoto(null);
       setHrSignature(null);
@@ -96,14 +90,14 @@ export default function Admin_GeneratedIDs() {
       showMessageBox(updateMessage);
       updateReset();
     }
-  }, [updateSuccess, updateError, updateMessage, updateReset, getIdCards]);
+  }, [updateSuccess, updateError, updateMessage, updateReset, fetchIdCards]);
 
   useEffect(() => {
     if (deleteSuccess) {
       showMessageBox(deleteMessage);
       deleteReset();
-      idCardStore.setState((state) => ({
-        items: state.items.filter((d) => d._id !== selectedId?._id),
+      idCardFilterStore.setState((state) => ({
+        data: state.data.filter((d) => d._id !== selectedId?._id),
       }));
       setSelectedId(null);
       setPanelMode(null);
@@ -122,7 +116,7 @@ export default function Admin_GeneratedIDs() {
     if (generateSuccess) {
       showMessageBox(generateMessage);
       generateReset();
-      getIdCards();
+      fetchIdCards();
       if (selectedId) {
         const updatedCard = items.find((item) => item._id === selectedId._id);
         if (updatedCard) {
@@ -150,52 +144,34 @@ export default function Admin_GeneratedIDs() {
     generateError,
     generateMessage,
     generateReset,
-    getIdCards,
+    fetchIdCards,
     items,
     selectedId,
   ]);
 
-  const viewRows = useMemo(
-    () =>
-      items.map((doc) => ({
-        _id: doc._id,
-        firstName: doc?.fullName?.firstName || "",
-        middleInitial: doc?.fullName?.middleInitial || "",
-        lastName: doc?.fullName?.lastName || "",
-        employeeNumber: doc?.employeeNumber || "",
-        position: doc?.position || "",
-        type: doc?.type || "",
-        status: doc?.status || "",
-        email: doc?.contactDetails?.email || "",
-        phone: doc?.contactDetails?.phone || "",
-        date: fmtDate(doc?.createdAt),
-        emFirstName: doc?.emergencyContact?.firstName || "",
-        emMiddleInitial: doc?.emergencyContact?.middleInitial || "",
-        emLastName: doc?.emergencyContact?.lastName || "",
-        emPhone: doc?.emergencyContact?.phone || "",
-        hrName: doc?.hrDetails?.name || "",
-        hrPosition: doc?.hrDetails?.position || "",
-        generatedFrontImagePath:
-          doc?.generatedFrontImagePath || doc?.generatedImagePath || "",
-        generatedBackImagePath: doc?.generatedBackImagePath || "",
-        photoPath: doc?.photoPath || "",
-      })),
-    [items]
-  );
-
-  const filteredData = useMemo(() => {
-    const q = searchTerm.trim().toLowerCase();
-    return viewRows.filter((id) => {
-      const matchesSearch =
-        `${id.firstName} ${id.lastName}`.toLowerCase().includes(q) ||
-        String(id.employeeNumber).toLowerCase().includes(q) ||
-        id.position.toLowerCase().includes(q);
-      const matchesType = typeFilter === "All" || id.type === typeFilter;
-      const matchesStatus =
-        statusFilter === "All" || id.status === statusFilter;
-      return matchesSearch && matchesType && matchesStatus;
-    });
-  }, [viewRows, searchTerm, typeFilter, statusFilter]);
+  const tableData = items.map((doc) => ({
+    _id: doc._id,
+    firstName: doc?.fullName?.firstName || "",
+    middleInitial: doc?.fullName?.middleInitial || "",
+    lastName: doc?.fullName?.lastName || "",
+    employeeNumber: doc?.employeeNumber || "",
+    position: doc?.position || "",
+    type: doc?.type || "",
+    status: doc?.status || "",
+    email: doc?.contactDetails?.email || "",
+    phone: doc?.contactDetails?.phone || "",
+    date: fmtDate(doc?.createdAt),
+    emFirstName: doc?.emergencyContact?.firstName || "",
+    emMiddleInitial: doc?.emergencyContact?.middleInitial || "",
+    emLastName: doc?.emergencyContact?.lastName || "",
+    emPhone: doc?.emergencyContact?.phone || "",
+    hrName: doc?.hrDetails?.name || "",
+    hrPosition: doc?.hrDetails?.position || "",
+    generatedFrontImagePath:
+      doc?.generatedFrontImagePath || doc?.generatedImagePath || "",
+    generatedBackImagePath: doc?.generatedBackImagePath || "",
+    photoPath: doc?.photoPath || "",
+  }));
 
   function onView(row) {
     setSelectedId({ ...row });
@@ -253,8 +229,8 @@ export default function Admin_GeneratedIDs() {
     if (!pendingDeleteRow) return;
     try {
       await idCardDelete(pendingDeleteRow._id);
-      idCardStore.setState((state) => ({
-        items: state.items.filter((d) => d._id !== pendingDeleteRow._id),
+      idCardFilterStore.setState((state) => ({
+        data: state.data.filter((d) => d._id !== pendingDeleteRow._id),
       }));
       if (selectedId?._id === pendingDeleteRow._id) {
         setSelectedId(null);
@@ -304,18 +280,11 @@ export default function Admin_GeneratedIDs() {
               className="lg:w-[60%] bg-white rounded-2xl shadow-md p-6 flex flex-col transition-all duration-300"
               style={{ height: `${tableHeight}px` }}
             >
-              <FilterBar
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                typeFilter={typeFilter}
-                setTypeFilter={setTypeFilter}
-                statusFilter={statusFilter}
-                setStatusFilter={setStatusFilter}
-              />
+              <FilterBar />
               <IDTable
                 loading={isActionLoading}
                 err={error ? message : ""}
-                filteredData={filteredData}
+                filteredData={tableData}
                 canView
                 canEdit
                 canDelete
