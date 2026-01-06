@@ -8,10 +8,24 @@ export default function FilterBar() {
   const setFilter = idCardFilterStore((state) => state.setFilter);
   const fetchIdCards = idCardFilterStore((state) => state.fetchIdCards);
   const initialized = idCardFilterStore((state) => state.initialized);
+  const resetFilters = idCardFilterStore((state) => state.resetFilters);
+  const isResetting = idCardFilterStore((state) => state.isResetting);
+  const clearResettingFlag = idCardFilterStore((state) => state.clearResettingFlag);
   
   const debounceRef = useRef(null);
   const fetchRef = useRef(fetchIdCards);
   const prevFiltersRef = useRef(filters);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+      if (resetFilters) {
+        resetFilters();
+      }
+    };
+  }, [resetFilters]);
 
   useEffect(() => {
     fetchRef.current = fetchIdCards;
@@ -19,41 +33,40 @@ export default function FilterBar() {
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
-
     setFilter("search", value);
   };
 
   const handleTypeChange = (e) => {
     const value = e.target.value === "All" ? "" : e.target.value;
- 
     setFilter("type", value);
   };
 
   const handleStatusChange = (e) => {
     const value = e.target.value === "All" ? "" : e.target.value;
-   
     setFilter("status", value);
   };
 
   useEffect(() => {
+    if (isResetting) {
+      clearResettingFlag();
+      prevFiltersRef.current = filters;
+      return;
+    }
+
     const filtersChanged = 
       prevFiltersRef.current.search !== filters.search ||
       prevFiltersRef.current.type !== filters.type ||
       prevFiltersRef.current.status !== filters.status;
 
-
     if (!initialized) {
-      
       prevFiltersRef.current = filters;
       return;
     }
 
     if (!filtersChanged) {
- 
       return;
     }
 
-  
     prevFiltersRef.current = filters;
     
     if (debounceRef.current) {
@@ -61,7 +74,6 @@ export default function FilterBar() {
     }
 
     debounceRef.current = setTimeout(() => {
-
       fetchRef.current();
     }, 500);
 
@@ -70,7 +82,7 @@ export default function FilterBar() {
         clearTimeout(debounceRef.current);
       }
     };
-  }, [filters, initialized]);
+  }, [filters, initialized, isResetting, clearResettingFlag]);
 
   const typeDisplayValue = filters.type || "All";
   const statusDisplayValue = filters.status || "All";

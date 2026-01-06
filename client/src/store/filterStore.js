@@ -9,6 +9,7 @@ export const idCardFilterStore = create(
     message: "",
     data: [],
     initialized: false,
+    isResetting: false,
 
     filters: {
       type: "",
@@ -56,11 +57,14 @@ export const idCardFilterStore = create(
 
     resetFilters: () =>
       set({
+        isResetting: true,
         filters: {
           type: "",
           status: "",
           search: "",
         },
       }),
+
+    clearResettingFlag: () => set({ isResetting: false }),
   }))
 );
