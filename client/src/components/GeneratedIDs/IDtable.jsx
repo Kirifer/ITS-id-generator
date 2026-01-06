@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { Eye, Pencil, Trash2, FileCheck } from "lucide-react";
 import { idCardFilterStore } from "../../store/filterStore";
 
@@ -18,12 +18,11 @@ export default function IDTable({
   statusBasedButtons,
   externalLoading,
 }) {
-  const { data: items, loading, error, fetchIdCards } = idCardFilterStore();
+  const items = idCardFilterStore((state) => state.data);
+  const loading = idCardFilterStore((state) => state.loading);
+  const error = idCardFilterStore((state) => state.error);
+  
   const isLoading = externalLoading || loading;
-
-  useEffect(() => {
-    fetchIdCards();
-  }, [fetchIdCards]);
 
   const fmtDate = (iso) => {
     const d = iso ? new Date(iso) : null;
@@ -36,6 +35,7 @@ export default function IDTable({
   };
 
   const filteredData = useMemo(() => {
+    console.log("[IDTABLE] Recalculating filteredData, items count:", items.length);
     return items.map((id) => ({
       _id: id._id,
       firstName: id?.fullName?.firstName || "",

@@ -15,8 +15,11 @@ import { idCardFilterStore } from "../store/filterStore";
 export default function AdminDashboard() {
   const mainRef = useRef(null);
   const tableRef = useRef(null);
+  const hasFetched = useRef(false);
 
-  const { data: items } = idCardFilterStore();
+  const items = idCardFilterStore((state) => state.data);
+  const fetchIdCards = idCardFilterStore((state) => state.fetchIdCards);
+  
   const [viewRow, setViewRow] = useState(null);
   const [tableHeight, setTableHeight] = useState(0);
 
@@ -30,6 +33,14 @@ export default function AdminDashboard() {
     [items]
   );
   const actionsCount = pendingCount;
+
+  useEffect(() => {
+    if (!hasFetched.current) {
+      console.log("[DASHBOARD] Initial fetch");
+      hasFetched.current = true;
+      fetchIdCards();
+    }
+  }, []);
 
   useEffect(() => {
     if (tableRef.current) {

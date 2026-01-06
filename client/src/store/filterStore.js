@@ -3,11 +3,12 @@ import { devtools } from "zustand/middleware";
 import { axiosInstance } from "../api/axiosConfig";
 
 export const idCardFilterStore = create(
-  devtools((set) => ({
+  devtools((set, get) => ({
     loading: false,
     error: false,
     message: "",
     data: [],
+    initialized: false,
 
     filters: {
       type: "",
@@ -15,35 +16,40 @@ export const idCardFilterStore = create(
       search: "",
     },
 
-    setFilter: (key, value) =>
+    setFilter: (key, value) => {
+      console.log(`[STORE] setFilter called: ${key} = ${value}`);
       set((state) => ({
         filters: {
           ...state.filters,
           [key]: value,
         },
-      })),
+      }));
+    },
 
     fetchIdCards: async () => {
-      set({ loading: true, error: false, message: "" });
+      console.log("[STORE] fetchIdCards CALLED");
+      set({ loading: true, error: false, message: "", initialized: true });
 
       try {
-        const { type, status, search } = idCardFilterStore.getState().filters;
+        const { type, status, search } = get().filters;
 
         const params = {};
         if (type) params.type = type;
         if (status) params.status = status;
         if (search) params.search = search;
 
+        console.log("[STORE] Fetching with params:", params);
         const res = await axiosInstance.get("/filter/", {
           params,
           withCredentials: true,
         });
-        console.log(res)
+        console.log("[STORE] Fetch response:", res);
         set({
           loading: false,
           data: res.data,
         });
       } catch (err) {
+        console.error("[STORE] Fetch error:", err);
         set({
           loading: false,
           error: true,

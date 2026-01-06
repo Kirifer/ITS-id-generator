@@ -5,67 +5,32 @@ import StatCard from '../components/StatCard';
 import IDTable from '../components/GeneratedIDs/IDtable';
 import ViewPanel from '../components/GeneratedIDs/ViewPanel';
 import FilterBar from '../components/GeneratedIDs/FilterBar';
-import { idCardStore } from '../store/cardStore';
-import { fmtDate } from '../utils/dateFormatter';
+import { idCardFilterStore } from '../store/filterStore';
 
 export default function DashboardHR() {
   const mainRef = useRef(null);
   const tableRef = useRef(null);
+  const hasFetched = useRef(false);
 
-  const { items, loading, error, message, getIdCards } = idCardStore();
+  const items = idCardFilterStore((state) => state.data);
+  const fetchIdCards = idCardFilterStore((state) => state.fetchIdCards);
+
   const [selectedId, setSelectedId] = useState(null);
   const [viewMode, setViewMode] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState('All');
-  const [statusFilter, setStatusFilter] = useState('All');
   const [tableHeight, setTableHeight] = useState(0);
 
   useEffect(() => {
-    getIdCards();
-  }, [getIdCards]);
+    if (!hasFetched.current) {
+      console.log("[DASHBOARD_HR] Initial fetch");
+      hasFetched.current = true;
+      fetchIdCards();
+    }
+  }, []);
 
   const total = items.length;
   const approved = useMemo(() => items.filter(i => i.status === 'Approved').length, [items]);
   const pending = useMemo(() => items.filter(i => i.status === 'Pending').length, [items]);
   const actions = pending;
-
-  const viewRows = useMemo(() =>
-    items.map(doc => ({
-      _id: doc._id,
-      firstName: doc?.fullName?.firstName || '',
-      middleInitial: doc?.fullName?.middleInitial || '',
-      lastName: doc?.fullName?.lastName || '',
-      employeeNumber: doc?.employeeNumber || '',
-      position: doc?.position || '',
-      type: doc?.type || '',
-      status: doc?.status || '',
-      email: doc?.contactDetails?.email || '',
-      phone: doc?.contactDetails?.phone || '',
-      date: fmtDate(doc?.createdAt),
-      emFirstName: doc?.emergencyContact?.firstName || '',
-      emMiddleInitial: doc?.emergencyContact?.middleInitial || '',
-      emLastName: doc?.emergencyContact?.lastName || '',
-      emPhone: doc?.emergencyContact?.phone || '',
-      hrName: doc?.hrDetails?.name || '',
-      hrPosition: doc?.hrDetails?.position || '',
-      generatedFrontImagePath: doc?.generatedFrontImagePath || doc?.generatedImagePath || '',
-      generatedBackImagePath: doc?.generatedBackImagePath || '',
-      photoPath: doc?.photoPath || '',
-    }))
-  , [items]);
-
-  const filteredData = useMemo(() => {
-    const q = searchTerm.trim().toLowerCase();
-    return viewRows.filter(id => {
-      const matchesSearch =
-        `${id.firstName} ${id.lastName}`.toLowerCase().includes(q) ||
-        String(id.employeeNumber).toLowerCase().includes(q) ||
-        id.position.toLowerCase().includes(q);
-      const matchesType = typeFilter === 'All' || id.type === typeFilter;
-      const matchesStatus = statusFilter === 'All' || id.status === statusFilter;
-      return matchesSearch && matchesType && matchesStatus;
-    });
-  }, [viewRows, searchTerm, typeFilter, statusFilter]);
 
   useEffect(() => {
     if (tableRef.current) {
@@ -74,7 +39,7 @@ export default function DashboardHR() {
       const calculatedHeight = viewportHeight - offsetTop - 24;
       setTableHeight(calculatedHeight);
     }
-  }, [filteredData, viewMode]);
+  }, [viewMode]);
 
   const handleView = row => {
     setSelectedId({ ...row });
@@ -107,18 +72,8 @@ export default function DashboardHR() {
             </div>
             <div className="flex flex-col lg:flex-row gap-6 items-start">
               <div ref={tableRef} className={`bg-white rounded-2xl shadow-md p-6 flex flex-col transition-all duration-300 ${panelOpen ? 'lg:w-[60%]' : 'w-full'}`} style={{ height: `${tableHeight}px` }}>
-                <FilterBar
-                  searchTerm={searchTerm}
-                  setSearchTerm={setSearchTerm}
-                  typeFilter={typeFilter}
-                  setTypeFilter={setTypeFilter}
-                  statusFilter={statusFilter}
-                  setStatusFilter={setStatusFilter}
-                />
+                <FilterBar />
                 <IDTable
-                  loading={loading}
-                  err={error ? message : ''}
-                  filteredData={filteredData}
                   canView={true}
                   onView={handleView}
                 />

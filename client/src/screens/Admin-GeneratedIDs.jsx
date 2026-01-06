@@ -15,8 +15,11 @@ export default function Admin_GeneratedIDs() {
   const mainRef = useRef(null);
   const formRef = useRef(null);
   const tableRef = useRef(null);
+  const hasFetched = useRef(false);
 
-  const { data: items } = idCardFilterStore();
+  const items = idCardFilterStore((state) => state.data);
+  const fetchIdCards = idCardFilterStore((state) => state.fetchIdCards);
+  
   const {
     loading: deleteLoading,
     success: deleteSuccess,
@@ -53,6 +56,14 @@ export default function Admin_GeneratedIDs() {
   const [pendingDeleteRow, setPendingDeleteRow] = useState(null);
   const [pendingGenerateRow, setPendingGenerateRow] = useState(null);
 
+  useEffect(() => {
+    if (!hasFetched.current) {
+      console.log("[ADMIN_GENERATED_IDS] Initial fetch");
+      hasFetched.current = true;
+      fetchIdCards();
+    }
+  }, []);
+
   useLayoutEffect(() => {
     if (tableRef.current) {
       const offsetTop = tableRef.current.getBoundingClientRect().top;
@@ -69,20 +80,19 @@ export default function Admin_GeneratedIDs() {
       setPanelMode("view");
       setPhoto(null);
       setHrSignature(null);
+      fetchIdCards();
     }
     if (updateError && updateMessage) {
       showMessageBox(updateMessage);
       updateReset();
     }
-  }, [updateSuccess, updateError, updateMessage, updateReset]);
+  }, [updateSuccess, updateError, updateMessage, updateReset, fetchIdCards]);
 
   useEffect(() => {
     if (deleteSuccess) {
       showMessageBox(deleteMessage);
       deleteReset();
-      idCardFilterStore.setState((state) => ({
-        data: state.data.filter((d) => d._id !== selectedId?._id),
-      }));
+      fetchIdCards();
       setSelectedId(null);
       setPanelMode(null);
       setDeleteModalOpen(false);
@@ -94,25 +104,13 @@ export default function Admin_GeneratedIDs() {
       setDeleteModalOpen(false);
       setPendingDeleteRow(null);
     }
-  }, [deleteSuccess, deleteError, deleteMessage, deleteReset, selectedId]);
+  }, [deleteSuccess, deleteError, deleteMessage, deleteReset, fetchIdCards]);
 
   useEffect(() => {
     if (generateSuccess) {
       showMessageBox(generateMessage);
       generateReset();
-      if (selectedId) {
-        const updatedCard = items.find((item) => item._id === selectedId._id);
-        if (updatedCard) {
-          setSelectedId({
-            ...selectedId,
-            generatedFrontImagePath:
-              updatedCard.generatedFrontImagePath ||
-              updatedCard.generatedImagePath ||
-              "",
-            generatedBackImagePath: updatedCard.generatedBackImagePath || "",
-          });
-        }
-      }
+      fetchIdCards();
       setGenerateModalOpen(false);
       setPendingGenerateRow(null);
     }
@@ -122,14 +120,7 @@ export default function Admin_GeneratedIDs() {
       setGenerateModalOpen(false);
       setPendingGenerateRow(null);
     }
-  }, [
-    generateSuccess,
-    generateError,
-    generateMessage,
-    generateReset,
-    items,
-    selectedId,
-  ]);
+  }, [generateSuccess, generateError, generateMessage, generateReset, fetchIdCards]);
 
   function onView(row) {
     setSelectedId({ ...row });
@@ -187,9 +178,6 @@ export default function Admin_GeneratedIDs() {
     if (!pendingDeleteRow) return;
     try {
       await idCardDelete(pendingDeleteRow._id);
-      idCardFilterStore.setState((state) => ({
-        data: state.data.filter((d) => d._id !== pendingDeleteRow._id),
-      }));
       if (selectedId?._id === pendingDeleteRow._id) {
         setSelectedId(null);
         setPanelMode(null);

@@ -4,33 +4,71 @@ import Dropdown from "../Common/Dropdown";
 import { idCardFilterStore } from "../../store/filterStore";
 
 export default function FilterBar() {
-  const { filters, setFilter, fetchIdCards } = idCardFilterStore();
+  const filters = idCardFilterStore((state) => state.filters);
+  const setFilter = idCardFilterStore((state) => state.setFilter);
+  const fetchIdCards = idCardFilterStore((state) => state.fetchIdCards);
+  const initialized = idCardFilterStore((state) => state.initialized);
+  
   const debounceRef = useRef(null);
+  const fetchRef = useRef(fetchIdCards);
+  const prevFiltersRef = useRef(filters);
+
+  useEffect(() => {
+    fetchRef.current = fetchIdCards;
+  }, [fetchIdCards]);
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
+    console.log("[FILTERBAR] Search change:", value);
     setFilter("search", value);
   };
 
   const handleTypeChange = (e) => {
     const value = e.target.value === "All" ? "" : e.target.value;
+    console.log("[FILTERBAR] Type change:", value);
     setFilter("type", value);
-    fetchIdCards();
   };
 
   const handleStatusChange = (e) => {
     const value = e.target.value === "All" ? "" : e.target.value;
+    console.log("[FILTERBAR] Status change:", value);
     setFilter("status", value);
-    fetchIdCards();
   };
 
   useEffect(() => {
+    const filtersChanged = 
+      prevFiltersRef.current.search !== filters.search ||
+      prevFiltersRef.current.type !== filters.type ||
+      prevFiltersRef.current.status !== filters.status;
+
+    console.log("[FILTERBAR] Effect triggered", {
+      initialized,
+      filtersChanged,
+      prevFilters: prevFiltersRef.current,
+      currentFilters: filters
+    });
+
+    if (!initialized) {
+      console.log("[FILTERBAR] Not initialized yet - skipping");
+      prevFiltersRef.current = filters;
+      return;
+    }
+
+    if (!filtersChanged) {
+      console.log("[FILTERBAR] Filters haven't changed - skipping");
+      return;
+    }
+
+    console.log("[FILTERBAR] Filter changed, scheduling debounced fetch");
+    prevFiltersRef.current = filters;
+    
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
 
     debounceRef.current = setTimeout(() => {
-      fetchIdCards();
+      console.log("[FILTERBAR] Debounce timeout - calling fetchIdCards");
+      fetchRef.current();
     }, 500);
 
     return () => {
@@ -38,7 +76,7 @@ export default function FilterBar() {
         clearTimeout(debounceRef.current);
       }
     };
-  }, [filters.search, fetchIdCards]);
+  }, [filters, initialized]);
 
   const typeDisplayValue = filters.type || "All";
   const statusDisplayValue = filters.status || "All";
