@@ -18,24 +18,58 @@ export default function ViewPanel({ row, onEdit, onClose }) {
   }`.replace(/\s+/g, "_");
 
   function printImage(url) {
+    if (!url) return;
+
     const w = window.open("", "PRINT", "height=700,width=900");
     if (!w) return;
+
     w.document.write(`
       <html>
-        <head><title>Print ${filenameBase}</title></head>
-        <body style="margin:0">
-          <img
-            src="${url}"
-            style="width:100%;max-width:100%"
-            onload="window.focus();window.print();window.close();"
-          />
+        <head>
+          <title>Print ${filenameBase} (${side})</title>
+          <style>
+            @page {
+              margin: 0;
+            }
+            html, body {
+              width: 100%;
+              height: 100%;
+              margin: 0;
+            }
+            body {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .card {
+              width: 350mm;
+              height: 150mm;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            img {
+              width: 100%;
+              height: 100%;
+              object-fit: contain;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <img
+              src="${url}"
+              onload="window.focus();window.print();window.close();"
+              alt="ID ${side}"
+            />
+          </div>
         </body>
       </html>
     `);
+
     w.document.close();
   }
 
-  // ✅ File-Saver download handler
   async function downloadImage() {
     if (!src) return;
 
@@ -76,7 +110,6 @@ export default function ViewPanel({ row, onEdit, onClose }) {
             }`}
             onClick={() => setSide("back")}
             disabled={!backAvailable}
-            title={backAvailable ? "Show back" : "Back image not available"}
           >
             Back
           </button>
@@ -87,7 +120,7 @@ export default function ViewPanel({ row, onEdit, onClose }) {
         {src ? (
           <img
             src={src}
-            alt="ID"
+            alt="ID Preview"
             className="w-full h-auto max-h-80 object-contain rounded-lg"
           />
         ) : (
@@ -103,7 +136,6 @@ export default function ViewPanel({ row, onEdit, onClose }) {
             <button
               onClick={downloadImage}
               className="flex-1 inline-flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 rounded-md"
-              title="Download"
             >
               Download ({side})
             </button>
@@ -111,7 +143,6 @@ export default function ViewPanel({ row, onEdit, onClose }) {
             <button
               onClick={() => printImage(src)}
               className="flex-1 inline-flex items-center justify-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-md"
-              title="Print"
             >
               Print ({side})
             </button>
