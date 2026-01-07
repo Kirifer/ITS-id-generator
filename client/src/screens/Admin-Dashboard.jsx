@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   FaIdCard,
   FaUserCheck,
@@ -11,35 +11,33 @@ import IDTable from "../components/GeneratedIDs/IDtable";
 import ViewPanel from "../components/GeneratedIDs/ViewPanel";
 import FilterBar from "../components/GeneratedIDs/FilterBar";
 import { idCardFilterStore } from "../store/filterStore";
+import { getStatsStore } from "../store/dashboardStore";
 
 export default function AdminDashboard() {
   const mainRef = useRef(null);
   const tableRef = useRef(null);
   const hasFetched = useRef(false);
+  const hasStatsFetched = useRef(false);
 
-  const items = idCardFilterStore((state) => state.data);
   const fetchIdCards = idCardFilterStore((state) => state.fetchIdCards);
+
+  const stats = getStatsStore((state) => state.stats);
+  const getStats = getStatsStore((state) => state.getStats);
+  const statsLoading = getStatsStore((state) => state.loading);
 
   const [viewRow, setViewRow] = useState(null);
   const [tableHeight, setTableHeight] = useState(0);
-
-  const total = items.length;
-  const approvedCount = useMemo(
-    () => items.filter((i) => i.status === "Approved").length,
-    [items]
-  );
-  const pendingCount = useMemo(
-    () => items.filter((i) => i.status === "Pending").length,
-    [items]
-  );
-  const actionsCount = pendingCount;
 
   useEffect(() => {
     if (!hasFetched.current) {
       hasFetched.current = true;
       fetchIdCards();
     }
-  }, []);
+    if (!hasStatsFetched.current) {
+      hasStatsFetched.current = true;
+      getStats();
+    }
+  }, [fetchIdCards, getStats]);
 
   useEffect(() => {
     if (tableRef.current) {
@@ -59,23 +57,28 @@ export default function AdminDashboard() {
 
   const panelOpen = !!viewRow;
   const sidebarExpanded = !panelOpen;
-  const stats = [
+
+  const statCards = [
     {
       icon: <FaIdCard size={50} />,
       label: "Total Generated IDs",
-      count: total,
+      count: stats?.total || 0,
     },
     {
       icon: <FaUserCheck size={50} />,
       label: "Approved",
-      count: approvedCount,
+      count: stats?.approved || 0,
     },
     {
       icon: <FaClipboardList size={50} />,
       label: "Pending",
-      count: pendingCount,
+      count: stats?.pending || 0,
     },
-    { icon: <FaTasks size={50} />, label: "Actions", count: actionsCount },
+    {
+      icon: <FaTasks size={50} />,
+      label: "Actions",
+      count: stats?.actions || 0,
+    },
   ];
 
   return (
@@ -85,7 +88,7 @@ export default function AdminDashboard() {
         <div className="p-6">
           <div className="flex flex-col gap-6 w-full max-w-screen-xl mx-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {stats.map((stat, idx) => (
+              {statCards.map((stat, idx) => (
                 <StatCard
                   key={idx}
                   icon={stat.icon}

@@ -10,23 +10,13 @@ const getIdCardStats = async (req, res) => {
           approved: {
             $sum: { $cond: [{ $eq: ["$status", "Approved"] }, 1, 0] },
           },
-          pending: {
-            $sum: { $cond: [{ $eq: ["$status", "Pending"] }, 1, 0] },
-          },
+          pending: { $sum: { $cond: [{ $eq: ["$status", "Pending"] }, 1, 0] } },
           actions: {
             $sum: { $cond: [{ $eq: ["$status", "Rejected"] }, 1, 0] },
           },
         },
       },
-      {
-        $project: {
-          _id: 0,
-          total: 1,
-          approved: 1,
-          pending: 1,
-          actions: 1,
-        },
-      },
+      { $project: { _id: 0, total: 1, approved: 1, pending: 1, actions: 1 } },
     ]);
 
     const result = stats[0] || {
@@ -38,7 +28,7 @@ const getIdCardStats = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: result,
+      data: result,
     });
   } catch (err) {
     console.error("ID Card Stats Error:", err);
@@ -49,6 +39,4 @@ const getIdCardStats = async (req, res) => {
   }
 };
 
-module.exports = {
-  getIdCardStats,
-};
+module.exports = { getIdCardStats };
