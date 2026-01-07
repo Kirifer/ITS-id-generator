@@ -38,7 +38,7 @@ const getIdCardStats = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: result,
+      message: result,
     });
   } catch (err) {
     console.error("ID Card Stats Error:", err);
