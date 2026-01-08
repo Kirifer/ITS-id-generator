@@ -63,7 +63,11 @@ async function renderSide(card, templateKey, suffix) {
 
     while (size >= (spec.minFontSize || 14)) {
       ctx.font = `${spec.weight || 700} ${size}px Arial`;
-      if (!spec.maxWidth || ctx.measureText(value).width <= toPx(spec.maxWidth, tpl.designW)) break;
+      if (
+        !spec.maxWidth ||
+        ctx.measureText(value).width <= toPx(spec.maxWidth, tpl.designW)
+      )
+        break;
       size--;
     }
 
@@ -72,7 +76,9 @@ async function renderSide(card, templateKey, suffix) {
 
   if (suffix === "front") {
     drawText(
-      `${card.fullName.firstName} ${card.fullName.middleInitial || ""} ${card.fullName.lastName}`.trim(),
+      `${card.fullName.firstName} ${card.fullName.middleInitial || ""} ${
+        card.fullName.lastName
+      }`.trim(),
       tpl.text.name
     );
     drawText(card.position, tpl.text.position);
