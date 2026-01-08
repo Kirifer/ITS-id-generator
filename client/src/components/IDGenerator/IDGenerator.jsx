@@ -108,10 +108,21 @@ export default function IDGeneratorForm({
     }
   }
 
-  const handleSignatureUpload = (file) => {
-    if (!validateFile(file, setHrSignature, setHrSignatureError)) return
-    setHrSignature(file)
-  }
+    const handleSignatureUpload = async (file) => {
+      if (!validateFile(file, setHrSignature, setHrSignatureError)) return
+
+      try {
+        const image = await removeBackground(file)
+        const blob = image instanceof Blob ? image : await image.blob()
+        const processedFile = new File([blob], file.name, { type: "image/png" })
+        setHrSignature(processedFile)
+        setHrSignatureError("")
+      } catch {
+        setHrSignature(null)
+        setHrSignatureError("Failed to remove background.")
+      }
+    }
+
 
   return (
     <div

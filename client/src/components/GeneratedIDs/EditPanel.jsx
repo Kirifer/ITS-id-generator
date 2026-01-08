@@ -59,10 +59,21 @@ export default function EditPanel({
     }
   }
 
-  const handleSignatureUpload = (file) => {
-    if (!validateFile(file, setHrSignatureError)) return
-    setHrSignature(file)
-  }
+      const handleSignatureUpload = async (file) => {
+      if (!validateFile(file, setHrSignatureError)) return
+
+      try {
+        const result = await removeBackground(file)
+        const blob = result instanceof Blob ? result : await result.blob()
+        const processedFile = new File([blob], file.name, { type: "image/png" })
+        setHrSignature(processedFile)
+        setHrSignatureError("")
+      } catch {
+        setHrSignature(null)
+        setHrSignatureError("Failed to remove background.")
+      }
+    }
+
 
   return (
     <>
