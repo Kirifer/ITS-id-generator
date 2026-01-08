@@ -28,6 +28,7 @@ export default function IDGeneratorForm({
   onSubmit,
 }) {
   const [photoProcessing, setPhotoProcessing] = useState(false)
+  const [signatureProcessing, setSignatureProcessing] = useState(false)
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -108,21 +109,22 @@ export default function IDGeneratorForm({
     }
   }
 
-    const handleSignatureUpload = async (file) => {
-      if (!validateFile(file, setHrSignature, setHrSignatureError)) return
-
-      try {
-        const image = await removeBackground(file)
-        const blob = image instanceof Blob ? image : await image.blob()
-        const processedFile = new File([blob], file.name, { type: "image/png" })
-        setHrSignature(processedFile)
-        setHrSignatureError("")
-      } catch {
-        setHrSignature(null)
-        setHrSignatureError("Failed to remove background.")
-      }
+  const handleSignatureUpload = async (file) => {
+    if (!validateFile(file, setHrSignature, setHrSignatureError)) return
+    setSignatureProcessing(true)
+    try {
+      const image = await removeBackground(file)
+      const blob = image instanceof Blob ? image : await image.blob()
+      const processedFile = new File([blob], file.name, { type: "image/png" })
+      setHrSignature(processedFile)
+      setHrSignatureError("")
+    } catch {
+      setHrSignature(null)
+      setHrSignatureError("Failed to remove background.")
+    } finally {
+      setSignatureProcessing(false)
     }
-
+  }
 
   return (
     <div
@@ -339,7 +341,8 @@ export default function IDGeneratorForm({
           file={photo}
           error={photoError}
           onFileChange={(e) => handlePhotoUpload(e.target.files[0])}
-          label={photoProcessing ? "Processing Photo..." : "Photo"}
+          label="Photo"
+          isProcessing={photoProcessing}
         />
 
         <FileUpload
@@ -349,11 +352,12 @@ export default function IDGeneratorForm({
           error={hrSignatureError}
           onFileChange={(e) => handleSignatureUpload(e.target.files[0])}
           label="HR Signature"
+          isProcessing={signatureProcessing}
         />
 
         <button
           type="submit"
-          disabled={photoProcessing}
+          disabled={photoProcessing || signatureProcessing}
           className="w-full bg-purple-400 hover:bg-purple-500 disabled:bg-purple-300 text-white font-semibold py-3 rounded-md transition duration-200 text-lg"
         >
           Generate
