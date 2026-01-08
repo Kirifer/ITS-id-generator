@@ -1,4 +1,4 @@
-import React from "react"
+import React from "react";
 import {
   User,
   CreditCard,
@@ -8,11 +8,11 @@ import {
   Mail,
   UploadCloud,
   FileSignature,
-} from "lucide-react"
-import { removeBackground } from "@imgly/background-removal"
-import InputWithIcon from "../Common/InputWithIcon"
-import SelectWithIcon from "../Common/SelectWithIcon"
-import FileUpload from "../Forms/FileUpload"
+} from "lucide-react";
+import { removeBackground } from "@imgly/background-removal";
+import InputWithIcon from "../Common/InputWithIcon";
+import SelectWithIcon from "../Common/SelectWithIcon";
+import FileUpload from "../Forms/FileUpload";
 
 export default function EditPanel({
   selectedId,
@@ -24,56 +24,60 @@ export default function EditPanel({
   onSubmit,
   onCancel,
 }) {
-  const [photoError, setPhotoError] = React.useState("")
-  const [hrSignatureError, setHrSignatureError] = React.useState("")
-  const [photoProcessing, setPhotoProcessing] = React.useState(false)
+  const [photoError, setPhotoError] = React.useState("");
+  const [hrSignatureError, setHrSignatureError] = React.useState("");
+  const [photoProcessing, setPhotoProcessing] = React.useState(false);
+  const [signatureProcessing, setSignatureProcessing] = React.useState(false);
 
   const validateFile = (file, setError) => {
-    if (!file) return false
+    if (!file) return false;
     if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
-      setError("Invalid file type. Only JPEG and PNG are allowed.")
-      return false
+      setError("Invalid file type. Only JPEG and PNG are allowed.");
+      return false;
     }
     if (file.size > 4 * 1024 * 1024) {
-      setError("File too large. Max 4MB.")
-      return false
+      setError("File too large. Max 4MB.");
+      return false;
     }
-    setError("")
-    return true
-  }
+    setError("");
+    return true;
+  };
 
   const handlePhotoUpload = async (file) => {
-    if (!validateFile(file, setPhotoError)) return
-    setPhotoProcessing(true)
+    if (!validateFile(file, setPhotoError)) return;
+    setPhotoProcessing(true);
     try {
-      const result = await removeBackground(file)
-      const blob = result instanceof Blob ? result : await result.blob()
-      const processedFile = new File([blob], file.name, { type: "image/png" })
-      setPhoto(processedFile)
-      setPhotoError("")
+      const result = await removeBackground(file);
+      const blob = result instanceof Blob ? result : await result.blob();
+      const processedFile = new File([blob], file.name, { type: "image/png" });
+      setPhoto(processedFile);
+      setPhotoError("");
     } catch {
-      setPhoto(null)
-      setPhotoError("Failed to remove background.")
+      setPhoto(null);
+      setPhotoError("Failed to remove background.");
     } finally {
-      setPhotoProcessing(false)
+      setPhotoProcessing(false);
     }
-  }
+  };
 
-      const handleSignatureUpload = async (file) => {
-      if (!validateFile(file, setHrSignatureError)) return
-
-      try {
-        const result = await removeBackground(file)
-        const blob = result instanceof Blob ? result : await result.blob()
-        const processedFile = new File([blob], file.name, { type: "image/png" })
-        setHrSignature(processedFile)
-        setHrSignatureError("")
-      } catch {
-        setHrSignature(null)
-        setHrSignatureError("Failed to remove background.")
-      }
+  const handleSignatureUpload = async (file) => {
+    if (!validateFile(file, setHrSignatureError)) return;
+    setSignatureProcessing(true);
+    try {
+      const result = await removeBackground(file);
+      const blob = result instanceof Blob ? result : await result.blob();
+      const processedFile = new File([blob], file.name, { type: "image/png" });
+      setHrSignature(processedFile);
+      setHrSignatureError("");
+    } catch {
+      setHrSignature(null);
+      setHrSignatureError("Failed to remove background.");
+    } finally {
+      setSignatureProcessing(false);
     }
+  };
 
+  const isProcessing = photoProcessing || signatureProcessing;
 
   return (
     <>
@@ -84,7 +88,7 @@ export default function EditPanel({
         </p>
       </div>
 
-      <form className="space-y-4" onSubmit={onSubmit} noValidate>
+      <div className="space-y-4">
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Full Name
@@ -98,6 +102,7 @@ export default function EditPanel({
               }
               placeholder="First Name"
               required
+              disabled={isProcessing}
             />
             <InputWithIcon
               Icon={User}
@@ -107,6 +112,7 @@ export default function EditPanel({
               }
               placeholder="Middle Initial"
               required
+              disabled={isProcessing}
             />
             <InputWithIcon
               Icon={User}
@@ -116,6 +122,7 @@ export default function EditPanel({
               }
               placeholder="Last Name"
               required
+              disabled={isProcessing}
             />
           </div>
         </div>
@@ -132,6 +139,7 @@ export default function EditPanel({
             }
             placeholder="Enter Employee Number"
             required
+            disabled={isProcessing}
           />
         </div>
 
@@ -151,6 +159,7 @@ export default function EditPanel({
               "SEO",
             ]}
             required
+            disabled={isProcessing}
           />
           <SelectWithIcon
             Icon={Tag}
@@ -161,6 +170,7 @@ export default function EditPanel({
             label="Type"
             options={["Intern", "Employee"]}
             required
+            disabled={isProcessing}
           />
         </div>
 
@@ -177,6 +187,7 @@ export default function EditPanel({
             placeholder="Enter Email"
             type="email"
             required
+            disabled={isProcessing}
           />
         </div>
 
@@ -193,6 +204,7 @@ export default function EditPanel({
             placeholder="Enter Phone Number"
             type="tel"
             required
+            disabled={isProcessing}
           />
         </div>
 
@@ -209,6 +221,7 @@ export default function EditPanel({
               }
               placeholder="First Name"
               required
+              disabled={isProcessing}
             />
             <InputWithIcon
               Icon={User}
@@ -221,6 +234,7 @@ export default function EditPanel({
               }
               placeholder="Middle Initial"
               required
+              disabled={isProcessing}
             />
             <InputWithIcon
               Icon={User}
@@ -230,6 +244,7 @@ export default function EditPanel({
               }
               placeholder="Last Name"
               required
+              disabled={isProcessing}
             />
           </div>
         </div>
@@ -246,6 +261,7 @@ export default function EditPanel({
             }
             placeholder="Enter Phone Number"
             required
+            disabled={isProcessing}
           />
         </div>
 
@@ -261,6 +277,7 @@ export default function EditPanel({
             }
             placeholder="Enter HR Name"
             required
+            disabled={isProcessing}
           />
         </div>
 
@@ -276,6 +293,7 @@ export default function EditPanel({
             }
             placeholder="Enter HR Position"
             required
+            disabled={isProcessing}
           />
         </div>
 
@@ -285,7 +303,8 @@ export default function EditPanel({
           file={photo}
           error={photoError}
           onFileChange={(e) => handlePhotoUpload(e.target.files[0])}
-          label={photoProcessing ? "Processing Photo..." : "Photo"}
+          label="Photo"
+          isProcessing={photoProcessing}
         />
 
         <FileUpload
@@ -295,25 +314,26 @@ export default function EditPanel({
           error={hrSignatureError}
           onFileChange={(e) => handleSignatureUpload(e.target.files[0])}
           label="HR Signature"
+          isProcessing={signatureProcessing}
         />
 
         <div className="mt-6 flex gap-4">
           <button
-            type="submit"
-            disabled={photoProcessing}
-            className="flex-1 bg-purple-400 hover:bg-purple-500 disabled:bg-purple-300 text-white font-semibold py-3 rounded-md transition duration-200 text-lg"
+            onClick={onSubmit}
+            disabled={isProcessing}
+            className="flex-1 bg-purple-400 hover:bg-purple-500 disabled:bg-purple-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-md transition duration-200 text-lg"
           >
             Update
           </button>
           <button
-            type="button"
             onClick={onCancel}
-            className="flex-1 bg-gray-300 hover:bg-gray-400 text-white font-semibold py-3 rounded-md transition duration-200 text-lg"
+            disabled={isProcessing}
+            className="flex-1 bg-gray-300 hover:bg-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-md transition duration-200 text-lg"
           >
             Cancel
           </button>
         </div>
-      </form>
+      </div>
     </>
-  )
+  );
 }
