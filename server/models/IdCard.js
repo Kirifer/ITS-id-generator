@@ -209,8 +209,15 @@ const IdCardSchema = new mongoose.Schema(
   }
 );
 
-IdCardSchema.index({ employeeNumber: 1 }, { unique: true });
-IdCardSchema.index({ idNumber: 1 }, { unique: true });
+
+/* ===========================
+   INDEXES (DATABASE GUARANTEE)
+=========================== */
+
+// Causing "Warning: Duplicate schema index"
+// IdCardSchema.index({ employeeNumber: 1 }, { unique: true });
+// IdCardSchema.index({ idNumber: 1 }, { unique: true });
+
 IdCardSchema.index({ type: 1, status: 1 });
 
 module.exports = mongoose.model("IdCard", IdCardSchema);
