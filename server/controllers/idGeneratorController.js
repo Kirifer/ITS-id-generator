@@ -3,17 +3,8 @@
 const IdCard = require("../models/IdCard");
 const { generateIDImages } = require("../utils/generateImage");
 
-/*
- HR reference (FINAL):
- - HR details are MANUALLY INPUT per ID
- - Stored in IdCard.hrDetails
- - User credentials are NOT rendered
- - Approver is workflow-only
-*/
-
 const postIdGenerator = async (req, res) => {
   try {
-    // 🔧 FIX: use cardId (Mongo ObjectId)
     const card = await IdCard.findById(req.params.cardId);
 
     if (!card) {
@@ -46,10 +37,8 @@ const postIdGenerator = async (req, res) => {
       });
     }
 
-    // Convert to plain object
     const cardData = card.toObject();
 
-    // Generate front & back images
     const { front, back } = await generateIDImages(cardData);
 
     card.generatedFrontImagePath = front;

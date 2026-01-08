@@ -6,10 +6,6 @@ const { postIdGenerator } = require('../controllers/idGeneratorController');
 
 const idGeneratorRoutes = express.Router();
 
-/*
-  Generates ID images for an APPROVED card
-  Uses MongoDB ObjectId (internal only)
-*/
 idGeneratorRoutes.post(
   '/:cardId/generate',
   verifyToken,
