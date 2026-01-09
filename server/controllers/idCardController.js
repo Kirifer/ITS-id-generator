@@ -7,7 +7,6 @@ const mongoose = require("mongoose");
 const IdCard = require("../models/IdCard");
 const { fileCleaner } = require("../utils/fileCleaner");
 
-
 /* =========================
    HELPERS
 ========================= */
@@ -188,10 +187,7 @@ const postIdCard = async (req, res) => {
       return res.status(400).json({
         message: "Validation failed",
         errors: Object.fromEntries(
-          Object.entries(err.errors).map(([key, val]) => [
-            key,
-            val.message,
-          ])
+          Object.entries(err.errors).map(([key, val]) => [key, val.message])
         ),
       });
     }
@@ -337,7 +333,7 @@ const patchIdCardDetails = async (req, res) => {
       updated = true;
     }
 
-        if (photo) {
+    if (photo) {
       await sharp(photo.path).metadata();
       card.photoPath = `/uploads/photos/${photo.filename}`;
       updated = true;
@@ -350,19 +346,18 @@ const patchIdCardDetails = async (req, res) => {
       }
     }
 
-            if (hrSignature) {
-          await sharp(hrSignature.path).metadata();
-          card.hrDetails.signaturePath = `/uploads/photos/${hrSignature.filename}`;
-          updated = true;
+    if (hrSignature) {
+      await sharp(hrSignature.path).metadata();
+      card.hrDetails.signaturePath = `/uploads/photos/${hrSignature.filename}`;
+      updated = true;
 
-          if (oldSignature && oldSignature.startsWith("/uploads/photos")) {
-            fs.unlink(
-              path.join(__dirname, "..", oldSignature.replace(/^\//, "")),
-              () => {}
-            );
-          }
-        }
-
+      if (oldSignature && oldSignature.startsWith("/uploads/photos")) {
+        fs.unlink(
+          path.join(__dirname, "..", oldSignature.replace(/^\//, "")),
+          () => {}
+        );
+      }
+    }
 
     if (updated) {
       card.status = "Pending";
@@ -380,10 +375,7 @@ const patchIdCardDetails = async (req, res) => {
       return res.status(400).json({
         message: "Validation failed",
         errors: Object.fromEntries(
-          Object.entries(e.errors).map(([key, val]) => [
-            key,
-            val.message,
-          ])
+          Object.entries(e.errors).map(([key, val]) => [key, val.message])
         ),
       });
     }

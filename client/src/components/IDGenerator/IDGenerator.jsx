@@ -30,6 +30,10 @@ export default function IDGeneratorForm({
   const [photoProcessing, setPhotoProcessing] = useState(false)
   const [signatureProcessing, setSignatureProcessing] = useState(false)
 
+  // 🔽 NEW STATES (TOGGLES)
+  const [removePhotoBg, setRemovePhotoBg] = useState(true)
+  const [removeSignatureBg, setRemoveSignatureBg] = useState(true)
+
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
@@ -94,6 +98,14 @@ export default function IDGeneratorForm({
 
   const handlePhotoUpload = async (file) => {
     if (!validateFile(file, setPhoto, setPhotoError)) return
+
+    // 🔽 TOGGLE LOGIC
+    if (!removePhotoBg) {
+      setPhoto(file)
+      setPhotoError("")
+      return
+    }
+
     setPhotoProcessing(true)
     try {
       const image = await removeBackground(file)
@@ -111,6 +123,14 @@ export default function IDGeneratorForm({
 
   const handleSignatureUpload = async (file) => {
     if (!validateFile(file, setHrSignature, setHrSignatureError)) return
+
+    // 🔽 TOGGLE LOGIC
+    if (!removeSignatureBg) {
+      setHrSignature(file)
+      setHrSignatureError("")
+      return
+    }
+
     setSignatureProcessing(true)
     try {
       const image = await removeBackground(file)
@@ -335,6 +355,20 @@ export default function IDGeneratorForm({
           </div>
         </div>
 
+        {/* 🔽 PHOTO TOGGLE */}
+        <div className="flex items-center gap-2 mt-2">
+          <input
+            type="checkbox"
+            id="removePhotoBg"
+            checked={removePhotoBg}
+            onChange={(e) => setRemovePhotoBg(e.target.checked)}
+            className="accent-purple-500"
+          />
+          <label htmlFor="removePhotoBg" className="text-sm text-gray-700">
+            Remove photo background
+          </label>
+        </div>
+
         <FileUpload
           id="photoUpload"
           icon={UploadCloud}
@@ -344,6 +378,20 @@ export default function IDGeneratorForm({
           label="Photo"
           isProcessing={photoProcessing}
         />
+
+        {/* 🔽 SIGNATURE TOGGLE */}
+        <div className="flex items-center gap-2 mt-2">
+          <input
+            type="checkbox"
+            id="removeSignatureBg"
+            checked={removeSignatureBg}
+            onChange={(e) => setRemoveSignatureBg(e.target.checked)}
+            className="accent-purple-500"
+          />
+          <label htmlFor="removeSignatureBg" className="text-sm text-gray-700">
+            Remove signature background
+          </label>
+        </div>
 
         <FileUpload
           id="hrSignatureUpload"
