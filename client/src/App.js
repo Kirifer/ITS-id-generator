@@ -11,7 +11,6 @@ import { authCheckStore } from "./store/authStore";
 import ProtectedRoute from "./guards/ProtectedRouting";
 import PublicRoute from "./guards/PublicRouter";
 import Login from "./screens/Login";
-import Logout from "./screens/Logout";
 import Admin_Dashboard from "./screens/Admin-Dashboard";
 import Admin_IDGenerator from "./screens/Admin-IDGenerator";
 import Admin_GeneratedIDs from "./screens/Admin-GeneratedIDs";
@@ -51,7 +50,6 @@ function AppRoutes() {
             </PublicRoute>
           }
         />
-        <Route path="/logout" element={<Logout />} />
         <Route
           path="/view-login"
           element={
