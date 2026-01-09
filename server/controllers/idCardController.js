@@ -5,6 +5,8 @@ const fs = require("fs");
 const sharp = require("sharp");
 const mongoose = require("mongoose");
 const IdCard = require("../models/IdCard");
+const { fileCleaner } = require("../utils/fileCleaner");
+
 
 /* =========================
    HELPERS
@@ -286,6 +288,11 @@ const patchIdCardDetails = async (req, res) => {
     const card = await IdCard.findById(id);
     if (!card) return res.status(404).json({ message: "Not found" });
 
+    const oldFront = card.generatedFrontImagePath;
+    const oldBack = card.generatedBackImagePath;
+    const oldPhoto = card.photoPath;
+    const oldSignature = card.hrDetails?.signaturePath;
+
     const photo = req.files?.photo?.[0];
     const hrSignature = req.files?.hrSignature?.[0];
 
@@ -330,21 +337,40 @@ const patchIdCardDetails = async (req, res) => {
       updated = true;
     }
 
-    if (photo) {
+        if (photo) {
       await sharp(photo.path).metadata();
       card.photoPath = `/uploads/photos/${photo.filename}`;
       updated = true;
+
+      if (oldPhoto && oldPhoto.startsWith("/uploads/photos")) {
+        fs.unlink(
+          path.join(__dirname, "..", oldPhoto.replace(/^\//, "")),
+          () => {}
+        );
+      }
     }
-    if (hrSignature) {
-      await sharp(hrSignature.path).metadata();
-      card.hrDetails.signaturePath = `/uploads/photos/${hrSignature.filename}`;
-      updated = true;
-    }
+
+            if (hrSignature) {
+          await sharp(hrSignature.path).metadata();
+          card.hrDetails.signaturePath = `/uploads/photos/${hrSignature.filename}`;
+          updated = true;
+
+          if (oldSignature && oldSignature.startsWith("/uploads/photos")) {
+            fs.unlink(
+              path.join(__dirname, "..", oldSignature.replace(/^\//, "")),
+              () => {}
+            );
+          }
+        }
+
 
     if (updated) {
       card.status = "Pending";
       card.generatedFrontImagePath = null;
       card.generatedBackImagePath = null;
+
+      fileCleaner(oldFront);
+      fileCleaner(oldBack);
     }
 
     await card.save();
