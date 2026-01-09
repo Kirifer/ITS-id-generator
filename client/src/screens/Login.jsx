@@ -121,13 +121,8 @@ const Login = () => {
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-sm">
-          <label className="flex items-center text-gray-800">
-            <input type="checkbox" className="mr-2" /> Remember Me
-          </label>
-        </div>
 
-        <button
+        <button 
           type="submit"
           disabled={loading}
           className="w-full bg-purple-400 hover:bg-purple-500 text-white font-semibold py-2 rounded-md transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
