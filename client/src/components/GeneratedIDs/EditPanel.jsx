@@ -13,6 +13,7 @@ import { removeBackground } from "@imgly/background-removal";
 import InputWithIcon from "../Common/InputWithIcon";
 import SelectWithIcon from "../Common/SelectWithIcon";
 import FileUpload from "../Forms/FileUpload";
+import ToggleSwitch from "../Forms/ToggleSwitch";
 
 export default function EditPanel({
   selectedId,
@@ -28,6 +29,8 @@ export default function EditPanel({
   const [hrSignatureError, setHrSignatureError] = React.useState("");
   const [photoProcessing, setPhotoProcessing] = React.useState(false);
   const [signatureProcessing, setSignatureProcessing] = React.useState(false);
+  const [removePhotoBg, setRemovePhotoBg] = React.useState(false);
+  const [removeSignatureBg, setRemoveSignatureBg] = React.useState(false);
 
   const validateFile = (file, setError) => {
     if (!file) return false;
@@ -45,6 +48,13 @@ export default function EditPanel({
 
   const handlePhotoUpload = async (file) => {
     if (!validateFile(file, setPhotoError)) return;
+
+    if (!removePhotoBg) {
+      setPhoto(file);
+      setPhotoError("");
+      return;
+    }
+
     setPhotoProcessing(true);
     try {
       const result = await removeBackground(file);
@@ -62,6 +72,13 @@ export default function EditPanel({
 
   const handleSignatureUpload = async (file) => {
     if (!validateFile(file, setHrSignatureError)) return;
+
+    if (!removeSignatureBg) {
+      setHrSignature(file);
+      setHrSignatureError("");
+      return;
+    }
+
     setSignatureProcessing(true);
     try {
       const result = await removeBackground(file);
@@ -297,25 +314,57 @@ export default function EditPanel({
           />
         </div>
 
-        <FileUpload
-          id="photoEditUpload"
-          icon={UploadCloud}
-          file={photo}
-          error={photoError}
-          onFileChange={(e) => handlePhotoUpload(e.target.files[0])}
-          label="Photo"
-          isProcessing={photoProcessing}
-        />
+        <div className="border-t pt-4">
+          <label className="block text-sm font-semibold text-gray-800 mb-2">
+            Photo Upload
+          </label>
+          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+            <ToggleSwitch
+              id="removePhotoBgEdit"
+              label="Remove photo background"
+              checked={removePhotoBg}
+              onChange={setRemovePhotoBg}
+            />
+            <p className="text-xs text-gray-600 italic ml-14">
+              Toggle this before uploading if you want automatic background removal
+            </p>
+            <FileUpload
+              id="photoEditUpload"
+              icon={UploadCloud}
+              file={photo}
+              error={photoError}
+              onFileChange={(e) => handlePhotoUpload(e.target.files[0])}
+              label="Photo"
+              isProcessing={photoProcessing}
+            />
+          </div>
+        </div>
 
-        <FileUpload
-          id="hrSignatureUpload"
-          icon={FileSignature}
-          file={hrSignature}
-          error={hrSignatureError}
-          onFileChange={(e) => handleSignatureUpload(e.target.files[0])}
-          label="HR Signature"
-          isProcessing={signatureProcessing}
-        />
+        <div className="border-t pt-4">
+          <label className="block text-sm font-semibold text-gray-800 mb-2">
+            HR Signature Upload
+          </label>
+          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+            <ToggleSwitch
+              id="removeSignatureBgEdit"
+              label="Remove signature background"
+              checked={removeSignatureBg}
+              onChange={setRemoveSignatureBg}
+            />
+            <p className="text-xs text-gray-600 italic ml-14">
+              Toggle this before uploading if you want automatic background removal
+            </p>
+            <FileUpload
+              id="hrSignatureUpload"
+              icon={FileSignature}
+              file={hrSignature}
+              error={hrSignatureError}
+              onFileChange={(e) => handleSignatureUpload(e.target.files[0])}
+              label="HR Signature"
+              isProcessing={signatureProcessing}
+            />
+          </div>
+        </div>
 
         <div className="mt-6 flex gap-4">
           <button

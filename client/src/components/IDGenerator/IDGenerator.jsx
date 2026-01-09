@@ -12,6 +12,7 @@ import { removeBackground } from "@imgly/background-removal"
 import InputField from "../Forms/InputField"
 import SelectField from "../Forms/SelectField"
 import FileUpload from "../Forms/FileUpload"
+import ToggleSwitch from "../Forms/ToggleSwitch"
 
 export default function IDGeneratorForm({
   formRef,
@@ -29,10 +30,8 @@ export default function IDGeneratorForm({
 }) {
   const [photoProcessing, setPhotoProcessing] = useState(false)
   const [signatureProcessing, setSignatureProcessing] = useState(false)
-
-  // 🔽 NEW STATES (TOGGLES)
-  const [removePhotoBg, setRemovePhotoBg] = useState(true)
-  const [removeSignatureBg, setRemoveSignatureBg] = useState(true)
+  const [removePhotoBg, setRemovePhotoBg] = useState(false)
+  const [removeSignatureBg, setRemoveSignatureBg] = useState(false)
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -99,7 +98,6 @@ export default function IDGeneratorForm({
   const handlePhotoUpload = async (file) => {
     if (!validateFile(file, setPhoto, setPhotoError)) return
 
-    // 🔽 TOGGLE LOGIC
     if (!removePhotoBg) {
       setPhoto(file)
       setPhotoError("")
@@ -124,7 +122,6 @@ export default function IDGeneratorForm({
   const handleSignatureUpload = async (file) => {
     if (!validateFile(file, setHrSignature, setHrSignatureError)) return
 
-    // 🔽 TOGGLE LOGIC
     if (!removeSignatureBg) {
       setHrSignature(file)
       setHrSignatureError("")
@@ -355,53 +352,57 @@ export default function IDGeneratorForm({
           </div>
         </div>
 
-        {/* 🔽 PHOTO TOGGLE */}
-        <div className="flex items-center gap-2 mt-2">
-          <input
-            type="checkbox"
-            id="removePhotoBg"
-            checked={removePhotoBg}
-            onChange={(e) => setRemovePhotoBg(e.target.checked)}
-            className="accent-purple-500"
-          />
-          <label htmlFor="removePhotoBg" className="text-sm text-gray-700">
-            Remove photo background
+        <div className="border-t pt-4">
+          <label className="block text-sm font-semibold text-gray-800 mb-2">
+            Photo Upload
           </label>
+          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+            <ToggleSwitch
+              id="removePhotoBg"
+              label="Remove photo background"
+              checked={removePhotoBg}
+              onChange={setRemovePhotoBg}
+            />
+            <p className="text-xs text-gray-600 italic ml-14">
+              Toggle this before uploading if you want automatic background removal
+            </p>
+            <FileUpload
+              id="photoUpload"
+              icon={UploadCloud}
+              file={photo}
+              error={photoError}
+              onFileChange={(e) => handlePhotoUpload(e.target.files[0])}
+              label="Photo"
+              isProcessing={photoProcessing}
+            />
+          </div>
         </div>
 
-        <FileUpload
-          id="photoUpload"
-          icon={UploadCloud}
-          file={photo}
-          error={photoError}
-          onFileChange={(e) => handlePhotoUpload(e.target.files[0])}
-          label="Photo"
-          isProcessing={photoProcessing}
-        />
-
-        {/* 🔽 SIGNATURE TOGGLE */}
-        <div className="flex items-center gap-2 mt-2">
-          <input
-            type="checkbox"
-            id="removeSignatureBg"
-            checked={removeSignatureBg}
-            onChange={(e) => setRemoveSignatureBg(e.target.checked)}
-            className="accent-purple-500"
-          />
-          <label htmlFor="removeSignatureBg" className="text-sm text-gray-700">
-            Remove signature background
+        <div className="border-t pt-4">
+          <label className="block text-sm font-semibold text-gray-800 mb-2">
+            HR Signature Upload
           </label>
+          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+            <ToggleSwitch
+              id="removeSignatureBg"
+              label="Remove signature background"
+              checked={removeSignatureBg}
+              onChange={setRemoveSignatureBg}
+            />
+            <p className="text-xs text-gray-600 italic ml-14">
+              Toggle this before uploading if you want automatic background removal
+            </p>
+            <FileUpload
+              id="hrSignatureUpload"
+              icon={FileSignature}
+              file={hrSignature}
+              error={hrSignatureError}
+              onFileChange={(e) => handleSignatureUpload(e.target.files[0])}
+              label="HR Signature"
+              isProcessing={signatureProcessing}
+            />
+          </div>
         </div>
-
-        <FileUpload
-          id="hrSignatureUpload"
-          icon={FileSignature}
-          file={hrSignature}
-          error={hrSignatureError}
-          onFileChange={(e) => handleSignatureUpload(e.target.files[0])}
-          label="HR Signature"
-          isProcessing={signatureProcessing}
-        />
 
         <button
           type="submit"
