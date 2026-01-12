@@ -12,12 +12,12 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      select: false, // Exclude password by default
+      select: false, 
     },
     role: {
       type: String,
-      enum: ["Admin", "Approver", "Employee", "Intern"],
-      default: "Employee",
+      enum: ["Admin"],
+      default: "Admin",
     },
     isActive: {
       type: Boolean,
