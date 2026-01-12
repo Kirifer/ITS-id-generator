@@ -99,7 +99,8 @@ export default function Admin_GeneratedIDs() {
     if (updateSuccess) {
       showMessageBox(updateMessage);
       updateReset();
-      setPanelMode("view");
+      setPanelMode(null);
+      setSelectedId(null);
       setPhoto(null);
       setHrSignature(null);
       fetchIdCards();
@@ -135,6 +136,8 @@ export default function Admin_GeneratedIDs() {
       fetchIdCards();
       setGenerateModalOpen(false);
       setPendingGenerateRow(null);
+      setPanelMode(null);
+      setSelectedId(null);
     }
     if (generateError && generateMessage) {
       showMessageBox(generateMessage);
@@ -186,13 +189,7 @@ export default function Admin_GeneratedIDs() {
       setRejectModalOpen(false);
       setPendingRejectRow(null);
     }
-  }, [
-    rejectSuccess,
-    rejectError,
-    rejectMessage,
-    rejectReset,
-    fetchIdCards,
-  ]);
+  }, [rejectSuccess, rejectError, rejectMessage, rejectReset, fetchIdCards]);
 
   function onView(row) {
     setSelectedId({ ...row });
@@ -322,7 +319,12 @@ export default function Admin_GeneratedIDs() {
   }
 
   const sidebarExpanded = !selectedId || sidebarHover;
-  const isActionLoading = deleteLoading || updateLoading || generateLoading || approveLoading || rejectLoading;
+  const isActionLoading =
+    deleteLoading ||
+    updateLoading ||
+    generateLoading ||
+    approveLoading ||
+    rejectLoading;
 
   return (
     <div className="flex h-screen w-screen font-inter overflow-hidden">

@@ -39,10 +39,6 @@ export default function GeneratedID() {
           </Link>
         </div>
 
-        <div className="mb-4 text-gray-600 text-sm">
-          ID Number: <span className="font-semibold">{idNumber}</span>
-        </div>
-
         {loading ? (
           <div className="text-gray-600">Loading…</div>
         ) : error ? (
@@ -86,7 +82,7 @@ export default function GeneratedID() {
               <Info label="Name" value={formatName(data?.fullName)} />
               <Info label="Position" value={data?.position} />
               <Info label="Type" value={data?.type} />
-              <Info label="ID Number" value={data?.idNumber || idNumber} />
+              <Info label="ID Number" value={data?.employeeNumber || idNumber} />
             </div>
 
             {imgUrl && (
