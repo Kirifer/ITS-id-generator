@@ -56,8 +56,17 @@ const EmergencyContactSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const HrDetailsSchema = new mongoose.Schema(
+/**
+ * HR snapshot + reference
+ * Keeps historical correctness even if HR is deleted/changed
+ */
+const HrSnapshotSchema = new mongoose.Schema(
   {
+    hrRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Hr",
+      required: true,
+    },
     name: {
       type: String,
       required: true,
@@ -155,7 +164,7 @@ const IdCardSchema = new mongoose.Schema(
     },
 
     hrDetails: {
-      type: HrDetailsSchema,
+      type: HrSnapshotSchema,
       required: true,
     },
 
@@ -208,7 +217,6 @@ const IdCardSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
-
 
 /* ===========================
    INDEXES (DATABASE GUARANTEE)
