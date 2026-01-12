@@ -212,6 +212,10 @@ const IdCardSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    isGenerated: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

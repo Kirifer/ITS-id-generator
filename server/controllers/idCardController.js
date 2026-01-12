@@ -163,9 +163,10 @@ const postIdCard = async (req, res) => {
       },
       photoPath: `/uploads/photos/${photo.filename}`,
       status: "Approved",
+      isGenerated: false,
       createdBy: req.user.id,
       approvedBy: req.user.id,
-      issuedAt: new Date(),
+      // issuedAt: new Date(),
     });
 
     res.status(201).json(doc);
@@ -206,7 +207,10 @@ const patchIdCardApprove = async (req, res) => {
 
     const updated = await IdCard.findByIdAndUpdate(
       id,
-      { status: "Approved", approvedBy: req.user.id, issuedAt: new Date() },
+      { status: "Approved", 
+        approvedBy: req.user.id, 
+        // issuedAt: new Date() 
+      },
       { new: true }
     );
 
@@ -239,7 +243,7 @@ const patchIdCardReject = async (req, res) => {
 const patchIdCardDetails = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("TRIGGER UPDATE")
+   
     if (!mongoose.isValidObjectId(id))
       return res.status(400).json({ message: "Invalid ID" });
 
@@ -301,6 +305,7 @@ const patchIdCardDetails = async (req, res) => {
       Object.assign(card, {
         generatedFrontImagePath: null,
         generatedBackImagePath: null,
+        isGenerated: false,
         status: card.status === "Rejected" ? "Rejected" : "Approved",
       });
       fileCleaner(oldFront);
