@@ -4,7 +4,6 @@ const express = require("express");
 const {
   verifyToken,
   requireRole,
-  requireAnyRole,
 } = require("../middleware/authMiddleware");
 const {
   getDetailIdCard,
@@ -46,30 +45,26 @@ idCardRoutes.post(
   postIdCard
 );
 
-/* =========================
-   List IDs (Admin or Approver)
-========================= */
+
 idCardRoutes.get(
   "/",
   verifyToken,
-  requireAnyRole("Admin", "Approver"),
+  requireRole("Admin"),
   getIdCard
 );
 
-/* =========================
-   Approvals (Approver only)
-========================= */
+
 idCardRoutes.patch(
   "/:id/approve",
   verifyToken,
-  requireRole("Approver"),
+  requireRole("Admin"),
   patchIdCardApprove
 );
 
 idCardRoutes.patch(
   "/:id/reject",
   verifyToken,
-  requireRole("Approver"),
+  requireRole("Admin"),
   patchIdCardReject
 );
 

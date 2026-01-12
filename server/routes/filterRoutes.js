@@ -3,14 +3,14 @@ const filterRoutes = express.Router();
 
 const {
   verifyToken,
-  requireAnyRole,
+  requireRole,
 } = require("../middleware/authMiddleware");
 const { getFilteredIdCards } = require("../controllers/filterController");
 
 filterRoutes.get(
   "/",
   verifyToken,
-  requireAnyRole("Admin", "Approver"),
+  requireRole("Admin"),
   getFilteredIdCards
 );
 
