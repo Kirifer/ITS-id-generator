@@ -6,10 +6,13 @@ import EditPanel from "../components/GeneratedIDs/EditPanel";
 import FilterBar from "../components/GeneratedIDs/FilterBar";
 import DeleteConfirmModal from "../components/Modal/DeleteConfirmModal";
 import GenerateConfirmModal from "../components/Modal/GenerateConfirmModal";
+import ApproveConfirmModal from "../components/Modal/ApproveConfirmModal";
+import RejectConfirmModal from "../components/Modal/RejectConfirmModal";
 import { showMessageBox } from "../utils/messageBox";
 import { idCardDeleteStore, idCardUpdateStore } from "../store/cardStore";
 import { generateIDStore } from "../store/generateStore";
 import { idCardFilterStore } from "../store/filterStore";
+import { idCardApproveStore, idCardRejectStore } from "../store/cardStore";
 
 export default function Admin_GeneratedIDs() {
   const mainRef = useRef(null);
@@ -44,6 +47,22 @@ export default function Admin_GeneratedIDs() {
     generateId,
     reset: generateReset,
   } = generateIDStore();
+  const {
+    loading: approveLoading,
+    success: approveSuccess,
+    error: approveError,
+    message: approveMessage,
+    idCardApprove,
+    reset: approveReset,
+  } = idCardApproveStore();
+  const {
+    loading: rejectLoading,
+    success: rejectSuccess,
+    error: rejectError,
+    message: rejectMessage,
+    idCardReject,
+    reset: rejectReset,
+  } = idCardRejectStore();
 
   const [tableHeight, setTableHeight] = useState(0);
   const [photo, setPhoto] = useState(null);
@@ -53,8 +72,12 @@ export default function Admin_GeneratedIDs() {
   const [selectedId, setSelectedId] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [generateModalOpen, setGenerateModalOpen] = useState(false);
+  const [approveModalOpen, setApproveModalOpen] = useState(false);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [pendingDeleteRow, setPendingDeleteRow] = useState(null);
   const [pendingGenerateRow, setPendingGenerateRow] = useState(null);
+  const [pendingApproveRow, setPendingApproveRow] = useState(null);
+  const [pendingRejectRow, setPendingRejectRow] = useState(null);
 
   useEffect(() => {
     if (!hasFetched.current) {
@@ -124,6 +147,50 @@ export default function Admin_GeneratedIDs() {
     generateError,
     generateMessage,
     generateReset,
+    fetchIdCards,
+  ]);
+
+  useEffect(() => {
+    if (approveSuccess) {
+      showMessageBox(approveMessage);
+      approveReset();
+      fetchIdCards();
+      setApproveModalOpen(false);
+      setPendingApproveRow(null);
+    }
+    if (approveError && approveMessage) {
+      showMessageBox(approveMessage);
+      approveReset();
+      setApproveModalOpen(false);
+      setPendingApproveRow(null);
+    }
+  }, [
+    approveSuccess,
+    approveError,
+    approveMessage,
+    approveReset,
+    fetchIdCards,
+  ]);
+
+  useEffect(() => {
+    if (rejectSuccess) {
+      showMessageBox(rejectMessage);
+      rejectReset();
+      fetchIdCards();
+      setRejectModalOpen(false);
+      setPendingRejectRow(null);
+    }
+    if (rejectError && rejectMessage) {
+      showMessageBox(rejectMessage);
+      rejectReset();
+      setRejectModalOpen(false);
+      setPendingRejectRow(null);
+    }
+  }, [
+    rejectSuccess,
+    rejectError,
+    rejectMessage,
+    rejectReset,
     fetchIdCards,
   ]);
 
@@ -216,8 +283,46 @@ export default function Admin_GeneratedIDs() {
     setPendingGenerateRow(null);
   }
 
+  function onApprove(row) {
+    setPendingApproveRow(row);
+    setApproveModalOpen(true);
+  }
+
+  async function handleConfirmApprove() {
+    if (!pendingApproveRow) return;
+    try {
+      await idCardApprove(pendingApproveRow._id);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function handleCancelApprove() {
+    setApproveModalOpen(false);
+    setPendingApproveRow(null);
+  }
+
+  function onReject(row) {
+    setPendingRejectRow(row);
+    setRejectModalOpen(true);
+  }
+
+  async function handleConfirmReject() {
+    if (!pendingRejectRow) return;
+    try {
+      await idCardReject(pendingRejectRow._id);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function handleCancelReject() {
+    setRejectModalOpen(false);
+    setPendingRejectRow(null);
+  }
+
   const sidebarExpanded = !selectedId || sidebarHover;
-  const isActionLoading = deleteLoading || updateLoading || generateLoading;
+  const isActionLoading = deleteLoading || updateLoading || generateLoading || approveLoading || rejectLoading;
 
   return (
     <div className="flex h-screen w-screen font-inter overflow-hidden">
@@ -236,10 +341,15 @@ export default function Admin_GeneratedIDs() {
                 canEdit
                 canDelete
                 canGenerate
+                canApprove={true}
+                canReject={true}
+                statusBasedButtons={true}
                 onView={onView}
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onGenerate={onGenerate}
+                onApprove={onApprove}
+                onReject={onReject}
                 externalLoading={isActionLoading}
               />
             </div>
@@ -299,6 +409,22 @@ export default function Admin_GeneratedIDs() {
         firstName={pendingGenerateRow?.firstName || ""}
         lastName={pendingGenerateRow?.lastName || ""}
         isLoading={generateLoading}
+      />
+      <ApproveConfirmModal
+        isOpen={approveModalOpen}
+        onClose={handleCancelApprove}
+        onConfirm={handleConfirmApprove}
+        firstName={pendingApproveRow?.firstName || ""}
+        lastName={pendingApproveRow?.lastName || ""}
+        isLoading={approveLoading}
+      />
+      <RejectConfirmModal
+        isOpen={rejectModalOpen}
+        onClose={handleCancelReject}
+        onConfirm={handleConfirmReject}
+        firstName={pendingRejectRow?.firstName || ""}
+        lastName={pendingRejectRow?.lastName || ""}
+        isLoading={rejectLoading}
       />
     </div>
   );

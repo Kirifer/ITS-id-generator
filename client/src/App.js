@@ -14,8 +14,8 @@ import Login from "./screens/Login";
 import Admin_Dashboard from "./screens/Admin-Dashboard";
 import Admin_IDGenerator from "./screens/Admin-IDGenerator";
 import Admin_GeneratedIDs from "./screens/Admin-GeneratedIDs";
-import Approver_Dashboard from "./screens/DashboardHR";
-import Approver_GeneratedIDs from "./screens/ApprovalHR";
+// import Approver_Dashboard from "./screens/DashboardHR";
+// import Approver_GeneratedIDs from "./screens/ApprovalHR";
 import IDViewer from "./screens/Login2";
 import GeneratedID from "./screens/Viewing";
 import { Toaster } from "sonner";
@@ -99,7 +99,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route
+        {/* <Route
           path="/approver-dashboard"
           element={
             <ProtectedRoute allowedRoles={["Approver"]}>
@@ -114,7 +114,7 @@ function AppRoutes() {
               <Approver_GeneratedIDs />
             </ProtectedRoute>
           }
-        />
+        /> */}
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </div>

@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Eye, Pencil, Trash2, FileCheck } from "lucide-react";
+import { Eye, Pencil, Trash2, FileCheck, Check, X } from "lucide-react";
 import { idCardFilterStore } from "../../store/filterStore";
 
 export default function IDTable({
@@ -57,11 +57,12 @@ export default function IDTable({
         id?.generatedFrontImagePath || id?.generatedImagePath || "",
       generatedBackImagePath: id?.generatedBackImagePath || "",
       photoPath: id?.photoPath || "",
+      isGenerated: id?.isGenerated || false,
     }));
   }, [items]);
 
-  const showActions =
-    canView || canEdit || canDelete || canApprove || canReject || canGenerate;
+  const showActions = canView || canEdit || canDelete || canGenerate;
+  const showStatusColumn = canApprove || canReject;
 
   return (
     <div className="rounded-2xl overflow-hidden flex flex-col h-full">
@@ -80,8 +81,12 @@ export default function IDTable({
                 <th className="p-4 rounded-tl-2xl">Name</th>
                 <th className="p-4">Type</th>
                 <th className="p-4">Status</th>
+                <th className="p-4">Generated</th>
                 <th className="p-4">Date Generated</th>
-                {showActions && <th className="p-4 rounded-tr-2xl">Actions</th>}
+                {showActions && <th className="p-4">Actions</th>}
+                {showStatusColumn && (
+                  <th className="p-4 rounded-tr-2xl">Approval</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -96,6 +101,15 @@ export default function IDTable({
                     </td>
                     <td className="p-4">{id.type}</td>
                     <td className="p-4">{id.status}</td>
+                    <td className="p-4">
+                      <div className="flex justify-center">
+                        {id.isGenerated ? (
+                          <Check size={16} className="text-green-600" />
+                        ) : (
+                          <X size={16} className="text-gray-400" />
+                        )}
+                      </div>
+                    </td>
                     <td className="p-4">{id.date}</td>
                     {showActions && (
                       <td className="p-4 text-purple-600">
@@ -123,14 +137,19 @@ export default function IDTable({
                           )}
                           {canGenerate &&
                             id.status === "Approved" &&
-                            !id.generatedFrontImagePath &&
-                            !id.generatedBackImagePath && (
+                            !id.isGenerated && (
                               <FileCheck
                                 size={16}
                                 className="cursor-pointer text-green-600"
                                 onClick={() => onGenerate(id)}
                               />
                             )}
+                        </div>
+                      </td>
+                    )}
+                    {showStatusColumn && (
+                      <td className="p-4">
+                        <div className="flex justify-center gap-2">
                           {statusBasedButtons && (
                             <>
                               {id.status === "Pending" && canApprove && (
@@ -175,7 +194,11 @@ export default function IDTable({
               ) : (
                 <tr>
                   <td
-                    colSpan={showActions ? 5 : 4}
+                    colSpan={
+                      5 +
+                      (showActions ? 1 : 0) +
+                      (showStatusColumn ? 1 : 0)
+                    }
                     className="p-4 text-gray-500 italic"
                   >
                     No matching results.
