@@ -46,6 +46,17 @@ export default function FilterBar() {
     setFilter("status", value);
   };
 
+  const handleIsGeneratedChange = (e) => {
+    const value = e.target.value;
+    if (value === "All") {
+      setFilter("isGenerated", "");
+    } else if (value === "Generated") {
+      setFilter("isGenerated", "true");
+    } else if (value === "Not Generated") {
+      setFilter("isGenerated", "false");
+    }
+  };
+
   useEffect(() => {
     if (isResetting) {
       clearResettingFlag();
@@ -56,7 +67,8 @@ export default function FilterBar() {
     const filtersChanged = 
       prevFiltersRef.current.search !== filters.search ||
       prevFiltersRef.current.type !== filters.type ||
-      prevFiltersRef.current.status !== filters.status;
+      prevFiltersRef.current.status !== filters.status ||
+      prevFiltersRef.current.isGenerated !== filters.isGenerated;
 
     if (!initialized) {
       prevFiltersRef.current = filters;
@@ -86,6 +98,12 @@ export default function FilterBar() {
 
   const typeDisplayValue = filters.type || "All";
   const statusDisplayValue = filters.status || "All";
+  const isGeneratedDisplayValue = 
+    filters.isGenerated === "" 
+      ? "All" 
+      : filters.isGenerated === "true" 
+      ? "Generated" 
+      : "Not Generated";
 
   return (
     <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
@@ -103,6 +121,12 @@ export default function FilterBar() {
           options={["All", "Approved", "Pending", "Rejected"]}
           value={statusDisplayValue}
           onChange={handleStatusChange}
+        />
+        <Dropdown
+          label="Generated"
+          options={["All", "Generated", "Not Generated"]}
+          value={isGeneratedDisplayValue}
+          onChange={handleIsGeneratedChange}
         />
 
         <div className="relative">

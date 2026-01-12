@@ -2,7 +2,8 @@ const IdCard = require("../models/IdCard");
 
 const getFilteredIdCards = async (req, res) => {
   try {
-    const { type, status, search } = req.query;
+    const { type, status, search, isGenerated } = req.query;
+
 
     const query = {};
 
@@ -12,6 +13,10 @@ const getFilteredIdCards = async (req, res) => {
 
     if (status) {
       query.status = status;
+    }
+
+    if (isGenerated !== undefined && isGenerated !== "") {
+      query.isGenerated = isGenerated === "true";
     }
 
     if (search) {

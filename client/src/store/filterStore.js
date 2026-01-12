@@ -15,6 +15,7 @@ export const idCardFilterStore = create(
       type: "",
       status: "",
       search: "",
+      isGenerated: "",
     },
 
     setFilter: (key, value) => {
@@ -30,12 +31,13 @@ export const idCardFilterStore = create(
       set({ loading: true, error: false, message: "", initialized: true });
 
       try {
-        const { type, status, search } = get().filters;
+        const { type, status, search, isGenerated } = get().filters;
 
         const params = {};
         if (type) params.type = type;
         if (status) params.status = status;
         if (search) params.search = search;
+        if (isGenerated !== "") params.isGenerated = isGenerated;
 
         const res = await axiosInstance.get("/filter/", {
           params,
@@ -62,6 +64,7 @@ export const idCardFilterStore = create(
           type: "",
           status: "",
           search: "",
+          isGenerated: "",
         },
       }),
 
