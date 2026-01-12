@@ -32,7 +32,7 @@ idCardRoutes.get(
 /* =========================
    Create ID (Admin only)
    - employee photo
-   - HR signature
+   - HR signature (only for manual HR)
 ========================= */
 idCardRoutes.post(
   "/",
@@ -41,7 +41,8 @@ idCardRoutes.post(
   upload.fields([
     { name: "photo", maxCount: 1 },
     { name: "hrSignature", maxCount: 1 },
-  ]), handleMulterError,
+  ]),
+  handleMulterError,
   postIdCard
 );
 
