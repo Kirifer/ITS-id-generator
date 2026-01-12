@@ -9,6 +9,7 @@ const cookieParser = require("cookie-parser");
 const idGeneratorRoutes = require("./routes/idGeneratorRoutes");
 const filterRoutes = require("./routes/filterRoutes");
 const { dashboardRoutes } = require("./routes/dashboardRoutes");
+const { adminRoutes } = require("./routes/adminRoutes");
 dotenv.config();
 
 if (
@@ -64,7 +65,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/id-cards", idCardsRouter);
 app.use("/api/id-generator", idGeneratorRoutes);
 app.use("/api/filter", filterRoutes);
-app.use("/api/stats", dashboardRoutes)
+app.use("/api/stats", dashboardRoutes);
+app.use("/api/admin", adminRoutes)
 
 
 // 404 Handler

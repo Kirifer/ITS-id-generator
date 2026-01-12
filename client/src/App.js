@@ -19,6 +19,7 @@ import Approver_GeneratedIDs from "./screens/ApprovalHR";
 import IDViewer from "./screens/Login2";
 import GeneratedID from "./screens/Viewing";
 import { Toaster } from "sonner";
+import AdminManagement from "./screens/Admin-Creation";
 
 function AppRoutes() {
   const { authCheck, loading } = authCheckStore();
@@ -71,6 +72,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute allowedRoles={["Admin"]}>
               <Admin_Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={["Admin"]}>
+              <AdminManagement />
             </ProtectedRoute>
           }
         />

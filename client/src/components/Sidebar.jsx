@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutGrid, Contact, NotebookText, Loader } from "lucide-react";
+import { LayoutGrid, Contact, NotebookText, Loader, ShieldUser } from "lucide-react";
 import { FaSignOutAlt } from "react-icons/fa";
 import logo from "../assets/images/logo.png";
 import { logoutStore, authCheckStore } from "../store/authStore";
@@ -56,6 +56,7 @@ function SidebarNav({ expanded, role }) {
       { to: "/dashboard", icon: <LayoutGrid size={20} />, label: "Dashboard" },
       { to: "/id-generator", icon: <Contact size={20} />, label: "ID Generator" },
       { to: "/generated-ids", icon: <NotebookText size={20} />, label: "Generated IDs" },
+       { to: "/admin", icon: <ShieldUser size={20} />, label: "User Management" },
     ];
   } else if (role === "Approver") {
     navItems = [
