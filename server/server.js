@@ -10,6 +10,10 @@ const idGeneratorRoutes = require("./routes/idGeneratorRoutes");
 const filterRoutes = require("./routes/filterRoutes");
 const { dashboardRoutes } = require("./routes/dashboardRoutes");
 const { adminRoutes } = require("./routes/adminRoutes");
+
+const hrRoutes = require("./routes/hrRoutes"); 
+
+
 dotenv.config();
 
 if (
@@ -67,6 +71,9 @@ app.use("/api/id-generator", idGeneratorRoutes);
 app.use("/api/filter", filterRoutes);
 app.use("/api/stats", dashboardRoutes);
 app.use("/api/admin", adminRoutes)
+app.use("/api/stats", dashboardRoutes)
+app.use("/api/hr", hrRoutes); 
+
 
 
 // 404 Handler
