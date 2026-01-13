@@ -266,6 +266,8 @@ const patchIdCardDetails = async (req, res) => {
       "fullName.firstName": req.body.firstName,
       "fullName.middleInitial": req.body.middleInitial,
       "fullName.lastName": req.body.lastName,
+      "contactDetails.email": req.body.email,
+      "position": req.body.position,
       "emergencyContact.firstName": req.body.emFirstName,
       "emergencyContact.middleInitial": req.body.emMiddleInitial,
       "emergencyContact.lastName": req.body.emLastName,
