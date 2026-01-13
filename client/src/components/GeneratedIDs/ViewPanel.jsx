@@ -154,7 +154,7 @@ export default function ViewPanel({ row, onEdit, onClose }) {
         <InfoField
           label="Name"
           value={`${row.firstName} ${
-            row.middleInitial ? row.middleInitial + ". " : ""
+            row.middleInitial ? row.middleInitial + " " : ""
           }${row.lastName}`}
         />
         <InfoField label="Employee Number" value={row.employeeNumber} />
