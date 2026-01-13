@@ -39,6 +39,34 @@ async function renderSide(card, templateKey, suffix) {
     );
   }
 
+  // Only add overlay for employee cards (not intern cards)
+  if (suffix === "front" && templateKey.toLowerCase().includes("employee")) {
+    try {
+      const overlayPath = path.join(SERVER_ROOT, "templates", "Blue-Geometric-Vector.png");
+      const overlayImg = await loadImage(overlayPath);
+      
+      const overlayConfig = tpl.overlay || {
+        x: 6,
+        y: 50,
+        width: tpl.designW,
+        height: tpl.designH,
+        opacity: 0.95,
+      };
+      
+      ctx.globalAlpha = overlayConfig.opacity;
+      ctx.drawImage(
+        overlayImg,
+        toPx(overlayConfig.x, tpl.designW),
+        toPx(overlayConfig.y, tpl.designH),
+        toPx(overlayConfig.width, tpl.designW),
+        toPx(overlayConfig.height, tpl.designH)
+      );
+      ctx.globalAlpha = 1.0;
+    } catch (err) {
+      console.error(`Failed to load overlay image:`, err.message);
+    }
+  }
+
   if (suffix === "back" && tpl.barcode && card.idNumber) {
     const bw = toPx(tpl.barcode.width, tpl.designW);
     const bh = toPx(tpl.barcode.height, tpl.designH);
@@ -75,21 +103,16 @@ async function renderSide(card, templateKey, suffix) {
   };
 
   if (suffix === "front") {
-    // Build the full name string
     let nameValue = `${card.fullName.firstName} ${card.fullName.middleInitial || ""} ${card.fullName.lastName}`.trim();
 
-    // Only split into two lines if the template flag is set (employee card)
     if (tpl.text?.name?.splitLastName) {
       nameValue = `${card.fullName.firstName} ${card.fullName.middleInitial || ""}\n${card.fullName.lastName}`.trim();
     }
 
-    // Draw the name
     drawText(nameValue, tpl.text.name);
-
     drawText(card.position, tpl.text.position);
     drawText(card.employeeNumber, tpl.text.idNumber);
   }
-
 
   if (suffix === "back") {
     if (card.emergencyContact) {

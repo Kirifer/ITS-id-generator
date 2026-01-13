@@ -1,13 +1,6 @@
 {
   "background": "Employee-Front-Template.png",
-  "overlay": {
-    "image": "Blue-Geometric-Vector.png",
-    "x": 0,
-    "y": 0,
-    "width": 660,
-    "height": 1000,
-    "opacity": 0.95
-  },
+
   "designSize": {
     "width": 660,
     "height": 1000
