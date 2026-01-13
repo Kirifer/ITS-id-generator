@@ -1,49 +1,59 @@
 {
   "background": "Employee-Front-Template.png",
+  "overlay": {
+    "image": "Blue-Geometric-Vector.png",
+    "x": 0,
+    "y": 0,
+    "width": 660,
+    "height": 1000,
+    "opacity": 0.95
+  },
   "designSize": {
-    "width": 1200,
-    "height": 750
+    "width": 660,
+    "height": 1000
   },
-
   "photo": {
-    "left": 475,
-    "top": 195,
-    "width": 250,
-    "height": 320,
-    "radius": 16
+    "left": 340,
+    "top": 220,
+    "width": 315,
+    "height": 780,
+    "radius": 0
   },
-
   "text": {
     "name": {
-      "x": 600,
-      "y": 560,
-      "align": "center",
-      "fontSize": 40,
-      "minFontSize": 22,
-      "maxWidth": 420,
-      "fill": "#111",
-      "weight": 700
+      "x": 30,
+      "y": 450,
+      "align": "left",
+      "fontSize": 64,
+      "minFontSize": 32,
+      "maxWidth": 300,
+      "maxLines": 3,
+      "lineHeight": 1.25,
+      "fill": "#000000",
+      "weight": 700,
+      "wordWrap": true,
+      "breakWords": true,
+      "hyphenate": false,
+      "splitLastName": true
     },
-
     "position": {
-      "x": 600,
-      "y": 610,
-      "align": "center",
+      "x": 30,
+      "y": 600,
+      "align": "left",
       "fontSize": 30,
-      "minFontSize": 18,
-      "maxWidth": 480,
-      "fill": "#2f6cb4",
-      "weight": 600
+      "minFontSize": 24,
+      "maxWidth": 300,
+      "fill": "#1a5dab",
+      "weight": 800
     },
-
     "idNumber": {
-      "x": 600,
-      "y": 655,
-      "align": "center",
-      "fontSize": 28,
-      "maxWidth": 400,
-      "fill": "#111",
-      "weight": 500
+      "x": 30,
+      "y": 650,
+      "align": "left",
+      "fontSize": 29,
+      "maxWidth": 300,
+      "fill": "#000000",
+      "weight": 400
     }
   }
 }

@@ -1,5 +1,3 @@
-// server/controllers/idCardController.js
-
 const path = require("path");
 const fs = require("fs");
 const sharp = require("sharp");
@@ -18,7 +16,9 @@ const normalizePhone = (value) => {
   if (phone.startsWith("+639")) return "0" + phone.slice(3);
   if (/^09\d{9}$/.test(phone)) return phone;
 
-  throw new Error("Invalid phone number format. Use 09XXXXXXXXX or +639XXXXXXXXX.");
+  throw new Error(
+    "Invalid phone number format. Use 09XXXXXXXXX or +639XXXXXXXXX."
+  );
 };
 
 const unlinkIfExists = (p) => {
@@ -28,7 +28,8 @@ const unlinkIfExists = (p) => {
 };
 
 const generateUniqueIdNumber = async () => {
-  let idNumber, exists = true;
+  let idNumber,
+    exists = true;
 
   while (exists) {
     idNumber = `ITS-${Date.now().toString().slice(-10)}`;
@@ -48,7 +49,9 @@ const getDetailIdCard = async (req, res) => {
     }).lean();
 
     if (!item)
-      return res.status(404).json({ message: "No approved ID with that employee number" });
+      return res
+        .status(404)
+        .json({ message: "No approved ID with that employee number" });
 
     res.json({
       employeeNumber: item.employeeNumber,
@@ -67,11 +70,21 @@ const getDetailIdCard = async (req, res) => {
 const postIdCard = async (req, res) => {
   try {
     const {
-      firstName, middleInitial, lastName,
-      employeeNumber, position, type,
-      email, phone,
-      emFirstName, emMiddleInitial, emLastName, emPhone,
-      hrId, hrName, hrPosition,
+      firstName,
+      middleInitial,
+      lastName,
+      employeeNumber,
+      position,
+      type,
+      email,
+      phone,
+      emFirstName,
+      emMiddleInitial,
+      emLastName,
+      emPhone,
+      hrId,
+      hrName,
+      hrPosition,
     } = req.body || {};
 
     const required = [
@@ -91,7 +104,9 @@ const postIdCard = async (req, res) => {
       if (!v) return res.status(400).json({ message: `Missing field: ${k}` });
 
     if (await IdCard.exists({ employeeNumber }))
-      return res.status(400).json({ message: "Employee number already exists" });
+      return res
+        .status(400)
+        .json({ message: "Employee number already exists" });
 
     const phoneLocal = normalizePhone(phone);
     const emPhoneLocal = normalizePhone(emPhone);
@@ -145,8 +160,11 @@ const postIdCard = async (req, res) => {
         signaturePath: hr.signaturePath,
       },
       photoPath: `/uploads/photos/${photo.filename}`,
-      status: "Pending",
+      status: "Approved",
+      isGenerated: false,
       createdBy: req.user.id,
+      approvedBy: req.user.id,
+      // issuedAt: new Date(),
     });
 
     res.status(201).json(doc);
@@ -161,7 +179,9 @@ const postIdCard = async (req, res) => {
     }
 
     if (err.code === 11000)
-      return res.status(409).json({ message: "Duplicate ID detected. Please retry." });
+      return res
+        .status(409)
+        .json({ message: "Duplicate ID detected. Please retry." });
 
     res.status(500).json({ message: err.message });
   }
@@ -185,7 +205,10 @@ const patchIdCardApprove = async (req, res) => {
 
     const updated = await IdCard.findByIdAndUpdate(
       id,
-      { status: "Approved", approvedBy: req.user.id, issuedAt: new Date() },
+      { status: "Approved", 
+        approvedBy: req.user.id, 
+        // issuedAt: new Date() 
+      },
       { new: true }
     );
 
@@ -218,11 +241,14 @@ const patchIdCardReject = async (req, res) => {
 const patchIdCardDetails = async (req, res) => {
   try {
     const { id } = req.params;
+   
     if (!mongoose.isValidObjectId(id))
       return res.status(400).json({ message: "Invalid ID" });
 
     if ("employeeNumber" in req.body)
-      return res.status(400).json({ message: "Employee number cannot be modified" });
+      return res
+        .status(400)
+        .json({ message: "Employee number cannot be modified" });
 
     const card = await IdCard.findById(id);
     if (!card) return res.status(404).json({ message: "Not found" });
@@ -275,9 +301,10 @@ const patchIdCardDetails = async (req, res) => {
 
     if (updated) {
       Object.assign(card, {
-        status: "Pending",
         generatedFrontImagePath: null,
         generatedBackImagePath: null,
+        isGenerated: false,
+        status: card.status === "Rejected" ? "Rejected" : "Approved",
       });
       fileCleaner(oldFront);
       fileCleaner(oldBack);

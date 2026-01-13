@@ -75,15 +75,21 @@ async function renderSide(card, templateKey, suffix) {
   };
 
   if (suffix === "front") {
-    drawText(
-      `${card.fullName.firstName} ${card.fullName.middleInitial || ""} ${
-        card.fullName.lastName
-      }`.trim(),
-      tpl.text.name
-    );
+    // Build the full name string
+    let nameValue = `${card.fullName.firstName} ${card.fullName.middleInitial || ""} ${card.fullName.lastName}`.trim();
+
+    // Only split into two lines if the template flag is set (employee card)
+    if (tpl.text?.name?.splitLastName) {
+      nameValue = `${card.fullName.firstName} ${card.fullName.middleInitial || ""}\n${card.fullName.lastName}`.trim();
+    }
+
+    // Draw the name
+    drawText(nameValue, tpl.text.name);
+
     drawText(card.position, tpl.text.position);
     drawText(card.employeeNumber, tpl.text.idNumber);
   }
+
 
   if (suffix === "back") {
     if (card.emergencyContact) {
