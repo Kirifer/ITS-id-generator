@@ -22,7 +22,8 @@ export default function FileUpload({
         }`}
         style={{ minHeight: "120px" }}
       >
-        <Icon size={32} />
+        {/* ✅ SAFE ICON RENDER */}
+        {Icon && <Icon size={32} />}
 
         <p className={`mt-2 text-sm text-center ${file ? "text-purple-600" : ""}`}>
           {isProcessing
@@ -52,5 +53,5 @@ export default function FileUpload({
         disabled={isProcessing}
       />
     </div>
-  )
+  );
 }

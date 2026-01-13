@@ -5,7 +5,6 @@ import {
   Tag,
   Phone,
   UploadCloud,
-  FileSignature,
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { removeBackground } from "@imgly/background-removal"
@@ -13,6 +12,7 @@ import InputField from "../Forms/InputField"
 import SelectField from "../Forms/SelectField"
 import FileUpload from "../Forms/FileUpload"
 import ToggleSwitch from "../Forms/ToggleSwitch"
+import HrSelector from "./HrSelector"
 
 export default function IDGeneratorForm({
   formRef,
@@ -22,16 +22,31 @@ export default function IDGeneratorForm({
   setPhoto,
   photoError,
   setPhotoError,
-  hrSignature,
+  onSubmit,
+   hrSignature,
   setHrSignature,
   hrSignatureError,
   setHrSignatureError,
-  onSubmit,
 }) {
   const [photoProcessing, setPhotoProcessing] = useState(false)
-  const [signatureProcessing, setSignatureProcessing] = useState(false)
   const [removePhotoBg, setRemovePhotoBg] = useState(false)
-  const [removeSignatureBg, setRemoveSignatureBg] = useState(false)
+
+  /* =====================
+     HR STATE
+  ===================== */
+  const [hr_name, set_hr_name] = useState("")
+  const [hr_position, set_hr_position] = useState("")
+  const [hr_id, set_hr_id] = useState(null) // ✅ ADD THIS
+
+   useEffect(() => {
+  setFormData((prev) => ({
+    ...prev,
+    hrId: hr_id || "",
+    hrName: hr_name,
+    hrPosition: hr_position,
+  }))
+}, [hr_id, hr_name, hr_position])
+
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -119,29 +134,7 @@ export default function IDGeneratorForm({
     }
   }
 
-  const handleSignatureUpload = async (file) => {
-    if (!validateFile(file, setHrSignature, setHrSignatureError)) return
-
-    if (!removeSignatureBg) {
-      setHrSignature(file)
-      setHrSignatureError("")
-      return
-    }
-
-    setSignatureProcessing(true)
-    try {
-      const image = await removeBackground(file)
-      const blob = image instanceof Blob ? image : await image.blob()
-      const processedFile = new File([blob], file.name, { type: "image/png" })
-      setHrSignature(processedFile)
-      setHrSignatureError("")
-    } catch {
-      setHrSignature(null)
-      setHrSignatureError("Failed to remove background.")
-    } finally {
-      setSignatureProcessing(false)
-    }
-  }
+  
 
   return (
     <div
@@ -153,7 +146,7 @@ export default function IDGeneratorForm({
         Please provide the required information below.
       </p>
 
-      <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Full Name
@@ -325,32 +318,17 @@ export default function IDGeneratorForm({
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-1">
-              HR Name
-            </label>
-            <InputField
-              icon={User}
-              placeholder="Enter HR Name"
-              value={formData.hrName}
-              onChange={(e) => handleChange("hrName", e.target.value)}
-              required
+            <HrSelector
+              hr_name={hr_name}
+              set_hr_name={set_hr_name}
+              hr_position={hr_position}
+              set_hr_position={set_hr_position}
+              hr_signature={hrSignature}
+              set_hr_signature={setHrSignature}
+              set_hr_id={set_hr_id}          // ✅ ADD THIS
+              hr_signature_error={hrSignatureError}
+              set_hr_signature_error={setHrSignatureError}
             />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-1">
-              HR Position
-            </label>
-            <InputField
-              icon={Briefcase}
-              placeholder="Enter HR Position"
-              value={formData.hrPosition}
-              onChange={(e) => handleChange("hrPosition", e.target.value)}
-              required
-            />
-          </div>
-        </div>
 
         <div className="border-t pt-4">
           <label className="block text-sm font-semibold text-gray-800 mb-2">
@@ -378,35 +356,9 @@ export default function IDGeneratorForm({
           </div>
         </div>
 
-        <div className="border-t pt-4">
-          <label className="block text-sm font-semibold text-gray-800 mb-2">
-            HR Signature Upload
-          </label>
-          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-            <ToggleSwitch
-              id="removeSignatureBg"
-              label="Remove signature background"
-              checked={removeSignatureBg}
-              onChange={setRemoveSignatureBg}
-            />
-            <p className="text-xs text-gray-600 italic ml-14">
-              Toggle this before uploading if you want automatic background removal
-            </p>
-            <FileUpload
-              id="hrSignatureUpload"
-              icon={FileSignature}
-              file={hrSignature}
-              error={hrSignatureError}
-              onFileChange={(e) => handleSignatureUpload(e.target.files[0])}
-              label="HR Signature"
-              isProcessing={signatureProcessing}
-            />
-          </div>
-        </div>
-
         <button
           type="submit"
-          disabled={photoProcessing || signatureProcessing}
+          disabled={photoProcessing}
           className="w-full bg-purple-400 hover:bg-purple-500 disabled:bg-purple-300 text-white font-semibold py-3 rounded-md transition duration-200 text-lg"
         >
           Generate
