@@ -1,16 +1,29 @@
 import React, { useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutGrid, Contact, NotebookText, Loader, ShieldUser } from "lucide-react";
+import {
+  LayoutGrid,
+  Contact,
+  NotebookText,
+  Loader,
+  ShieldUser,
+  Users, // ✅ NEW ICON
+} from "lucide-react";
 import { FaSignOutAlt } from "react-icons/fa";
 import logo from "../assets/images/logo.png";
 import { logoutStore, authCheckStore } from "../store/authStore";
 
 export default function Sidebar({ expanded, onMouseEnter, onMouseLeave }) {
-  const { logout, loading, success, error, message: logoutMsg, reset } = logoutStore();
-  const { message: authData } = authCheckStore(); // Get user data from our auth check
+  const {
+    logout,
+    loading,
+    success,
+    error,
+    message: logoutMsg,
+    reset,
+  } = logoutStore();
+  const { message: authData } = authCheckStore();
   const navigate = useNavigate();
 
-  // Get role directly from the store instead of localStorage
   const userRole = authData?.role;
 
   const handleLogout = async () => {
@@ -20,7 +33,6 @@ export default function Sidebar({ expanded, onMouseEnter, onMouseLeave }) {
   useEffect(() => {
     if (success) {
       reset();
-      // We don't need to manually clear localStorage anymore
       navigate("/login", { replace: true });
     }
     if (error) {
@@ -32,7 +44,9 @@ export default function Sidebar({ expanded, onMouseEnter, onMouseLeave }) {
     <aside
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      className={`${expanded ? "w-60" : "w-20"} bg-[#262046] text-white min-h-screen p-5 flex flex-col justify-between transition-all duration-300`}
+      className={`${
+        expanded ? "w-60" : "w-20"
+      } bg-[#262046] text-white min-h-screen p-5 flex flex-col justify-between transition-all duration-300`}
     >
       <div className="space-y-6">
         <SidebarLogo expanded={expanded} />
@@ -48,41 +62,62 @@ export default function Sidebar({ expanded, onMouseEnter, onMouseLeave }) {
 }
 
 function SidebarNav({ expanded, role }) {
-  // Define items based on role
   let navItems = [];
 
   if (role === "Admin") {
     navItems = [
       { to: "/dashboard", icon: <LayoutGrid size={20} />, label: "Dashboard" },
       { to: "/id-generator", icon: <Contact size={20} />, label: "ID Generator" },
-      { to: "/generated-ids", icon: <NotebookText size={20} />, label: "Generated IDs" },
-       { to: "/admin", icon: <ShieldUser size={20} />, label: "User Management" },
+      {
+        to: "/generated-ids",
+        icon: <NotebookText size={20} />,
+        label: "Generated IDs",
+      },
+      {
+        to: "/hr-management", // ✅ NEW ROUTE
+        icon: <Users size={20} />, // ✅ HR icon
+        label: "HR Management",
+      },
+      {
+        to: "/admin",
+        icon: <ShieldUser size={20} />,
+        label: "User Management",
+      },
     ];
   } else if (role === "Approver") {
     navItems = [
       { to: "/approver-dashboard", icon: <LayoutGrid size={20} />, label: "Dashboard" },
-      { to: "/approver-generated-ids", icon: <NotebookText size={20} />, label: "Generated IDs" },
+      {
+        to: "/approver-generated-ids",
+        icon: <NotebookText size={20} />,
+        label: "Generated IDs",
+      },
     ];
   }
 
   return (
     <nav className="space-y-3">
       {navItems.map(({ to, icon, label }) => (
-        <NavItem key={to} to={to} icon={icon} label={label} expanded={expanded} />
+        <NavItem
+          key={to}
+          to={to}
+          icon={icon}
+          label={label}
+          expanded={expanded}
+        />
       ))}
     </nav>
   );
 }
-
-// SidebarLogo, SidebarFooter, and NavItem remain mostly the same...
-// (Code omitted for brevity, but ensure NavItem uses the same logic)
 
 function SidebarLogo({ expanded }) {
   return (
     <div className="flex items-center gap-3">
       <img src={logo} alt="Logo" className="w-8 h-8" />
       <span
-        className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${expanded ? "opacity-100 w-auto" : "opacity-0 w-0"} text-xl font-bold`}
+        className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${
+          expanded ? "opacity-100 w-auto" : "opacity-0 w-0"
+        } text-xl font-bold`}
       >
         IT Squarehub
       </span>

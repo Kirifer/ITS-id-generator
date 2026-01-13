@@ -12,9 +12,16 @@ const Hr = require("../models/Hr");
 const getHrList = async (req, res) => {
   try {
     const hrs = await Hr.find().sort({ name: 1, position: 1 });
-    res.json(hrs);
+
+    return res.json({
+      success: true,
+      data: hrs,
+    });
   } catch (e) {
-    return res.status(500).json({ message: e.message });
+    return res.status(500).json({
+      success: false,
+      error: e.message,
+    });
   }
 };
 
@@ -26,18 +33,30 @@ const getHrById = async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ message: "Invalid HR ID" });
+      return res.status(400).json({
+        success: false,
+        error: "Invalid HR ID",
+      });
     }
 
     const hr = await Hr.findById(id);
 
     if (!hr) {
-      return res.status(404).json({ message: "HR not found" });
+      return res.status(404).json({
+        success: false,
+        error: "HR not found",
+      });
     }
 
-    res.json(hr);
+    return res.json({
+      success: true,
+      data: hr,
+    });
   } catch (e) {
-    return res.status(500).json({ message: e.message });
+    return res.status(500).json({
+      success: false,
+      error: e.message,
+    });
   }
 };
 
@@ -51,13 +70,15 @@ const createHr = async (req, res) => {
 
     if (!name || !position) {
       return res.status(400).json({
-        message: "Name and position are required",
+        success: false,
+        error: "Name and position are required",
       });
     }
 
     if (!signature) {
       return res.status(400).json({
-        message: "HR signature is required",
+        success: false,
+        error: "HR signature is required",
       });
     }
 
@@ -66,7 +87,8 @@ const createHr = async (req, res) => {
     } catch {
       fs.unlink(signature.path, () => {});
       return res.status(400).json({
-        message: "Invalid signature image",
+        success: false,
+        error: "Invalid signature image",
       });
     }
 
@@ -78,15 +100,22 @@ const createHr = async (req, res) => {
       createdBy: req.user.id,
     });
 
-    res.status(201).json(hr);
+    return res.status(201).json({
+      success: true,
+      data: hr,
+    });
   } catch (err) {
     if (err.code === 11000) {
       return res.status(409).json({
-        message: "HR with the same name and position already exists",
+        success: false,
+        error: "HR with the same name and position already exists",
       });
     }
 
-    return res.status(500).json({ message: err.message });
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+    });
   }
 };
 
@@ -98,12 +127,18 @@ const patchHr = async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ message: "Invalid HR ID" });
+      return res.status(400).json({
+        success: false,
+        error: "Invalid HR ID",
+      });
     }
 
     const hr = await Hr.findById(id);
     if (!hr) {
-      return res.status(404).json({ message: "HR not found" });
+      return res.status(404).json({
+        success: false,
+        error: "HR not found",
+      });
     }
 
     const { name, position } = req.body;
@@ -127,7 +162,8 @@ const patchHr = async (req, res) => {
       } catch {
         fs.unlink(signature.path, () => {});
         return res.status(400).json({
-          message: "Invalid signature image",
+          success: false,
+          error: "Invalid signature image",
         });
       }
 
@@ -147,20 +183,29 @@ const patchHr = async (req, res) => {
 
     if (!updated) {
       return res.status(400).json({
-        message: "No fields provided to update",
+        success: false,
+        error: "No fields provided to update",
       });
     }
 
     await hr.save();
-    res.json(hr);
+
+    return res.json({
+      success: true,
+      data: hr,
+    });
   } catch (err) {
     if (err.code === 11000) {
       return res.status(409).json({
-        message: "HR with the same name and position already exists",
+        success: false,
+        error: "HR with the same name and position already exists",
       });
     }
 
-    return res.status(500).json({ message: err.message });
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+    });
   }
 };
 
@@ -172,12 +217,18 @@ const deleteHr = async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ message: "Invalid HR ID" });
+      return res.status(400).json({
+        success: false,
+        error: "Invalid HR ID",
+      });
     }
 
     const hr = await Hr.findById(id);
     if (!hr) {
-      return res.status(404).json({ message: "HR not found" });
+      return res.status(404).json({
+        success: false,
+        error: "HR not found",
+      });
     }
 
     if (hr.signaturePath) {
@@ -190,9 +241,15 @@ const deleteHr = async (req, res) => {
     }
 
     await hr.deleteOne();
-    res.json({ ok: true });
+
+    return res.json({
+      success: true,
+    });
   } catch (e) {
-    return res.status(500).json({ message: e.message });
+    return res.status(500).json({
+      success: false,
+      error: e.message,
+    });
   }
 };
 
@@ -200,6 +257,6 @@ module.exports = {
   getHrList,
   getHrById,
   createHr,
-  patchHr,   // ✅ THIS FIXES THE CRASH
+  patchHr, // ✅ THIS FIXES THE CRASH
   deleteHr,
 };

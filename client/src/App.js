@@ -20,6 +20,7 @@ import IDViewer from "./screens/Login2";
 import GeneratedID from "./screens/Viewing";
 import { Toaster } from "sonner";
 import AdminManagement from "./screens/Admin-Creation";
+import HRManagement from "./screens/hrManagement"; 
 
 function AppRoutes() {
   const { authCheck, loading } = authCheckStore();
@@ -39,10 +40,12 @@ function AppRoutes() {
   if (loading && !hasChecked.current) {
     return <div>Loading Application...</div>;
   }
+
   return (
     <div className="App min-h-screen custom-bg">
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
+
         <Route
           path="/login"
           element={
@@ -51,6 +54,7 @@ function AppRoutes() {
             </PublicRoute>
           }
         />
+
         <Route
           path="/view-login"
           element={
@@ -59,6 +63,7 @@ function AppRoutes() {
             </PublicRoute>
           }
         />
+
         <Route
           path="/view-generated-id/:idNumber"
           element={
@@ -67,6 +72,7 @@ function AppRoutes() {
             </PublicRoute>
           }
         />
+
         <Route
           path="/dashboard"
           element={
@@ -75,6 +81,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/admin"
           element={
@@ -83,6 +90,17 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        
+        <Route
+          path="/hr-management"
+          element={
+            <ProtectedRoute allowedRoles={["Admin"]}>
+              <HRManagement />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/id-generator"
           element={
@@ -91,6 +109,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/generated-ids"
           element={
@@ -99,6 +118,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         {/* <Route
           path="/approver-dashboard"
           element={
@@ -115,6 +135,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         /> */}
+
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </div>
