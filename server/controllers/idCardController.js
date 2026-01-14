@@ -2,6 +2,7 @@ const path = require("path");
 const fs = require("fs");
 const sharp = require("sharp");
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 const IdCard = require("../models/IdCard");
 const Hr = require("../models/Hr");
 const { fileCleaner } = require("../utils/fileCleaner");
@@ -27,17 +28,25 @@ const unlinkIfExists = (p) => {
   }
 };
 
+
 const generateUniqueIdNumber = async () => {
-  let idNumber,
-    exists = true;
+  let idNumber;
+  let exists = true;
 
   while (exists) {
-    idNumber = `ITS-${Date.now().toString().slice(-10)}`;
+    // generate exactly 10 digits
+    const digits = crypto
+      .randomInt(1_000_000_000, 10_000_000_000)
+      .toString();
+
+    idNumber = `ITS-${digits}`;
     exists = await IdCard.exists({ idNumber });
   }
 
   return idNumber;
 };
+
+
 
 /* -------------------- controllers -------------------- */
 
@@ -110,7 +119,7 @@ const postIdCard = async (req, res) => {
 
     const phoneLocal = normalizePhone(phone);
     const emPhoneLocal = normalizePhone(emPhone);
-    const idNumber = await generateUniqueIdNumber();
+    const idNumber = await generateUniqueIdNumber(); 
 
     const photo = req.files?.photo?.[0];
     const hrSignature = req.files?.hrSignature?.[0];
@@ -164,7 +173,6 @@ const postIdCard = async (req, res) => {
       isGenerated: false,
       createdBy: req.user.id,
       approvedBy: req.user.id,
-      // issuedAt: new Date(),
     });
 
     res.status(201).json(doc);
@@ -205,10 +213,7 @@ const patchIdCardApprove = async (req, res) => {
 
     const updated = await IdCard.findByIdAndUpdate(
       id,
-      { status: "Approved", 
-        approvedBy: req.user.id, 
-        // issuedAt: new Date() 
-      },
+      { status: "Approved", approvedBy: req.user.id },
       { new: true }
     );
 
@@ -241,7 +246,7 @@ const patchIdCardReject = async (req, res) => {
 const patchIdCardDetails = async (req, res) => {
   try {
     const { id } = req.params;
-   
+
     if (!mongoose.isValidObjectId(id))
       return res.status(400).json({ message: "Invalid ID" });
 
@@ -265,7 +270,7 @@ const patchIdCardDetails = async (req, res) => {
       "fullName.middleInitial": req.body.middleInitial,
       "fullName.lastName": req.body.lastName,
       "contactDetails.email": req.body.email,
-      "position": req.body.position,
+      position: req.body.position,
       "emergencyContact.firstName": req.body.emFirstName,
       "emergencyContact.middleInitial": req.body.emMiddleInitial,
       "emergencyContact.lastName": req.body.emLastName,
@@ -279,16 +284,16 @@ const patchIdCardDetails = async (req, res) => {
         updated = true;
       }
     }
-     
+
     if (req.body.phone !== undefined) {
-        card.contactDetails.phone = normalizePhone(req.body.phone);
-        updated = true;
-      }
+      card.contactDetails.phone = normalizePhone(req.body.phone);
+      updated = true;
+    }
 
     if (req.body.emPhone !== undefined) {
-        card.emergencyContact.phone = normalizePhone(req.body.emPhone);
-        updated = true;
-      }
+      card.emergencyContact.phone = normalizePhone(req.body.emPhone);
+      updated = true;
+    }
 
     const photo = req.files?.photo?.[0];
     if (photo) {
