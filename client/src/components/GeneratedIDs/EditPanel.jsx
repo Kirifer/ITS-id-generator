@@ -14,6 +14,7 @@ import SelectWithIcon from "../Common/SelectWithIcon";
 import FileUpload from "../Forms/FileUpload";
 import ToggleSwitch from "../Forms/ToggleSwitch";
 import HrSelector from "../IDGenerator/HrSelector";
+import PositionSelect from "../Forms/PositionSelect";
 
 export default function EditPanel({
   selectedId,
@@ -158,23 +159,20 @@ export default function EditPanel({
 
         {/* POSITION & TYPE */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <SelectWithIcon
-            Icon={Briefcase}
-            value={selectedId.position}
-            onChange={(e) =>
-              setSelectedId({ ...selectedId, position: e.target.value })
-            }
-            label="Position"
-            options={[
-              "Full Stack Developer",
-              "Human Resources",
-              "Marketing",
-              "Creative",
-              "SEO",
-            ]}
-            required
-            disabled={isProcessing}
-          />
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-1">
+              Position
+            </label>
+            <PositionSelect
+              value={selectedId.position}
+              onChange={(e) =>
+                setSelectedId({ ...selectedId, position: e.target.value })
+              }
+              required
+              disabled={isProcessing}
+            />
+          </div>
+
           <SelectWithIcon
             Icon={Tag}
             value={selectedId.type}
