@@ -279,11 +279,16 @@ const patchIdCardDetails = async (req, res) => {
         updated = true;
       }
     }
+     
+    if (req.body.phone !== undefined) {
+        card.contactDetails.phone = normalizePhone(req.body.phone);
+        updated = true;
+      }
 
     if (req.body.emPhone !== undefined) {
-      card.emergencyContact.phone = normalizePhone(req.body.emPhone);
-      updated = true;
-    }
+        card.emergencyContact.phone = normalizePhone(req.body.emPhone);
+        updated = true;
+      }
 
     const photo = req.files?.photo?.[0];
     if (photo) {
