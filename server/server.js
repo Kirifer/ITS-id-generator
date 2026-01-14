@@ -11,8 +11,8 @@ const filterRoutes = require("./routes/filterRoutes");
 const { dashboardRoutes } = require("./routes/dashboardRoutes");
 const { adminRoutes } = require("./routes/adminRoutes");
 
-const hrRoutes = require("./routes/hrRoutes"); 
-
+const hrRoutes = require("./routes/hrRoutes");
+const { positionRoutes } = require("./routes/positionRoutes");
 
 dotenv.config();
 
@@ -70,11 +70,10 @@ app.use("/api/id-cards", idCardsRouter);
 app.use("/api/id-generator", idGeneratorRoutes);
 app.use("/api/filter", filterRoutes);
 app.use("/api/stats", dashboardRoutes);
-app.use("/api/admin", adminRoutes)
-app.use("/api/stats", dashboardRoutes)
-app.use("/api/hr", hrRoutes); 
-
-
+app.use("/api/admin", adminRoutes);
+app.use("/api/stats", dashboardRoutes);
+app.use("/api/hr", hrRoutes);
+app.use("/api/position", positionRoutes);
 
 // 404 Handler
 app.use((req, res) => {
