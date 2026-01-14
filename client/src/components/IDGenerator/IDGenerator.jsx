@@ -5,14 +5,15 @@ import {
   Tag,
   Phone,
   UploadCloud,
-} from "lucide-react"
-import { useEffect, useState } from "react"
-import { removeBackground } from "@imgly/background-removal"
-import InputField from "../Forms/InputField"
-import SelectField from "../Forms/SelectField"
-import FileUpload from "../Forms/FileUpload"
-import ToggleSwitch from "../Forms/ToggleSwitch"
-import HrSelector from "./HrSelector"
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { removeBackground } from "@imgly/background-removal";
+import InputField from "../Forms/InputField";
+import SelectField from "../Forms/SelectField";
+import FileUpload from "../Forms/FileUpload";
+import ToggleSwitch from "../Forms/ToggleSwitch";
+import HrSelector from "./HrSelector";
+import PositionSelect from "../Forms/PositionSelect";
 
 export default function IDGeneratorForm({
   formRef,
@@ -23,118 +24,115 @@ export default function IDGeneratorForm({
   photoError,
   setPhotoError,
   onSubmit,
-   hrSignature,
+  hrSignature,
   setHrSignature,
   hrSignatureError,
   setHrSignatureError,
 }) {
-  const [photoProcessing, setPhotoProcessing] = useState(false)
-  const [removePhotoBg, setRemovePhotoBg] = useState(false)
+  const [photoProcessing, setPhotoProcessing] = useState(false);
+  const [removePhotoBg, setRemovePhotoBg] = useState(false);
 
   /* =====================
      HR STATE
   ===================== */
-  const [hr_name, set_hr_name] = useState("")
-  const [hr_position, set_hr_position] = useState("")
-  const [hr_id, set_hr_id] = useState(null) // ✅ ADD THIS
+  const [hr_name, set_hr_name] = useState("");
+  const [hr_position, set_hr_position] = useState("");
+  const [hr_id, set_hr_id] = useState(null); // ✅ ADD THIS
 
-   useEffect(() => {
-  setFormData((prev) => ({
-    ...prev,
-    hrId: hr_id || "",
-    hrName: hr_name,
-    hrPosition: hr_position,
-  }))
-}, [hr_id, hr_name, hr_position])
-
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      hrId: hr_id || "",
+      hrName: hr_name,
+      hrPosition: hr_position,
+    }));
+  }, [hr_id, hr_name, hr_position]);
 
   const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   useEffect(() => {
     if (!formData.phone || formData.phone === "") {
-      setFormData((prev) => ({ ...prev, phone: "+639" }))
+      setFormData((prev) => ({ ...prev, phone: "+639" }));
     }
     if (!formData.emPhone || formData.emPhone === "") {
-      setFormData((prev) => ({ ...prev, emPhone: "+639" }))
+      setFormData((prev) => ({ ...prev, emPhone: "+639" }));
     }
-  }, [])
+  }, []);
 
   const handlePhoneChange = (field, value) => {
-    if (!value.startsWith("+639")) value = "+639"
-    const digits = value.slice(4).replace(/\D/g, "")
-    const limitedDigits = digits.slice(0, 9)
-    handleChange(field, "+639" + limitedDigits)
-  }
+    if (!value.startsWith("+639")) value = "+639";
+    const digits = value.slice(4).replace(/\D/g, "");
+    const limitedDigits = digits.slice(0, 9);
+    handleChange(field, "+639" + limitedDigits);
+  };
 
   const getEmployeePrefix = () => {
-    if (formData.type === "Intern") return "ITSIN-"
-    if (formData.type === "Employee") return "ITS-"
-    return ""
-  }
+    if (formData.type === "Intern") return "ITSIN-";
+    if (formData.type === "Employee") return "ITS-";
+    return "";
+  };
 
   const handleEmployeeNumberChange = (value) => {
-    const numericValue = value.replace(/\D/g, "").slice(0, 5)
-    handleChange("employeeNumber", getEmployeePrefix() + numericValue)
-  }
+    const numericValue = value.replace(/\D/g, "").slice(0, 5);
+    handleChange("employeeNumber", getEmployeePrefix() + numericValue);
+  };
 
   const getDisplayNumber = () => {
-    const prefix = getEmployeePrefix()
+    const prefix = getEmployeePrefix();
     if (formData.employeeNumber.startsWith(prefix)) {
-      return formData.employeeNumber.slice(prefix.length)
+      return formData.employeeNumber.slice(prefix.length);
     }
-    return formData.employeeNumber.replace(/^(ITS-|ITSIN-)/, "")
-  }
+    return formData.employeeNumber.replace(/^(ITS-|ITSIN-)/, "");
+  };
 
   useEffect(() => {
     if (formData.type && formData.employeeNumber) {
-      const displayNum = getDisplayNumber()
-      handleChange("employeeNumber", getEmployeePrefix() + displayNum)
+      const displayNum = getDisplayNumber();
+      handleChange("employeeNumber", getEmployeePrefix() + displayNum);
     }
-  }, [formData.type])
+  }, [formData.type]);
 
   const validateFile = (file, setFile, setError) => {
-    if (!file) return false
+    if (!file) return false;
     if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
-      setFile(null)
-      setError("Invalid file type. Only JPEG and PNG are allowed.")
-      return false
+      setFile(null);
+      setError("Invalid file type. Only JPEG and PNG are allowed.");
+      return false;
     }
     if (file.size > 4 * 1024 * 1024) {
-      setFile(null)
-      setError("File too large. Max 4MB.")
-      return false
+      setFile(null);
+      setError("File too large. Max 4MB.");
+      return false;
     }
-    setError("")
-    return true
-  }
+    setError("");
+    return true;
+  };
 
   const handlePhotoUpload = async (file) => {
-    if (!validateFile(file, setPhoto, setPhotoError)) return
+    if (!validateFile(file, setPhoto, setPhotoError)) return;
 
     if (!removePhotoBg) {
-      setPhoto(file)
-      setPhotoError("")
-      return
+      setPhoto(file);
+      setPhotoError("");
+      return;
     }
 
-    setPhotoProcessing(true)
+    setPhotoProcessing(true);
     try {
-      const image = await removeBackground(file)
-      const blob = image instanceof Blob ? image : await image.blob()
-      const processedFile = new File([blob], file.name, { type: "image/png" })
-      setPhoto(processedFile)
-      setPhotoError("")
+      const image = await removeBackground(file);
+      const blob = image instanceof Blob ? image : await image.blob();
+      const processedFile = new File([blob], file.name, { type: "image/png" });
+      setPhoto(processedFile);
+      setPhotoError("");
     } catch {
-      setPhoto(null)
-      setPhotoError("Failed to remove background.")
+      setPhoto(null);
+      setPhotoError("Failed to remove background.");
     } finally {
-      setPhotoProcessing(false)
+      setPhotoProcessing(false);
     }
-  }
-
-  
+  };
 
   return (
     <div
@@ -146,7 +144,7 @@ export default function IDGeneratorForm({
         Please provide the required information below.
       </p>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={onSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Full Name
@@ -228,15 +226,8 @@ export default function IDGeneratorForm({
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Position
           </label>
-          <SelectField
+          <PositionSelect
             icon={Briefcase}
-            options={[
-              "Full Stack Developer",
-              "Human Resources",
-              "Marketing",
-              "Creative",
-              "SEO",
-            ]}
             value={formData.position}
             onChange={(e) => handleChange("position", e.target.value)}
             placeholder="Select Position"
@@ -318,17 +309,17 @@ export default function IDGeneratorForm({
           />
         </div>
 
-            <HrSelector
-              hr_name={hr_name}
-              set_hr_name={set_hr_name}
-              hr_position={hr_position}
-              set_hr_position={set_hr_position}
-              hr_signature={hrSignature}
-              set_hr_signature={setHrSignature}
-              set_hr_id={set_hr_id}          // ✅ ADD THIS
-              hr_signature_error={hrSignatureError}
-              set_hr_signature_error={setHrSignatureError}
-            />
+        <HrSelector
+          hr_name={hr_name}
+          set_hr_name={set_hr_name}
+          hr_position={hr_position}
+          set_hr_position={set_hr_position}
+          hr_signature={hrSignature}
+          set_hr_signature={setHrSignature}
+          set_hr_id={set_hr_id} // ✅ ADD THIS
+          hr_signature_error={hrSignatureError}
+          set_hr_signature_error={setHrSignatureError}
+        />
 
         <div className="border-t pt-4">
           <label className="block text-sm font-semibold text-gray-800 mb-2">
@@ -342,7 +333,8 @@ export default function IDGeneratorForm({
               onChange={setRemovePhotoBg}
             />
             <p className="text-xs text-gray-600 italic ml-14">
-              Toggle this before uploading if you want automatic background removal
+              Toggle this before uploading if you want automatic background
+              removal
             </p>
             <FileUpload
               id="photoUpload"
@@ -365,5 +357,5 @@ export default function IDGeneratorForm({
         </button>
       </form>
     </div>
-  )
+  );
 }

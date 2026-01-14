@@ -20,7 +20,8 @@ import IDViewer from "./screens/Login2";
 import GeneratedID from "./screens/Viewing";
 import { Toaster } from "sonner";
 import AdminManagement from "./screens/Admin-Creation";
-import HRManagement from "./screens/hrManagement"; 
+import HRManagement from "./screens/hrManagement";
+import PositionsScreen from "./screens/PositionsScreen";
 
 function AppRoutes() {
   const { authCheck, loading } = authCheckStore();
@@ -91,7 +92,6 @@ function AppRoutes() {
           }
         />
 
-        
         <Route
           path="/hr-management"
           element={
@@ -115,6 +115,15 @@ function AppRoutes() {
           element={
             <ProtectedRoute allowedRoles={["Admin"]}>
               <Admin_GeneratedIDs />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/positions"
+          element={
+            <ProtectedRoute allowedRoles={["Admin"]}>
+              <PositionsScreen />
             </ProtectedRoute>
           }
         />

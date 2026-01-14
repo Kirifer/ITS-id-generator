@@ -6,7 +6,8 @@ import {
   NotebookText,
   Loader,
   ShieldUser,
-  Users, // ✅ NEW ICON
+  Users,
+  Plus, // ✅ NEW ICON
 } from "lucide-react";
 import { FaSignOutAlt } from "react-icons/fa";
 import logo from "../assets/images/logo.png";
@@ -67,7 +68,11 @@ function SidebarNav({ expanded, role }) {
   if (role === "Admin") {
     navItems = [
       { to: "/dashboard", icon: <LayoutGrid size={20} />, label: "Dashboard" },
-      { to: "/id-generator", icon: <Contact size={20} />, label: "ID Generator" },
+      {
+        to: "/id-generator",
+        icon: <Contact size={20} />,
+        label: "ID Generator",
+      },
       {
         to: "/generated-ids",
         icon: <NotebookText size={20} />,
@@ -83,10 +88,19 @@ function SidebarNav({ expanded, role }) {
         icon: <ShieldUser size={20} />,
         label: "User Management",
       },
+      {
+        to: "/positions",
+        icon: <Plus size={20} />,
+        label: "Add Position",
+      },
     ];
   } else if (role === "Approver") {
     navItems = [
-      { to: "/approver-dashboard", icon: <LayoutGrid size={20} />, label: "Dashboard" },
+      {
+        to: "/approver-dashboard",
+        icon: <LayoutGrid size={20} />,
+        label: "Dashboard",
+      },
       {
         to: "/approver-generated-ids",
         icon: <NotebookText size={20} />,
@@ -131,7 +145,9 @@ function SidebarFooter({ expanded, handleLogout, loading }) {
       <button
         onClick={handleLogout}
         className={`flex items-center gap-3 px-2 py-1 rounded-md transition-colors duration-200
-        ${loading ? "bg-gray-500 cursor-not-allowed" : "hover:text-purple-400"}`}
+        ${
+          loading ? "bg-gray-500 cursor-not-allowed" : "hover:text-purple-400"
+        }`}
         disabled={loading}
       >
         {loading ? (
