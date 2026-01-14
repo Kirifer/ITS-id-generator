@@ -6,19 +6,19 @@
     "height": 1000
   },
   "photo": {
-    "left": 340,
+    "left": 250,
     "top": 220,
-    "width": 315,
+    "width": 400,
     "height": 780,
     "radius": 0
   },
   "text": {
     "name": {
       "x": 30,
-      "y": 450,
+      "y": 350,
       "align": "left",
       "fontSize": 64,
-      "minFontSize": 32,
+      "minFontSize": 40,
       "maxWidth": 300,
       "maxLines": 3,
       "lineHeight": 1.25,
@@ -31,9 +31,9 @@
     },
     "position": {
       "x": 30,
-      "y": 600,
+      "y": 500,
       "align": "left",
-      "fontSize": 30,
+      "fontSize": 38,
       "minFontSize": 24,
       "maxWidth": 300,
       "fill": "#1a5dab",
@@ -41,9 +41,9 @@
     },
     "idNumber": {
       "x": 30,
-      "y": 650,
+      "y": 550,
       "align": "left",
-      "fontSize": 29,
+      "fontSize": 33,
       "maxWidth": 300,
       "fill": "#000000",
       "weight": 400
