@@ -7,13 +7,13 @@ import {
   Phone,
   Mail,
   UploadCloud,
-  FileSignature,
 } from "lucide-react";
 import { removeBackground } from "@imgly/background-removal";
 import InputWithIcon from "../Common/InputWithIcon";
 import SelectWithIcon from "../Common/SelectWithIcon";
 import FileUpload from "../Forms/FileUpload";
 import ToggleSwitch from "../Forms/ToggleSwitch";
+import HrSelector from "../IDGenerator/HrSelector";
 
 export default function EditPanel({
   selectedId,
@@ -28,10 +28,28 @@ export default function EditPanel({
   const [photoError, setPhotoError] = React.useState("");
   const [hrSignatureError, setHrSignatureError] = React.useState("");
   const [photoProcessing, setPhotoProcessing] = React.useState(false);
-  const [signatureProcessing, setSignatureProcessing] = React.useState(false);
   const [removePhotoBg, setRemovePhotoBg] = React.useState(false);
-  const [removeSignatureBg, setRemoveSignatureBg] = React.useState(false);
 
+  // ✅ HR local state
+  const [hrName, setHrName] = React.useState(selectedId.hrName || "");
+  const [hrPosition, setHrPosition] = React.useState(
+    selectedId.hrPosition || ""
+  );
+  const [hrId, setHrId] = React.useState(selectedId.hrId || null);
+
+  // ✅ Sync HR data back to selectedId
+  React.useEffect(() => {
+    setSelectedId((prev) => ({
+      ...prev,
+      hrId: hrId || "",
+      hrName,
+      hrPosition,
+    }));
+  }, [hrId, hrName, hrPosition]);
+
+  /* =====================
+     PHOTO UPLOAD
+  ===================== */
   const validateFile = (file, setError) => {
     if (!file) return false;
     if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
@@ -70,31 +88,7 @@ export default function EditPanel({
     }
   };
 
-  const handleSignatureUpload = async (file) => {
-    if (!validateFile(file, setHrSignatureError)) return;
-
-    if (!removeSignatureBg) {
-      setHrSignature(file);
-      setHrSignatureError("");
-      return;
-    }
-
-    setSignatureProcessing(true);
-    try {
-      const result = await removeBackground(file);
-      const blob = result instanceof Blob ? result : await result.blob();
-      const processedFile = new File([blob], file.name, { type: "image/png" });
-      setHrSignature(processedFile);
-      setHrSignatureError("");
-    } catch {
-      setHrSignature(null);
-      setHrSignatureError("Failed to remove background.");
-    } finally {
-      setSignatureProcessing(false);
-    }
-  };
-
-  const isProcessing = photoProcessing || signatureProcessing;
+  const isProcessing = photoProcessing;
 
   return (
     <>
@@ -106,6 +100,7 @@ export default function EditPanel({
       </div>
 
       <div className="space-y-4">
+        {/* FULL NAME */}
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Full Name
@@ -144,6 +139,7 @@ export default function EditPanel({
           </div>
         </div>
 
+        {/* EMPLOYEE NUMBER */}
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Employee Number
@@ -160,6 +156,7 @@ export default function EditPanel({
           />
         </div>
 
+        {/* POSITION & TYPE */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <SelectWithIcon
             Icon={Briefcase}
@@ -191,6 +188,7 @@ export default function EditPanel({
           />
         </div>
 
+        {/* EMAIL */}
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Email
@@ -208,6 +206,7 @@ export default function EditPanel({
           />
         </div>
 
+        {/* PHONE */}
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Phone Number
@@ -225,6 +224,7 @@ export default function EditPanel({
           />
         </div>
 
+        {/* EMERGENCY CONTACT */}
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Emergency Contact Person
@@ -266,6 +266,7 @@ export default function EditPanel({
           </div>
         </div>
 
+        {/* EMERGENCY PHONE */}
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Emergency Contact Number
@@ -282,38 +283,20 @@ export default function EditPanel({
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-800 mb-1">
-            HR Name
-          </label>
-          <InputWithIcon
-            Icon={User}
-            value={selectedId.hrName || ""}
-            onChange={(e) =>
-              setSelectedId({ ...selectedId, hrName: e.target.value })
-            }
-            placeholder="Enter HR Name"
-            required
-            disabled={isProcessing}
-          />
-        </div>
+        {/* ✅ HR SELECTOR (REPLACEMENT) */}
+        <HrSelector
+          hr_name={hrName}
+          set_hr_name={setHrName}
+          hr_position={hrPosition}
+          set_hr_position={setHrPosition}
+          hr_signature={hrSignature}
+          set_hr_signature={setHrSignature}
+          set_hr_id={setHrId}
+          hr_signature_error={hrSignatureError}
+          set_hr_signature_error={setHrSignatureError}
+        />
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-800 mb-1">
-            HR Position
-          </label>
-          <InputWithIcon
-            Icon={Briefcase}
-            value={selectedId.hrPosition || ""}
-            onChange={(e) =>
-              setSelectedId({ ...selectedId, hrPosition: e.target.value })
-            }
-            placeholder="Enter HR Position"
-            required
-            disabled={isProcessing}
-          />
-        </div>
-
+        {/* PHOTO UPLOAD */}
         <div className="border-t pt-4">
           <label className="block text-sm font-semibold text-gray-800 mb-2">
             Photo Upload
@@ -326,7 +309,8 @@ export default function EditPanel({
               onChange={setRemovePhotoBg}
             />
             <p className="text-xs text-gray-600 italic ml-14">
-              Toggle this before uploading if you want automatic background removal
+              Toggle this before uploading if you want automatic background
+              removal
             </p>
             <FileUpload
               id="photoEditUpload"
@@ -340,32 +324,7 @@ export default function EditPanel({
           </div>
         </div>
 
-        <div className="border-t pt-4">
-          <label className="block text-sm font-semibold text-gray-800 mb-2">
-            HR Signature Upload
-          </label>
-          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-            <ToggleSwitch
-              id="removeSignatureBgEdit"
-              label="Remove signature background"
-              checked={removeSignatureBg}
-              onChange={setRemoveSignatureBg}
-            />
-            <p className="text-xs text-gray-600 italic ml-14">
-              Toggle this before uploading if you want automatic background removal
-            </p>
-            <FileUpload
-              id="hrSignatureUpload"
-              icon={FileSignature}
-              file={hrSignature}
-              error={hrSignatureError}
-              onFileChange={(e) => handleSignatureUpload(e.target.files[0])}
-              label="HR Signature"
-              isProcessing={signatureProcessing}
-            />
-          </div>
-        </div>
-
+        {/* ACTION BUTTONS */}
         <div className="mt-6 flex gap-4">
           <button
             onClick={onSubmit}
