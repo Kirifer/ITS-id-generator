@@ -39,8 +39,8 @@ export default function Admin_IDGenerator() {
   const [hrSignatureError, setHrSignatureError] = useState("");
 
   useEffect(() => {
-  console.log("HR SIGNATURE:", hrSignature)
-}, [hrSignature])
+    console.log("HR SIGNATURE:", hrSignature);
+  }, [hrSignature]);
 
   const { loading, success, error, message, idCardPost, reset } =
     idCardPostStore();
@@ -63,12 +63,11 @@ export default function Admin_IDGenerator() {
       return;
     }
 
-   // Require signature ONLY if manual HR (no hrId)
-if (!formData.hrId && !hrSignature) {
-  showMessageBoxIdGen("Please upload HR signature.");
-  return;
-}
-
+    // Require signature ONLY if manual HR (no hrId)
+    if (!formData.hrId && !hrSignature) {
+      showMessageBoxIdGen("Please upload HR signature.");
+      return;
+    }
 
     /* =====================
        PHOTO VALIDATION
@@ -117,9 +116,20 @@ if (!formData.hrId && !hrSignature) {
 
     const formDataToSend = new FormData();
 
+    // =======
     Object.keys(formData).forEach((key) => {
-      formDataToSend.append(key, formData[key]);
+      let value = formData[key];
+
+      if ((key === "middleInitial" || key === "emMiddleInitial") && value) {
+        value = value.toUpperCase();
+        if (!value.endsWith(".")) {
+          value = value + ".";
+        }
+      }
+
+      formDataToSend.append(key, value);
     });
+    // =======
 
     formDataToSend.append("photo", photo);
 
@@ -127,8 +137,6 @@ if (!formData.hrId && !hrSignature) {
     if (hrSignature instanceof File) {
       formDataToSend.append("hrSignature", hrSignature);
     }
-
-    
 
     /* =====================
        SUBMIT
