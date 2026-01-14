@@ -167,10 +167,8 @@ const updateAdmin = async (req, res) => {
       }
     }
 
-    if (password !== undefined) {
-      if (validator.isEmpty(password)) {
-        errors.password = "Password cannot be empty";
-      } else if (!validator.isLength(password, { min: 8 })) {
+    if (password !== undefined && !validator.isEmpty(password)) {
+      if (!validator.isLength(password, { min: 8 })) {
         errors.password = "Password must be at least 8 characters";
       } else if (!validator.matches(password, /[A-Z]/)) {
         errors.password = "Password must contain at least one uppercase letter";
@@ -181,6 +179,11 @@ const updateAdmin = async (req, res) => {
       } else if (!validator.matches(password, /[@$!%*?&#]/)) {
         errors.password =
           "Password must contain at least one special character";
+      } else {
+        const isSamePassword = await admin.comparePassword(password);
+        if (isSamePassword) {
+          errors.password = "New password cannot be the same as current password";
+        }
       }
     }
 
@@ -193,15 +196,20 @@ const updateAdmin = async (req, res) => {
     }
 
     if (Object.keys(errors).length > 0) {
+      const errorValues = Object.values(errors);
+      const message = errorValues.length === 1 ? errorValues[0] : "Validation failed";
+      
       return res.status(400).json({
         success: false,
-        message: "Validation failed",
+        message,
         errors,
       });
     }
 
     if (username !== undefined) admin.username = username;
-    if (password !== undefined) admin.password = password;
+    if (password !== undefined && !validator.isEmpty(password)) {
+      admin.password = password;
+    }
     admin.role = "Admin";
     if (isActive !== undefined) admin.isActive = isActive;
 
