@@ -167,7 +167,7 @@ export default function ViewPanel({ row, onEdit, onClose }) {
         <InfoField
           label="Emergency Contact"
           value={`${row.emFirstName} ${
-            row.emMiddleInitial ? row.emMiddleInitial + ". " : ""
+            row.emMiddleInitial ? row.emMiddleInitial + " " : ""
           }${row.emLastName}`}
         />
         <InfoField label="Emergency Phone" value={row.emPhone} />
