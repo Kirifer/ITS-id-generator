@@ -28,13 +28,11 @@ const unlinkIfExists = (p) => {
   }
 };
 
-
 const generateUniqueIdNumber = async () => {
   let idNumber;
   let exists = true;
 
   while (exists) {
-    // generate exactly 10 digits
     const digits = crypto
       .randomInt(1_000_000_000, 10_000_000_000)
       .toString();
@@ -45,8 +43,6 @@ const generateUniqueIdNumber = async () => {
 
   return idNumber;
 };
-
-
 
 /* -------------------- controllers -------------------- */
 
@@ -119,7 +115,7 @@ const postIdCard = async (req, res) => {
 
     const phoneLocal = normalizePhone(phone);
     const emPhoneLocal = normalizePhone(emPhone);
-    const idNumber = await generateUniqueIdNumber(); 
+    const idNumber = await generateUniqueIdNumber();
 
     const photo = req.files?.photo?.[0];
     const hrSignature = req.files?.hrSignature?.[0];
@@ -127,26 +123,40 @@ const postIdCard = async (req, res) => {
     if (!photo) return res.status(400).json({ message: "Photo is required" });
     await sharp(photo.path).metadata();
 
-    let hr;
+    /* =========================
+       HR HANDLING (FIXED)
+    ========================= */
+
+    let hrSnapshot;
 
     if (hrId) {
-      hr = await Hr.findById(hrId);
-      if (!hr) return res.status(400).json({ message: "Invalid HR selected" });
+      const hr = await Hr.findById(hrId);
+      if (!hr) {
+        return res.status(400).json({ message: "Invalid HR selected" });
+      }
+
+      hrSnapshot = {
+        hrRef: hr._id,
+        name: hr.name,
+        position: hr.position,
+        signaturePath: hr.signaturePath,
+      };
     } else {
-      if (!hrName || !hrPosition || !hrSignature)
+      if (!hrName || !hrPosition || !hrSignature) {
         return res.status(400).json({
           message: "HR name, position, and signature are required",
         });
+      }
 
       await sharp(hrSignature.path).metadata();
 
-      hr = await Hr.create({
+      // ❌ DO NOT SAVE HR
+      hrSnapshot = {
+        hrRef: null,
         name: hrName,
         position: hrPosition,
         signaturePath: `/uploads/photos/${hrSignature.filename}`,
-        isManual: true,
-        createdBy: req.user.id,
-      });
+      };
     }
 
     const doc = await IdCard.create({
@@ -162,12 +172,7 @@ const postIdCard = async (req, res) => {
         lastName: emLastName,
         phone: emPhoneLocal,
       },
-      hrDetails: {
-        hrRef: hr._id,
-        name: hr.name,
-        position: hr.position,
-        signaturePath: hr.signaturePath,
-      },
+      hrDetails: hrSnapshot,
       photoPath: `/uploads/photos/${photo.filename}`,
       status: "Approved",
       isGenerated: false,
@@ -340,7 +345,6 @@ const deleteIdCard = async (req, res) => {
 
     [
       doc.photoPath,
-      doc.hrDetails?.signaturePath,
       doc.generatedFrontImagePath,
       doc.generatedBackImagePath,
     ].forEach(unlinkIfExists);
