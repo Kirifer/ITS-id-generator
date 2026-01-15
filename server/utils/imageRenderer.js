@@ -39,7 +39,6 @@ async function renderSide(card, templateKey, suffix) {
     );
   }
 
-  // Only add overlay for employee cards (not intern cards)
   if (suffix === "front" && templateKey.toLowerCase().includes("employee")) {
     try {
       const overlayPath = path.join(SERVER_ROOT, "templates", "Blue-Geometric-Vector.png");
@@ -99,18 +98,96 @@ async function renderSide(card, templateKey, suffix) {
       size--;
     }
 
-    ctx.fillText(value, toPx(spec.x, tpl.designW), toPx(spec.y, tpl.designH));
+    const x = toPx(spec.x, tpl.designW);
+    const y = toPx(spec.y, tpl.designH);
+
+    const lines = String(value).split("\n");
+    const lineHeight = size * 1.2;
+
+    lines.forEach((line, i) => {
+      ctx.fillText(line, x, y + i * lineHeight);
+    });
+  };
+
+  const drawEmployeeNameShrink = (fullName, spec) => {
+    if (!fullName || !spec) return;
+
+    let size = spec.fontSize || 30;
+    const minSize = spec.minFontSize || 16;
+
+    ctx.fillStyle = spec.fill || "#000";
+    ctx.textAlign = spec.align || "left";
+    ctx.textBaseline = "top";
+
+    const fullNameLength = `${fullName.firstName} ${fullName.middleInitial || ""} ${fullName.lastName || ""}`.trim().length;
+    const isLongName = fullNameLength > 20;
+
+    let nameValue;
+    
+    if (isLongName) {
+      if (fullName.middleInitial) {
+        nameValue = `${fullName.firstName} ${fullName.middleInitial}\n${fullName.lastName || ""}`.trim();
+      } else {
+        nameValue = `${fullName.firstName}\n${fullName.lastName || ""}`.trim();
+      }
+    } else {
+      if (fullName.middleInitial) {
+        nameValue = `${fullName.firstName} ${fullName.middleInitial}\n${fullName.lastName || ""}`.trim();
+      } else {
+        nameValue = `${fullName.firstName}\n${fullName.lastName || ""}`.trim();
+      }
+    }
+
+    const maxWidth = spec.maxWidth ? toPx(spec.maxWidth, tpl.designW) : null;
+
+    while (maxWidth && size >= minSize) {
+      ctx.font = `${spec.weight || 700} ${size}px Arial`;
+      const lines = nameValue.split("\n");
+      const maxLineWidth = Math.max(...lines.map(l => ctx.measureText(l).width));
+      if (maxLineWidth <= maxWidth) break;
+      size--;
+    }
+
+    const x = toPx(spec.x, tpl.designW);
+    let y = toPx(spec.y, tpl.designH);
+
+    if (isLongName) {
+      y += size * 1.1;
+    }
+
+    const lines = nameValue.split("\n");
+    const lineHeight = size * 1.2;
+
+    lines.forEach((line, i) => {
+      ctx.fillText(line, x, y + i * lineHeight);
+    });
   };
 
   if (suffix === "front") {
-    let nameValue = `${card.fullName.firstName} ${card.fullName.middleInitial || ""} ${card.fullName.lastName}`.trim();
+    if (templateKey.toLowerCase().includes("employee")) {
+      drawEmployeeNameShrink(card.fullName, tpl.text.name);
+      
+      let positionValue = card.position;
+      if (positionValue) {
+        const words = positionValue.trim().split(/\s+/);
+        if (words.length === 2) {
+          positionValue = words.join("\n");
+        } else if (words.length >= 3) {
+          positionValue = `${words[0]} ${words[1]}\n${words.slice(2).join(" ")}`;
+        }
+      }
+      drawText(positionValue, tpl.text.position);
+    } else {
+      let nameValue = `${card.fullName.firstName} ${card.fullName.middleInitial || ""} ${card.fullName.lastName}`.trim();
 
-    if (tpl.text?.name?.splitLastName) {
-      nameValue = `${card.fullName.firstName} ${card.fullName.middleInitial || ""}\n${card.fullName.lastName}`.trim();
+      if (tpl.text?.name?.splitLastName) {
+        nameValue = `${card.fullName.firstName} ${card.fullName.middleInitial || ""}\n${card.fullName.lastName}`.trim();
+      }
+
+      drawText(nameValue, tpl.text.name);
+      drawText(card.position, tpl.text.position);
     }
 
-    drawText(nameValue, tpl.text.name);
-    drawText(card.position, tpl.text.position);
     drawText(card.employeeNumber, tpl.text.idNumber);
   }
 

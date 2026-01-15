@@ -41,7 +41,7 @@
     },
     "idNumber": {
       "x": 30,
-      "y": 550,
+      "y": 600,
       "align": "left",
       "fontSize": 33,
       "maxWidth": 300,
