@@ -57,15 +57,16 @@ const EmergencyContactSchema = new mongoose.Schema(
 );
 
 /**
- * HR snapshot + reference
- * Keeps historical correctness even if HR is deleted/changed
+ * HR snapshot + optional reference
+ * - hrRef exists ONLY when HR is selected from DB
+ * - Manual HR uses snapshot fields only
  */
 const HrSnapshotSchema = new mongoose.Schema(
   {
     hrRef: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Hr",
-      required: true,
+      required: false, // ✅ FIX: allow manual HR
     },
     name: {
       type: String,
@@ -86,7 +87,9 @@ const HrSnapshotSchema = new mongoose.Schema(
   { _id: false }
 );
 
-//validators
+// ===========================
+// VALIDATORS
+// ===========================
 
 const employeeNumberValidator = {
   validator: function (value) {
@@ -212,6 +215,7 @@ const IdCardSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+
     isGenerated: {
       type: Boolean,
       default: false,
@@ -226,10 +230,7 @@ const IdCardSchema = new mongoose.Schema(
    INDEXES (DATABASE GUARANTEE)
 =========================== */
 
-// Causing "Warning: Duplicate schema index"
-// IdCardSchema.index({ employeeNumber: 1 }, { unique: true });
-// IdCardSchema.index({ idNumber: 1 }, { unique: true });
-
+// Avoid duplicate index warnings (already handled by schema)
 IdCardSchema.index({ type: 1, status: 1 });
 
 module.exports = mongoose.model("IdCard", IdCardSchema);

@@ -31,14 +31,13 @@ export default function EditPanel({
   const [photoProcessing, setPhotoProcessing] = React.useState(false);
   const [removePhotoBg, setRemovePhotoBg] = React.useState(false);
 
-  // ✅ HR local state
+  // HR local state
   const [hrName, setHrName] = React.useState(selectedId.hrName || "");
   const [hrPosition, setHrPosition] = React.useState(
     selectedId.hrPosition || ""
   );
   const [hrId, setHrId] = React.useState(selectedId.hrId || null);
 
-  // ✅ Sync HR data back to selectedId
   React.useEffect(() => {
     setSelectedId((prev) => ({
       ...prev,
@@ -47,6 +46,24 @@ export default function EditPanel({
       hrPosition,
     }));
   }, [hrId, hrName, hrPosition]);
+
+  /* =====================
+     PHONE HANDLER (11 DIGITS)
+  ===================== */
+  const handlePhoneChange = (field, value) => {
+    let digits = value.replace(/\D/g, "");
+
+    if (!digits.startsWith("09")) {
+      digits = "09";
+    }
+
+    digits = digits.slice(0, 11);
+
+    setSelectedId((prev) => ({
+      ...prev,
+      [field]: digits,
+    }));
+  };
 
   /* =====================
      PHOTO UPLOAD
@@ -89,6 +106,31 @@ export default function EditPanel({
     }
   };
 
+  const handleMiddleInitialChange = (field, value) => {
+    // Allow full clear
+    if (value === "") {
+      setSelectedId((prev) => ({ ...prev, [field]: "" }));
+      return;
+    }
+
+    // Remove non-letters
+    const letters = value.replace(/[^a-zA-Z]/g, "");
+
+    // If user is deleting and only "." remains
+    if (letters.length === 0) {
+      setSelectedId((prev) => ({ ...prev, [field]: "" }));
+      return;
+    }
+
+    // Take first letter only
+    const letter = letters.charAt(0).toUpperCase();
+
+    setSelectedId((prev) => ({
+      ...prev,
+      [field]: letter + ".",
+    }));
+  };
+
   const isProcessing = photoProcessing;
 
   return (
@@ -121,12 +163,14 @@ export default function EditPanel({
               Icon={User}
               value={selectedId.middleInitial}
               onChange={(e) =>
-                setSelectedId({ ...selectedId, middleInitial: e.target.value })
+                handleMiddleInitialChange("middleInitial", e.target.value)
               }
               placeholder="Middle Initial"
+              maxLength={2}
               required
               disabled={isProcessing}
             />
+
             <InputWithIcon
               Icon={User}
               value={selectedId.lastName}
@@ -140,7 +184,8 @@ export default function EditPanel({
           </div>
         </div>
 
-        {/* EMPLOYEE NUMBER */}
+        {/* EMPLOYEE NUMBER (COMMENTED OUT) */}
+        {/*
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Employee Number
@@ -156,6 +201,7 @@ export default function EditPanel({
             disabled={isProcessing}
           />
         </div>
+        */}
 
         {/* POSITION & TYPE */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -212,10 +258,8 @@ export default function EditPanel({
           <InputWithIcon
             Icon={Phone}
             value={selectedId.phone || ""}
-            onChange={(e) =>
-              setSelectedId({ ...selectedId, phone: e.target.value })
-            }
-            placeholder="Enter Phone Number"
+            onChange={(e) => handlePhoneChange("phone", e.target.value)}
+            placeholder="09XXXXXXXXX"
             type="tel"
             required
             disabled={isProcessing}
@@ -242,10 +286,7 @@ export default function EditPanel({
               Icon={User}
               value={selectedId.emMiddleInitial || ""}
               onChange={(e) =>
-                setSelectedId({
-                  ...selectedId,
-                  emMiddleInitial: e.target.value,
-                })
+                handleMiddleInitialChange("emMiddleInitial", e.target.value)
               }
               placeholder="Middle Initial"
               required
@@ -272,16 +313,14 @@ export default function EditPanel({
           <InputWithIcon
             Icon={Phone}
             value={selectedId.emPhone || ""}
-            onChange={(e) =>
-              setSelectedId({ ...selectedId, emPhone: e.target.value })
-            }
-            placeholder="Enter Phone Number"
+            onChange={(e) => handlePhoneChange("emPhone", e.target.value)}
+            placeholder="09XXXXXXXXX"
             required
             disabled={isProcessing}
           />
         </div>
 
-        {/* ✅ HR SELECTOR (REPLACEMENT) */}
+        {/* HR SELECTOR */}
         <HrSelector
           hr_name={hrName}
           set_hr_name={setHrName}

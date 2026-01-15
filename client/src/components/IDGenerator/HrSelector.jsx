@@ -14,7 +14,7 @@ export default function HrSelector({
   set_hr_position,
   hr_signature,
   set_hr_signature,
-  set_hr_id, // ✅ REQUIRED
+  set_hr_id,
   hr_signature_error,
   set_hr_signature_error,
 }) {
@@ -28,9 +28,6 @@ export default function HrSelector({
     getHrList()
   }, [])
 
-  /* =====================
-     MANUAL SIGNATURE LOGIC
-  ===================== */
   const validate_file = (file) => {
     if (!file) return false
 
@@ -72,20 +69,16 @@ export default function HrSelector({
     }
   }
 
-  /* =====================
-     DROPDOWN HANDLER
-  ===================== */
   const hr_options = hrList.map((hr) => hr.name)
 
   const handle_hr_select = (value) => {
     const selected_hr = hrList.find((hr) => hr.name === value)
     if (!selected_hr) return
 
-    // ✅ EXISTING HR (BACKEND EXPECTS hrId)
     set_hr_name(selected_hr.name)
     set_hr_position(selected_hr.position)
-    set_hr_signature(selected_hr.signaturePath)
-    set_hr_id(selected_hr._id) // 🔑 THIS FIXES THE 400 ERROR
+    set_hr_signature(null)
+    set_hr_id(selected_hr._id)
     set_hr_signature_error("")
   }
 
@@ -99,8 +92,6 @@ export default function HrSelector({
         checked={use_dropdown}
         onChange={(val) => {
           set_use_dropdown(val)
-
-          // 🔄 Reset HR ID when switching to manual
           if (!val) {
             set_hr_id(null)
             set_hr_signature(null)
@@ -127,16 +118,15 @@ export default function HrSelector({
         />
       )}
 
-      {/* POSITION */}
       <InputField
         icon={Briefcase}
         placeholder="HR Position"
         value={hr_position}
         onChange={(e) => set_hr_position(e.target.value)}
         required
+        disabled={use_dropdown}
       />
 
-      {/* SIGNATURE — ONLY FOR MANUAL */}
       {!use_dropdown && (
         <div className="bg-gray-50 rounded-lg p-4 space-y-3">
           <ToggleSwitch
