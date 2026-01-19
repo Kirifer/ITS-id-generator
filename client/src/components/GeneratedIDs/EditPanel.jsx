@@ -2,7 +2,6 @@ import React from "react";
 import {
   User,
   CreditCard,
-  Briefcase,
   Tag,
   Phone,
   Mail,
@@ -15,6 +14,16 @@ import FileUpload from "../Forms/FileUpload";
 import ToggleSwitch from "../Forms/ToggleSwitch";
 import HrSelector from "../IDGenerator/HrSelector";
 import PositionSelect from "../Forms/PositionSelect";
+
+const getEmployeePrefix = (type) =>
+  type === "Intern" ? "ITSIN-" : "ITS-";
+
+const formatEmployeeNumber = (type, value) => {
+  const prefix = getEmployeePrefix(type);
+  let digits = value.replace(prefix, "").replace(/\D/g, "");
+  digits = digits.slice(0, 5);
+  return prefix + digits;
+};
 
 export default function EditPanel({
   selectedId,
@@ -31,7 +40,6 @@ export default function EditPanel({
   const [photoProcessing, setPhotoProcessing] = React.useState(false);
   const [removePhotoBg, setRemovePhotoBg] = React.useState(false);
 
-  // HR local state
   const [hrName, setHrName] = React.useState(selectedId.hrName || "");
   const [hrPosition, setHrPosition] = React.useState(
     selectedId.hrPosition || ""
@@ -47,27 +55,27 @@ export default function EditPanel({
     }));
   }, [hrId, hrName, hrPosition]);
 
-  /* =====================
-     PHONE HANDLER (11 DIGITS)
-  ===================== */
+  React.useEffect(() => {
+    if (!selectedId.type) return;
+    setSelectedId((prev) => ({
+      ...prev,
+      employeeNumber: formatEmployeeNumber(
+        prev.type,
+        prev.employeeNumber || ""
+      ),
+    }));
+  }, [selectedId.type]);
+
   const handlePhoneChange = (field, value) => {
     let digits = value.replace(/\D/g, "");
-
-    if (!digits.startsWith("09")) {
-      digits = "09";
-    }
-
+    if (!digits.startsWith("09")) digits = "09";
     digits = digits.slice(0, 11);
-
     setSelectedId((prev) => ({
       ...prev,
       [field]: digits,
     }));
   };
 
-  /* =====================
-     PHOTO UPLOAD
-  ===================== */
   const validateFile = (file, setError) => {
     if (!file) return false;
     if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
@@ -84,13 +92,11 @@ export default function EditPanel({
 
   const handlePhotoUpload = async (file) => {
     if (!validateFile(file, setPhotoError)) return;
-
     if (!removePhotoBg) {
       setPhoto(file);
       setPhotoError("");
       return;
     }
-
     setPhotoProcessing(true);
     try {
       const result = await removeBackground(file);
@@ -107,24 +113,16 @@ export default function EditPanel({
   };
 
   const handleMiddleInitialChange = (field, value) => {
-    // Allow full clear
     if (value === "") {
       setSelectedId((prev) => ({ ...prev, [field]: "" }));
       return;
     }
-
-    // Remove non-letters
     const letters = value.replace(/[^a-zA-Z]/g, "");
-
-    // If user is deleting and only "." remains
     if (letters.length === 0) {
       setSelectedId((prev) => ({ ...prev, [field]: "" }));
       return;
     }
-
-    // Take first letter only
     const letter = letters.charAt(0).toUpperCase();
-
     setSelectedId((prev) => ({
       ...prev,
       [field]: letter + ".",
@@ -143,7 +141,6 @@ export default function EditPanel({
       </div>
 
       <div className="space-y-4">
-        {/* FULL NAME */}
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Full Name
@@ -170,7 +167,6 @@ export default function EditPanel({
               required
               disabled={isProcessing}
             />
-
             <InputWithIcon
               Icon={User}
               value={selectedId.lastName}
@@ -184,26 +180,35 @@ export default function EditPanel({
           </div>
         </div>
 
-        {/* EMPLOYEE NUMBER (COMMENTED OUT) */}
-        {/*
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Employee Number
           </label>
           <InputWithIcon
             Icon={CreditCard}
-            value={selectedId.employeeNumber}
-            onChange={(e) =>
-              setSelectedId({ ...selectedId, employeeNumber: e.target.value })
+            value={
+              selectedId.employeeNumber ||
+              getEmployeePrefix(selectedId.type)
             }
-            placeholder="Enter Employee Number"
+            onChange={(e) =>
+              setSelectedId((prev) => ({
+                ...prev,
+                employeeNumber: formatEmployeeNumber(
+                  prev.type,
+                  e.target.value
+                ),
+              }))
+            }
+            placeholder={
+              selectedId.type === "Intern"
+                ? "ITSIN-12345"
+                : "ITS-12345"
+            }
             required
-            disabled={isProcessing}
+            disabled={isProcessing || !selectedId.type}
           />
         </div>
-        */}
 
-        {/* POSITION & TYPE */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-800 mb-1">
@@ -232,7 +237,6 @@ export default function EditPanel({
           />
         </div>
 
-        {/* EMAIL */}
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Email
@@ -250,7 +254,6 @@ export default function EditPanel({
           />
         </div>
 
-        {/* PHONE */}
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Phone Number
@@ -266,7 +269,6 @@ export default function EditPanel({
           />
         </div>
 
-        {/* EMERGENCY CONTACT */}
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Emergency Contact Person
@@ -305,7 +307,6 @@ export default function EditPanel({
           </div>
         </div>
 
-        {/* EMERGENCY PHONE */}
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Emergency Contact Number
@@ -320,7 +321,6 @@ export default function EditPanel({
           />
         </div>
 
-        {/* HR SELECTOR */}
         <HrSelector
           hr_name={hrName}
           set_hr_name={setHrName}
@@ -333,7 +333,6 @@ export default function EditPanel({
           set_hr_signature_error={setHrSignatureError}
         />
 
-        {/* PHOTO UPLOAD */}
         <div className="border-t pt-4">
           <label className="block text-sm font-semibold text-gray-800 mb-2">
             Photo Upload
@@ -361,7 +360,6 @@ export default function EditPanel({
           </div>
         </div>
 
-        {/* ACTION BUTTONS */}
         <div className="mt-6 flex gap-4">
           <button
             onClick={onSubmit}

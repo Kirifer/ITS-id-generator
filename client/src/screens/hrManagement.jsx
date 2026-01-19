@@ -5,8 +5,9 @@ import Sidebar from "../components/Sidebar";
 import { hrStore } from "../store/hrStore";
 import InputField from "../components/Forms/InputField";
 import FileUpload from "../components/Forms/FileUpload";
-import ToggleSwitch from "../components/Forms/ToggleSwitch"; // ✅ TOGGLE IMPORT
+import ToggleSwitch from "../components/Forms/ToggleSwitch";
 import { getImageUrl } from "../utils/imageUrl";
+import HrDeleteConfirmModal from "../components/Modal/HrDeleteConfirmModal";
 
 export default function HRManagement() {
   const {
@@ -32,11 +33,24 @@ export default function HRManagement() {
   const [signature, setSignature] = useState(null);
   const [signatureError, setSignatureError] = useState("");
   const [signatureProcessing, setSignatureProcessing] = useState(false);
-  const [removeSignatureBg, setRemoveSignatureBg] = useState(true); // ✅ TOGGLE STATE
+  const [removeSignatureBg, setRemoveSignatureBg] = useState(true);
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [hrToDelete, setHrToDelete] = useState(null);
+
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     getHrList();
   }, [getHrList]);
+
+  const filteredHrList = hrList.filter((hr) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      hr.name.toLowerCase().includes(term) ||
+      hr.position.toLowerCase().includes(term)
+    );
+  });
 
   const openCreateForm = () => {
     reset();
@@ -61,47 +75,38 @@ export default function HRManagement() {
     setShowForm(true);
   };
 
-  /* ---------- FILE VALIDATION ---------- */
   const validateFile = (file) => {
     if (!file) return false;
-
     if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
       setSignatureError("Only PNG and JPG files are allowed");
       return false;
     }
-
     if (file.size > 4 * 1024 * 1024) {
       setSignatureError("File too large (max 4MB)");
       return false;
     }
-
     setSignatureError("");
     return true;
   };
 
-  /* ---------- SIGNATURE UPLOAD + OPTIONAL BG REMOVAL ---------- */
   const handleSignatureUpload = async (file) => {
     if (!validateFile(file)) {
       setSignature(null);
       return;
     }
 
-    // ⛔ Background removal OFF
     if (!removeSignatureBg) {
       setSignature(file);
       return;
     }
 
-    // ✅ Background removal ON
     setSignatureProcessing(true);
     try {
       const image = await removeBackground(file);
       const blob = image instanceof Blob ? image : await image.blob();
-
       const processedFile = new File([blob], file.name, {
         type: "image/png",
       });
-
       setSignature(processedFile);
     } catch {
       setSignature(null);
@@ -138,14 +143,22 @@ export default function HRManagement() {
     reset();
   };
 
-  const handleDelete = async (hr) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${hr.name}?`
-    );
-    if (!confirmed) return;
+  const handleDelete = (hr) => {
+    setHrToDelete(hr);
+    setShowDeleteConfirm(true);
+  };
 
-    await deleteHr(hr._id);
+  const confirmDelete = async () => {
+    if (!hrToDelete) return;
+    await deleteHr(hrToDelete._id);
+    setShowDeleteConfirm(false);
+    setHrToDelete(null);
     reset();
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setHrToDelete(null);
   };
 
   return (
@@ -154,15 +167,13 @@ export default function HRManagement() {
 
       <main className="flex-1 overflow-hidden custom-bg">
         <div className="h-full flex transition-all duration-300 ease-in-out">
-
-          {/* LEFT SIDE */}
           <div
-            className={`transition-all duration-300 overflow-auto
-              ${showForm ? "w-2/3" : "w-full"}`}
+            className={`transition-all duration-300 overflow-auto ${
+              showForm ? "w-2/3" : "w-full"
+            }`}
           >
             <div className="p-6">
               <div className="flex flex-col gap-6 max-w-screen-xl mx-auto">
-
                 <div className="flex justify-between items-center">
                   <div>
                     <h1 className="text-3xl font-bold text-gray-800">
@@ -182,6 +193,32 @@ export default function HRManagement() {
                 </div>
 
                 <div className="bg-white rounded-2xl shadow-md p-6">
+                  <div className="mb-4">
+                    <div className="flex items-center gap-3 border rounded-xl px-4 py-3">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-4.35-4.35m1.85-5.65a7.5 7.5 0 11-15 0 7.5 7.5 0 0115 0z"
+                        />
+                      </svg>
+                      <input
+                        type="text"
+                        placeholder="Search by name or position..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full outline-none text-sm text-gray-700 placeholder-gray-400"
+                      />
+                    </div>
+                  </div>
+
                   <table className="w-full text-sm">
                     <thead className="border-b">
                       <tr>
@@ -192,15 +229,21 @@ export default function HRManagement() {
                       </tr>
                     </thead>
                     <tbody>
-                      {hrList.length === 0 ? (
+                      {filteredHrList.length === 0 ? (
                         <tr>
-                          <td colSpan="4" className="py-10 text-center text-gray-500">
-                            No HR records found
+                          <td
+                            colSpan="4"
+                            className="py-10 text-center text-gray-500"
+                          >
+                            No matching HR records found
                           </td>
                         </tr>
                       ) : (
-                        hrList.map((hr) => (
-                          <tr key={hr._id} className="border-b hover:bg-gray-50">
+                        filteredHrList.map((hr) => (
+                          <tr
+                            key={hr._id}
+                            className="border-b hover:bg-gray-50"
+                          >
                             <td className="py-4 px-4">{hr.name}</td>
                             <td className="py-4 px-4">{hr.position}</td>
                             <td className="py-4 px-4">
@@ -230,15 +273,18 @@ export default function HRManagement() {
                     </tbody>
                   </table>
                 </div>
-
               </div>
             </div>
           </div>
 
-          {/* RIGHT FORM */}
+          {showForm && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 z-30" />
+          )}
+
           <div
-            className={`bg-white shadow-xl transition-all duration-300
-              ${showForm ? "w-1/3" : "w-0"} overflow-hidden`}
+            className={`fixed top-0 right-0 h-full bg-white shadow-xl transition-all duration-300 z-40 ${
+              showForm ? "w-1/3" : "w-0"
+            } overflow-hidden`}
           >
             {showForm && (
               <div className="h-full p-6 flex flex-col">
@@ -269,7 +315,6 @@ export default function HRManagement() {
                     required
                   />
 
-                  {/* ✅ TOGGLE (NO DESIGN CHANGE) */}
                   <ToggleSwitch
                     id="removeSignatureBg"
                     label="Remove signature background"
@@ -308,9 +353,16 @@ export default function HRManagement() {
               </div>
             )}
           </div>
-
         </div>
       </main>
+
+      <HrDeleteConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={cancelDelete}
+        onConfirm={confirmDelete}
+        hrName={hrToDelete?.name}
+        isLoading={loading}
+      />
     </div>
   );
 }

@@ -122,7 +122,6 @@ const IdCardSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
-      immutable: true,
       validate: employeeNumberValidator,
     },
 
