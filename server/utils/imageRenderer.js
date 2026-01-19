@@ -21,12 +21,12 @@ async function renderSide(card, templateKey, suffix) {
     (tpl.designW - tpl.bgW * scale) / 2,
     (tpl.designH - tpl.bgH * scale) / 2,
     tpl.bgW * scale,
-    tpl.bgH * scale
+    tpl.bgH * scale,
   );
 
   if (suffix === "front" && card.photoPath && tpl.photo) {
     const img = await loadImage(
-      path.join(SERVER_ROOT, card.photoPath.replace(/^\//, ""))
+      path.join(SERVER_ROOT, card.photoPath.replace(/^\//, "")),
     );
 
     drawImageCover(
@@ -35,15 +35,19 @@ async function renderSide(card, templateKey, suffix) {
       toPx(tpl.photo.left, tpl.designW),
       toPx(tpl.photo.top, tpl.designH),
       toPx(tpl.photo.width, tpl.designW),
-      toPx(tpl.photo.height, tpl.designH)
+      toPx(tpl.photo.height, tpl.designH),
     );
   }
 
   if (suffix === "front" && templateKey.toLowerCase().includes("employee")) {
     try {
-      const overlayPath = path.join(SERVER_ROOT, "templates", "Blue-Geometric-Vector.png");
+      const overlayPath = path.join(
+        SERVER_ROOT,
+        "templates",
+        "Blue-Geometric-Vector.png",
+      );
       const overlayImg = await loadImage(overlayPath);
-      
+
       const overlayConfig = tpl.overlay || {
         x: 6,
         y: 50,
@@ -51,14 +55,14 @@ async function renderSide(card, templateKey, suffix) {
         height: tpl.designH,
         opacity: 0.95,
       };
-      
+
       ctx.globalAlpha = overlayConfig.opacity;
       ctx.drawImage(
         overlayImg,
         toPx(overlayConfig.x, tpl.designW),
         toPx(overlayConfig.y, tpl.designH),
         toPx(overlayConfig.width, tpl.designW),
-        toPx(overlayConfig.height, tpl.designH)
+        toPx(overlayConfig.height, tpl.designH),
       );
       ctx.globalAlpha = 1.0;
     } catch (err) {
@@ -76,7 +80,7 @@ async function renderSide(card, templateKey, suffix) {
       toPx(tpl.barcode.x, tpl.designW),
       toPx(tpl.barcode.y, tpl.designH),
       bw,
-      bh
+      bh,
     );
   }
 
@@ -119,20 +123,24 @@ async function renderSide(card, templateKey, suffix) {
     ctx.textAlign = spec.align || "left";
     ctx.textBaseline = "top";
 
-    const fullNameLength = `${fullName.firstName} ${fullName.middleInitial || ""} ${fullName.lastName || ""}`.trim().length;
+    const fullNameLength =
+      `${fullName.firstName} ${fullName.middleInitial || ""} ${fullName.lastName || ""}`.trim()
+        .length;
     const isLongName = fullNameLength > 20;
 
     let nameValue;
-    
+
     if (isLongName) {
       if (fullName.middleInitial) {
-        nameValue = `${fullName.firstName} ${fullName.middleInitial}\n${fullName.lastName || ""}`.trim();
+        nameValue =
+          `${fullName.firstName} ${fullName.middleInitial}\n${fullName.lastName || ""}`.trim();
       } else {
         nameValue = `${fullName.firstName}\n${fullName.lastName || ""}`.trim();
       }
     } else {
       if (fullName.middleInitial) {
-        nameValue = `${fullName.firstName} ${fullName.middleInitial}\n${fullName.lastName || ""}`.trim();
+        nameValue =
+          `${fullName.firstName} ${fullName.middleInitial}\n${fullName.lastName || ""}`.trim();
       } else {
         nameValue = `${fullName.firstName}\n${fullName.lastName || ""}`.trim();
       }
@@ -143,7 +151,9 @@ async function renderSide(card, templateKey, suffix) {
     while (maxWidth && size >= minSize) {
       ctx.font = `${spec.weight || 700} ${size}px Arial`;
       const lines = nameValue.split("\n");
-      const maxLineWidth = Math.max(...lines.map(l => ctx.measureText(l).width));
+      const maxLineWidth = Math.max(
+        ...lines.map((l) => ctx.measureText(l).width),
+      );
       if (maxLineWidth <= maxWidth) break;
       size--;
     }
@@ -166,7 +176,7 @@ async function renderSide(card, templateKey, suffix) {
   if (suffix === "front") {
     if (templateKey.toLowerCase().includes("employee")) {
       drawEmployeeNameShrink(card.fullName, tpl.text.name);
-      
+
       let positionValue = card.position;
       if (positionValue) {
         const words = positionValue.trim().split(/\s+/);
@@ -178,10 +188,12 @@ async function renderSide(card, templateKey, suffix) {
       }
       drawText(positionValue, tpl.text.position);
     } else {
-      let nameValue = `${card.fullName.firstName} ${card.fullName.middleInitial || ""} ${card.fullName.lastName}`.trim();
+      let nameValue =
+        `${card.fullName.firstName} ${card.fullName.middleInitial || ""} ${card.fullName.lastName}`.trim();
 
       if (tpl.text?.name?.splitLastName) {
-        nameValue = `${card.fullName.firstName} ${card.fullName.middleInitial || ""}\n${card.fullName.lastName}`.trim();
+        nameValue =
+          `${card.fullName.firstName} ${card.fullName.middleInitial || ""}\n${card.fullName.lastName}`.trim();
       }
 
       drawText(nameValue, tpl.text.name);
@@ -194,8 +206,8 @@ async function renderSide(card, templateKey, suffix) {
   if (suffix === "back") {
     if (card.emergencyContact) {
       drawText(
-        `Name: ${card.emergencyContact.firstName} ${card.emergencyContact.lastName}`,
-        tpl.text.emName
+        `Name: ${card.emergencyContact.firstName} ${card.emergencyContact.middleInitial || ""} ${card.emergencyContact.lastName}`.trim(),
+        tpl.text.emName,
       );
       drawText(`Number: ${card.emergencyContact.phone}`, tpl.text.emPhone);
     }
@@ -205,14 +217,14 @@ async function renderSide(card, templateKey, suffix) {
 
     if (tpl.signature && card.hrDetails.signaturePath) {
       const sig = await loadImage(
-        path.join(SERVER_ROOT, card.hrDetails.signaturePath.replace(/^\//, ""))
+        path.join(SERVER_ROOT, card.hrDetails.signaturePath.replace(/^\//, "")),
       );
       ctx.drawImage(
         sig,
         toPx(tpl.signature.x, tpl.designW),
         toPx(tpl.signature.y, tpl.designH),
         toPx(tpl.signature.width, tpl.designW),
-        toPx(tpl.signature.height, tpl.designH)
+        toPx(tpl.signature.height, tpl.designH),
       );
     }
   }
