@@ -137,10 +137,10 @@ const AdminManagement = () => {
                   <p className="text-gray-500 text-lg">No admins found</p>
                 </div>
               ) : (
-                <div className="overflow-auto flex-1">
+                <div className="overflow-auto flex-1 border border-gray-200 rounded-lg">
                   <table className="w-full">
-                    <thead className="sticky top-0 bg-white z-10">
-                      <tr className="border-b border-gray-200">
+                    <thead className="sticky top-0 bg-white z-10 border-b border-gray-200">
+                      <tr>
                         <th className="text-left py-4 px-4 font-semibold text-gray-700">
                           Username
                         </th>

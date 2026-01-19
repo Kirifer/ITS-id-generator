@@ -33,7 +33,7 @@ export default function HRManagement() {
   const [signature, setSignature] = useState(null);
   const [signatureError, setSignatureError] = useState("");
   const [signatureProcessing, setSignatureProcessing] = useState(false);
-  const [removeSignatureBg, setRemoveSignatureBg] = useState(true);
+  const [removeSignatureBg, setRemoveSignatureBg] = useState(false);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [hrToDelete, setHrToDelete] = useState(null);
@@ -192,8 +192,8 @@ export default function HRManagement() {
                   </button>
                 </div>
 
-                <div className="bg-white rounded-2xl shadow-md p-6">
-                  <div className="mb-4">
+                <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col max-h-[calc(100vh-220px)]">
+                  <div className="mb-4 flex-shrink-0">
                     <div className="flex items-center gap-3 border rounded-xl px-4 py-3">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -219,59 +219,61 @@ export default function HRManagement() {
                     </div>
                   </div>
 
-                  <table className="w-full text-sm">
-                    <thead className="border-b">
-                      <tr>
-                        <th className="text-left py-4 px-4">Name</th>
-                        <th className="text-left py-4 px-4">Position</th>
-                        <th className="text-left py-4 px-4">Signature</th>
-                        <th className="text-center py-4 px-4">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredHrList.length === 0 ? (
+                  <div className="overflow-auto flex-1 border border-gray-200 rounded-lg">
+                    <table className="w-full text-sm">
+                      <thead className="sticky top-0 bg-white z-10 border-b">
                         <tr>
-                          <td
-                            colSpan="4"
-                            className="py-10 text-center text-gray-500"
-                          >
-                            No matching HR records found
-                          </td>
+                          <th className="text-left py-4 px-4">Name</th>
+                          <th className="text-left py-4 px-4">Position</th>
+                          <th className="text-left py-4 px-4">Signature</th>
+                          <th className="text-center py-4 px-4">Actions</th>
                         </tr>
-                      ) : (
-                        filteredHrList.map((hr) => (
-                          <tr
-                            key={hr._id}
-                            className="border-b hover:bg-gray-50"
-                          >
-                            <td className="py-4 px-4">{hr.name}</td>
-                            <td className="py-4 px-4">{hr.position}</td>
-                            <td className="py-4 px-4">
-                              <img
-                                src={getImageUrl(hr.signaturePath)}
-                                className="h-10 object-contain"
-                                alt="signature"
-                              />
-                            </td>
-                            <td className="py-4 px-4 flex justify-center gap-3">
-                              <button
-                                onClick={() => openEditForm(hr)}
-                                className="text-purple-500"
-                              >
-                                <Pencil size={18} />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(hr)}
-                                className="text-purple-500"
-                              >
-                                <Trash2 size={18} />
-                              </button>
+                      </thead>
+                      <tbody>
+                        {filteredHrList.length === 0 ? (
+                          <tr>
+                            <td
+                              colSpan="4"
+                              className="py-10 text-center text-gray-500"
+                            >
+                              No matching HR records found
                             </td>
                           </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                        ) : (
+                          filteredHrList.map((hr) => (
+                            <tr
+                              key={hr._id}
+                              className="border-b hover:bg-gray-50"
+                            >
+                              <td className="py-4 px-4">{hr.name}</td>
+                              <td className="py-4 px-4">{hr.position}</td>
+                              <td className="py-4 px-4">
+                                <img
+                                  src={getImageUrl(hr.signaturePath)}
+                                  className="h-10 object-contain"
+                                  alt="signature"
+                                />
+                              </td>
+                              <td className="py-4 px-4 flex justify-center gap-3">
+                                <button
+                                  onClick={() => openEditForm(hr)}
+                                  className="text-purple-500"
+                                >
+                                  <Pencil size={18} />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(hr)}
+                                  className="text-purple-500"
+                                >
+                                  <Trash2 size={18} />
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>

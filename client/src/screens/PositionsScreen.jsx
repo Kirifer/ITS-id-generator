@@ -82,8 +82,8 @@ export default function PositionsScreen() {
               </form>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-md p-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">All Positions</h2>
+            <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col max-h-[calc(100vh-280px)]">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4 flex-shrink-0">All Positions</h2>
               {loading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -93,9 +93,9 @@ export default function PositionsScreen() {
                   <p className="text-gray-500 text-lg">No positions found</p>
                 </div>
               ) : (
-                <div className="overflow-auto">
+                <div className="overflow-auto flex-1 border border-gray-200 rounded-lg">
                   <table className="w-full">
-                    <thead className="bg-gray-50">
+                    <thead className="sticky top-0 bg-gray-50 z-10">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Position Name
