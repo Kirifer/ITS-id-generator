@@ -288,7 +288,7 @@ export const idCardPostStore = create(
             'Content-Type': 'multipart/form-data',
           },
         });
-
+        console.log(response)
         if (response.status === 201) {
           set({
             loading: false,
@@ -300,6 +300,7 @@ export const idCardPostStore = create(
           return true;
         }
       } catch (err) {
+        console.log(err.response.data)
         set({
           loading: false,
           success: false,

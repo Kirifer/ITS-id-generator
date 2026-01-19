@@ -75,14 +75,14 @@ export default function Admin_IDGenerator() {
 
     if (!["image/jpeg", "image/png", "image/jpg"].includes(photo.type)) {
       showMessageBoxIdGen(
-        "Invalid photo file type. Only JPEG and PNG are allowed."
+        "Invalid photo file type. Only JPEG and PNG are allowed.",
       );
       return;
     }
 
     if (photo.size > 4 * 1024 * 1024) {
       showMessageBoxIdGen(
-        "Photo file too large. Maximum allowed file size is 4MB."
+        "Photo file too large. Maximum allowed file size is 4MB.",
       );
       return;
     }
@@ -97,14 +97,14 @@ export default function Admin_IDGenerator() {
         !["image/jpeg", "image/png", "image/jpg"].includes(hrSignature.type)
       ) {
         showMessageBoxIdGen(
-          "Invalid HR signature file type. Only JPEG and PNG are allowed."
+          "Invalid HR signature file type. Only JPEG and PNG are allowed.",
         );
         return;
       }
 
       if (hrSignature.size > 4 * 1024 * 1024) {
         showMessageBoxIdGen(
-          "HR signature file too large. Maximum allowed file size is 4MB."
+          "HR signature file too large. Maximum allowed file size is 4MB.",
         );
         return;
       }
@@ -170,8 +170,8 @@ export default function Admin_IDGenerator() {
       setHrSignature(null);
       setHrSignatureError("");
     } else {
-      console.log(message);
-      showMessageBoxIdGen(message || "ID generation failed!");
+      const currentMessage = idCardPostStore.getState().message;
+      showMessageBoxIdGen(currentMessage || "ID generation failed!");
     }
   };
 
