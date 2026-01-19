@@ -239,7 +239,8 @@ const patchIdCardDetails = async (req, res) => {
     const card = await IdCard.findById(id);
     if (!card) return res.status(404).json({ message: "Not found" });
 
-    /* ===== EMPLOYEE NUMBER (NOW EDITABLE) ===== */
+    let updated = false;
+
     if (req.body.employeeNumber !== undefined) {
       const exists = await IdCard.exists({
         employeeNumber: req.body.employeeNumber,
@@ -255,12 +256,22 @@ const patchIdCardDetails = async (req, res) => {
       card.employeeNumber = req.body.employeeNumber;
     }
 
+    if (req.body.type !== undefined && req.body.type !== card.type) {
+      card.type = req.body.type;
+
+      if (card.employeeNumber) {
+        const digits = card.employeeNumber.replace(/\D/g, "").slice(0, 5);
+        const prefix = card.type === "Intern" ? "ITSIN-" : "ITS-";
+        card.employeeNumber = prefix + digits;
+      }
+
+      updated = true;
+    }
+
     const oldFront = card.generatedFrontImagePath;
     const oldBack = card.generatedBackImagePath;
     const oldPhoto = card.photoPath;
     const oldSignature = card.hrDetails?.signaturePath;
-
-    let updated = false;
 
     const updates = {
       "fullName.firstName": req.body.firstName,

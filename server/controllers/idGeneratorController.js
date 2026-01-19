@@ -39,12 +39,19 @@ const postIdGenerator = async (req, res) => {
 
     const cardData = card.toObject();
 
+    if (!cardData.type || !["Employee", "Intern"].includes(cardData.type)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid or missing card type: ${cardData.type}`,
+      });
+    }
+
     const { front, back } = await generateIDImages(cardData);
 
     card.generatedFrontImagePath = front;
     card.generatedBackImagePath = back;
     card.templateVersion = `${card.type}_V1`;
-    card.isGenerated = true
+    card.isGenerated = true;
     card.issuedAt = new Date();
     await card.save();
 
@@ -57,7 +64,7 @@ const postIdGenerator = async (req, res) => {
     console.error("ID generation error:", err);
     res.status(500).json({
       success: false,
-      message: "ID generation failed",
+      message: err.message || "ID generation failed",
     });
   }
 };
