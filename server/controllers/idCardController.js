@@ -123,10 +123,6 @@ const postIdCard = async (req, res) => {
     if (!photo) return res.status(400).json({ message: "Photo is required" });
     await sharp(photo.path).metadata();
 
-    /* =========================
-       HR HANDLING (FIXED)
-    ========================= */
-
     let hrSnapshot;
 
     if (hrId) {
@@ -150,7 +146,6 @@ const postIdCard = async (req, res) => {
 
       await sharp(hrSignature.path).metadata();
 
-      // ❌ DO NOT SAVE HR
       hrSnapshot = {
         hrRef: null,
         name: hrName,
@@ -182,20 +177,6 @@ const postIdCard = async (req, res) => {
 
     res.status(201).json(doc);
   } catch (err) {
-    if (err.name === "ValidationError") {
-      return res.status(400).json({
-        message: "Validation failed",
-        errors: Object.fromEntries(
-          Object.entries(err.errors).map(([k, v]) => [k, v.message])
-        ),
-      });
-    }
-
-    if (err.code === 11000)
-      return res
-        .status(409)
-        .json({ message: "Duplicate ID detected. Please retry." });
-
     res.status(500).json({ message: err.message });
   }
 };
@@ -255,13 +236,24 @@ const patchIdCardDetails = async (req, res) => {
     if (!mongoose.isValidObjectId(id))
       return res.status(400).json({ message: "Invalid ID" });
 
-    if ("employeeNumber" in req.body)
-      return res
-        .status(400)
-        .json({ message: "Employee number cannot be modified" });
-
     const card = await IdCard.findById(id);
     if (!card) return res.status(404).json({ message: "Not found" });
+
+    /* ===== EMPLOYEE NUMBER (NOW EDITABLE) ===== */
+    if (req.body.employeeNumber !== undefined) {
+      const exists = await IdCard.exists({
+        employeeNumber: req.body.employeeNumber,
+        _id: { $ne: card._id },
+      });
+
+      if (exists) {
+        return res
+          .status(400)
+          .json({ message: "Employee number already exists" });
+      }
+
+      card.employeeNumber = req.body.employeeNumber;
+    }
 
     const oldFront = card.generatedFrontImagePath;
     const oldBack = card.generatedBackImagePath;

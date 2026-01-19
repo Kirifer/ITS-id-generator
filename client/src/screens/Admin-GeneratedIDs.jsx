@@ -225,6 +225,8 @@ export default function Admin_GeneratedIDs() {
     formData.append("emPhone", selectedId.emPhone);
     formData.append("hrName", selectedId.hrName);
     formData.append("hrPosition", selectedId.hrPosition);
+    formData.append("employeeNumber", selectedId.employeeNumber); 
+
 
     if (photo) {
       formData.append("photo", photo);
