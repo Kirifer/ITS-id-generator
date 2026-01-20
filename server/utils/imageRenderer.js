@@ -113,96 +113,129 @@ async function renderSide(card, templateKey, suffix) {
     });
   };
 
-  const drawEmployeeNameShrink = (fullName, spec) => {
-    if (!fullName || !spec) return;
+const drawEmployeeNameShrink = (fullName, spec) => {
+  if (!fullName || !spec) return;
 
-    let size = spec.fontSize || 30;
-    const minSize = spec.minFontSize || 16;
+  let size = spec.fontSize || 30;
+  const minSize = spec.minFontSize || 16;
 
-    ctx.fillStyle = spec.fill || "#000";
-    ctx.textAlign = spec.align || "left";
-    ctx.textBaseline = "top";
+  ctx.fillStyle = spec.fill || "#000";
+  ctx.textAlign = spec.align || "left";
+  ctx.textBaseline = "top";
 
-    const fullNameLength =
-      `${fullName.firstName} ${fullName.middleInitial || ""} ${fullName.lastName || ""}`.trim()
-        .length;
+  const firstName = fullName.firstName || "";
+  const middleInitial = fullName.middleInitial || "";
+  const lastName = fullName.lastName || "";
+
+  const firstNameParts = firstName.trim().split(/\s+/);
+
+  let nameValue;
+  let useSmallFont = false;
+
+  if (firstNameParts.length === 2) {
+
+    nameValue = `${firstNameParts[0]}\n${firstNameParts[1]}${middleInitial ? " " + middleInitial + " " : ""}\n${lastName}`.trim();
+    useSmallFont = true;
+    size = Math.floor(size * 0.7);
+  } else if (firstNameParts.length >= 3) {
+    const line1 = firstNameParts.slice(0, 2).join(" ");
+    const line2 = `${firstNameParts.slice(2).join(" ")}${middleInitial ? " " + middleInitial : ""}`;
+    nameValue = `${line1}\n${line2}\n${lastName}`.trim();
+    useSmallFont = true;
+    size = Math.floor(size * 0.7);
+  } else {
+    const fullNameLength = `${firstName} ${middleInitial} ${lastName}`.trim()
+      .length;
     const isLongName = fullNameLength > 20;
 
-    let nameValue;
-
     if (isLongName) {
-      if (fullName.middleInitial) {
-        nameValue =
-          `${fullName.firstName} ${fullName.middleInitial}\n${fullName.lastName || ""}`.trim();
+      if (middleInitial) {
+        nameValue = `${firstName} ${middleInitial}\n${lastName}`.trim();
       } else {
-        nameValue = `${fullName.firstName}\n${fullName.lastName || ""}`.trim();
+        nameValue = `${firstName}\n${lastName}`.trim();
       }
     } else {
-      if (fullName.middleInitial) {
-        nameValue =
-          `${fullName.firstName} ${fullName.middleInitial}\n${fullName.lastName || ""}`.trim();
+      if (middleInitial) {
+        nameValue = `${firstName} ${middleInitial}\n${lastName}`.trim();
       } else {
-        nameValue = `${fullName.firstName}\n${fullName.lastName || ""}`.trim();
+        nameValue = `${firstName}\n${lastName}`.trim();
       }
     }
-
-    const maxWidth = spec.maxWidth ? toPx(spec.maxWidth, tpl.designW) : null;
-
-    while (maxWidth && size >= minSize) {
-      ctx.font = `${spec.weight || 700} ${size}px Arial`;
-      const lines = nameValue.split("\n");
-      const maxLineWidth = Math.max(
-        ...lines.map((l) => ctx.measureText(l).width),
-      );
-      if (maxLineWidth <= maxWidth) break;
-      size--;
-    }
-
-    const x = toPx(spec.x, tpl.designW);
-    let y = toPx(spec.y, tpl.designH);
-
-    if (isLongName) {
-      y += size * 1.1;
-    }
-
-    const lines = nameValue.split("\n");
-    const lineHeight = size * 1.2;
-
-    lines.forEach((line, i) => {
-      ctx.fillText(line, x, y + i * lineHeight);
-    });
-  };
-
-  if (suffix === "front") {
-    if (templateKey.toLowerCase().includes("employee")) {
-      drawEmployeeNameShrink(card.fullName, tpl.text.name);
-
-      let positionValue = card.position;
-      if (positionValue) {
-        const words = positionValue.trim().split(/\s+/);
-        if (words.length === 2) {
-          positionValue = words.join("\n");
-        } else if (words.length >= 3) {
-          positionValue = `${words[0]} ${words[1]}\n${words.slice(2).join(" ")}`;
-        }
-      }
-      drawText(positionValue, tpl.text.position);
-    } else {
-      let nameValue =
-        `${card.fullName.firstName} ${card.fullName.middleInitial || ""} ${card.fullName.lastName}`.trim();
-
-      if (tpl.text?.name?.splitLastName) {
-        nameValue =
-          `${card.fullName.firstName} ${card.fullName.middleInitial || ""}\n${card.fullName.lastName}`.trim();
-      }
-
-      drawText(nameValue, tpl.text.name);
-      drawText(card.position, tpl.text.position);
-    }
-
-    drawText(card.employeeNumber, tpl.text.idNumber);
   }
 
+  const maxWidth = spec.maxWidth ? toPx(spec.maxWidth, tpl.designW) : null;
+
+  while (maxWidth && size >= minSize) {
+    ctx.font = `${spec.weight || 700} ${size}px Arial`;
+    const lines = nameValue.split("\n");
+    const maxLineWidth = Math.max(
+      ...lines.map((l) => ctx.measureText(l).width),
+    );
+    if (maxLineWidth <= maxWidth) break;
+    size--;
+  }
+
+  const x = toPx(spec.x, tpl.designW);
+  let y = toPx(spec.y, tpl.designH);
+
+  const lineCount = nameValue.split("\n").length;
+  if (lineCount >= 3) {
+    y += size * 0.5;
+  } else if (
+    lineCount === 2 &&
+    fullName.firstName.trim().split(/\s+/).length < 3
+  ) {
+    y += size * 0.3;
+  }
+
+  const lines = nameValue.split("\n");
+  const lineHeight = size * 1.15;
+
+  lines.forEach((line, i) => {
+    ctx.fillText(line, x, y + i * lineHeight);
+  });
+};
+
+if (suffix === "front") {
+  if (templateKey.toLowerCase().includes("employee")) {
+    drawEmployeeNameShrink(card.fullName, tpl.text.name);
+
+    let positionValue = card.position;
+    let positionLineCount = 1;
+    
+    if (positionValue) {
+      const words = positionValue.trim().split(/\s+/);
+      if (words.length === 2) {
+        positionValue = words.join("\n");
+        positionLineCount = 2;
+      } else if (words.length >= 3) {
+        positionValue = `${words[0]} ${words[1]}\n${words.slice(2).join(" ")}`;
+        positionLineCount = 2;
+      }
+    }
+    drawText(positionValue, tpl.text.position);
+
+    let idNumberSpec = { ...tpl.text.idNumber };
+    if (positionLineCount === 2 && tpl.text.position) {
+      const positionFontSize = tpl.text.position.fontSize || 30;
+      const lineHeight = positionFontSize * 1.2;
+      idNumberSpec.y = (idNumberSpec.y || 0) + lineHeight;
+    }
+    drawText(card.employeeNumber, idNumberSpec);
+  } else {
+    let nameValue =
+      `${card.fullName.firstName} ${card.fullName.middleInitial || ""} ${card.fullName.lastName}`.trim();
+
+    if (tpl.text?.name?.splitLastName) {
+      nameValue =
+        `${card.fullName.firstName} ${card.fullName.middleInitial || ""}\n${card.fullName.lastName}`.trim();
+    }
+
+    drawText(nameValue, tpl.text.name);
+    drawText(card.position, tpl.text.position);
+    drawText(card.employeeNumber, tpl.text.idNumber);
+  }
+}
   if (suffix === "back") {
     if (card.emergencyContact) {
       drawText(
