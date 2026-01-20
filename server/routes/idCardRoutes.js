@@ -1,10 +1,7 @@
 // server/routes/idCardRoutes.js
 
 const express = require("express");
-const {
-  verifyToken,
-  requireRole,
-} = require("../middleware/authMiddleware");
+const { verifyToken, requireRole } = require("../middleware/authMiddleware");
 const {
   getDetailIdCard,
   postIdCard,
@@ -14,7 +11,11 @@ const {
   patchIdCardDetails,
   deleteIdCard,
 } = require("../controllers/idCardController");
-const { upload, handleMulterError } = require("../service/upload");
+const {
+  upload,
+  addLeftPadding,
+  handleMulterError,
+} = require("../service/upload");
 
 const idCardRoutes = express.Router();
 
@@ -23,10 +24,7 @@ const idCardRoutes = express.Router();
    Uses EMPLOYEE NUMBER (front of ID)
    Example: ITS-00003
 ========================= */
-idCardRoutes.get(
-  "/by-employee-number/:employeeNumber",
-  getDetailIdCard
-);
+idCardRoutes.get("/by-employee-number/:employeeNumber", getDetailIdCard);
 
 /* =========================
    Create ID (Admin only)
@@ -41,31 +39,25 @@ idCardRoutes.post(
     { name: "photo", maxCount: 1 },
     { name: "hrSignature", maxCount: 1 },
   ]),
+  addLeftPadding, // Add this middleware here
   handleMulterError,
-  postIdCard
+  postIdCard,
 );
 
-
-idCardRoutes.get(
-  "/",
-  verifyToken,
-  requireRole("Admin"),
-  getIdCard
-);
-
+idCardRoutes.get("/", verifyToken, requireRole("Admin"), getIdCard);
 
 idCardRoutes.patch(
   "/:id/approve",
   verifyToken,
   requireRole("Admin"),
-  patchIdCardApprove
+  patchIdCardApprove,
 );
 
 idCardRoutes.patch(
   "/:id/reject",
   verifyToken,
   requireRole("Admin"),
-  patchIdCardReject
+  patchIdCardReject,
 );
 
 /* =========================
@@ -79,17 +71,13 @@ idCardRoutes.patch(
     { name: "photo", maxCount: 1 },
     { name: "hrSignature", maxCount: 1 },
   ]),
-  patchIdCardDetails
+  addLeftPadding,
+  patchIdCardDetails,
 );
 
 /* =========================
    Delete ID (Admin only)
 ========================= */
-idCardRoutes.delete(
-  "/:id",
-  verifyToken,
-  requireRole("Admin"),
-  deleteIdCard
-);
+idCardRoutes.delete("/:id", verifyToken, requireRole("Admin"), deleteIdCard);
 
 module.exports = idCardRoutes;
