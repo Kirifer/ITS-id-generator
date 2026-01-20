@@ -134,12 +134,22 @@ async function renderSide(card, templateKey, suffix) {
     let nameValue;
 
     if (firstNameParts.length === 2) {
-      nameValue = `${firstNameParts[0]}\n${firstNameParts[1]}${middleInitial ? " " + middleInitial + " " : ""}\n${lastName}`.trim();
+      nameValue =
+        `${firstNameParts[0]}\n${firstNameParts[1]}\n${middleInitial ? middleInitial + " " : ""}${lastName}`.trim();
       size = Math.floor(size * 0.7);
-    } else if (firstNameParts.length >= 3) {
+    } else if (firstNameParts.length === 3 || firstNameParts.length === 4) {
       const line1 = firstNameParts.slice(0, 2).join(" ");
-      const line2 = `${firstNameParts.slice(2).join(" ")}${middleInitial ? " " + middleInitial : ""}`;
-      nameValue = `${line1}\n${line2}\n${lastName}`.trim();
+      const line2 = firstNameParts.slice(2).join(" ");
+      nameValue =
+        `${line1}\n${line2}\n${middleInitial ? middleInitial + " " : ""}${lastName}`.trim();
+      size = Math.floor(size * 0.7);
+    } else if (firstNameParts.length >= 5) {
+      const line1 = firstNameParts.slice(0, 2).join(" ");
+      const line2 = firstNameParts.slice(2, 5).join(" ");
+      const line3Parts = firstNameParts.slice(5);
+      const line3 =
+        `${line3Parts.join(" ")}${line3Parts.length > 0 ? " " : ""}${middleInitial ? middleInitial + " " : ""}${lastName}`.trim();
+      nameValue = `${line1}\n${line2}\n${line3}`;
       size = Math.floor(size * 0.7);
     } else {
       if (middleInitial) {

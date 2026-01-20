@@ -5,7 +5,7 @@ const fs = require("fs");
 async function processPhotoByType(file, type) {
   try {
     if (type === 'Employee') {
-      const paddingWidth = 100;
+      const paddingWidth = 105;
       const originalPath = file.path;
       const paddedFilename = `padded-${file.filename}`;
       const paddedPath = path.join(path.dirname(originalPath), paddedFilename);
