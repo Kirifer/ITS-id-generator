@@ -13,7 +13,6 @@ const {
 } = require("../controllers/idCardController");
 const {
   upload,
-  addLeftPadding,
   handleMulterError,
 } = require("../service/upload");
 
@@ -39,7 +38,6 @@ idCardRoutes.post(
     { name: "photo", maxCount: 1 },
     { name: "hrSignature", maxCount: 1 },
   ]),
-  addLeftPadding, // Add this middleware here
   handleMulterError,
   postIdCard,
 );
@@ -71,7 +69,6 @@ idCardRoutes.patch(
     { name: "photo", maxCount: 1 },
     { name: "hrSignature", maxCount: 1 },
   ]),
-  addLeftPadding,
   patchIdCardDetails,
 );
 

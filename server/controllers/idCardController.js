@@ -6,6 +6,7 @@ const crypto = require("crypto");
 const IdCard = require("../models/IdCard");
 const Hr = require("../models/Hr");
 const { fileCleaner } = require("../utils/fileCleaner");
+const {processPhotoByType} = require("../utils/padding")
 
 /* -------------------- helpers -------------------- */
 
@@ -168,7 +169,7 @@ const postIdCard = async (req, res) => {
         phone: emPhoneLocal,
       },
       hrDetails: hrSnapshot,
-      photoPath: `/uploads/photos/${photo.filename}`,
+      photoPath: await processPhotoByType(photo, type), 
       status: "Approved",
       isGenerated: false,
       createdBy: req.user.id,
@@ -306,7 +307,7 @@ const patchIdCardDetails = async (req, res) => {
     const photo = req.files?.photo?.[0];
     if (photo) {
       await sharp(photo.path).metadata();
-      card.photoPath = `/uploads/photos/${photo.filename}`;
+      card.photoPath = await processPhotoByType(photo, card.type);
       unlinkIfExists(oldPhoto);
       updated = true;
     }
@@ -333,6 +334,7 @@ const patchIdCardDetails = async (req, res) => {
     await card.save();
     res.json(card);
   } catch (e) {
+    console.error(e)
     res.status(500).json({ message: e.message });
   }
 };
