@@ -165,7 +165,7 @@ export default function IDGeneratorForm({
               onChange={(e) =>
                 handleChange("middleInitial", e.target.value.toUpperCase())
               }
-              required
+              // required
             />
             <InputField
               icon={User}
@@ -282,7 +282,7 @@ export default function IDGeneratorForm({
               onChange={(e) =>
                 handleChange("emMiddleInitial", e.target.value.toUpperCase())
               }
-              required
+              // required
             />
             <InputField
               icon={User}
