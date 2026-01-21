@@ -32,12 +32,10 @@ export default function IDGeneratorForm({
   const [photoProcessing, setPhotoProcessing] = useState(false);
   const [removePhotoBg, setRemovePhotoBg] = useState(false);
 
-  /* =====================
-     HR STATE
-  ===================== */
   const [hr_name, set_hr_name] = useState("");
   const [hr_position, set_hr_position] = useState("");
-  const [hr_id, set_hr_id] = useState(null); // ✅ ADD THIS
+  const [hr_id, set_hr_id] = useState(null);
+  const [hrResetKey, setHrResetKey] = useState(0);
 
   useEffect(() => {
     setFormData((prev) => ({
@@ -47,6 +45,20 @@ export default function IDGeneratorForm({
       hrPosition: hr_position,
     }));
   }, [hr_id, hr_name, hr_position]);
+
+  const resetHr = () => {
+    set_hr_name("");
+    set_hr_position("");
+    set_hr_id(null);
+    setHrSignature(null);
+    setHrSignatureError("");
+    setHrResetKey((prev) => prev + 1);
+  };
+
+  const handleSubmit = async (e) => {
+    await onSubmit(e);
+    resetHr();
+  };
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -144,7 +156,7 @@ export default function IDGeneratorForm({
         Please provide the required information below.
       </p>
 
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Full Name
@@ -165,7 +177,6 @@ export default function IDGeneratorForm({
               onChange={(e) =>
                 handleChange("middleInitial", e.target.value.toUpperCase())
               }
-              // required
             />
             <InputField
               icon={User}
@@ -282,7 +293,6 @@ export default function IDGeneratorForm({
               onChange={(e) =>
                 handleChange("emMiddleInitial", e.target.value.toUpperCase())
               }
-              // required
             />
             <InputField
               icon={User}
@@ -310,13 +320,14 @@ export default function IDGeneratorForm({
         </div>
 
         <HrSelector
+          key={hrResetKey}
           hr_name={hr_name}
           set_hr_name={set_hr_name}
           hr_position={hr_position}
           set_hr_position={set_hr_position}
           hr_signature={hrSignature}
           set_hr_signature={setHrSignature}
-          set_hr_id={set_hr_id} // ✅ ADD THIS
+          set_hr_id={set_hr_id}
           hr_signature_error={hrSignatureError}
           set_hr_signature_error={setHrSignatureError}
         />
