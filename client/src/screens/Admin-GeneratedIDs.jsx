@@ -97,7 +97,7 @@ export default function Admin_GeneratedIDs() {
 
   useEffect(() => {
     if (updateSuccess) {
-      showMessageBox(updateMessage);
+      // showMessageBox(updateMessage);
       updateReset();
       setPanelMode(null);
       setSelectedId(null);
@@ -131,7 +131,7 @@ export default function Admin_GeneratedIDs() {
 
   useEffect(() => {
     if (generateSuccess) {
-      showMessageBox(generateMessage);
+      // showMessageBox(generateMessage);
       generateReset();
       fetchIdCards();
       setGenerateModalOpen(false);

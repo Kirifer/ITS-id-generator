@@ -249,7 +249,7 @@ export const idCardUpdateStore = create(
           loading: false,
           success: false,
           error: true,
-          message: err.response?.data?.error || "Failed to Update User",
+          message: err.response?.data?.message || "Failed to Update User",
         });
       }
     },
