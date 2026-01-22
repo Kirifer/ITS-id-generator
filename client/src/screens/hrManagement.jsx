@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Pencil, X } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Search } from "lucide-react";
 import { removeBackground } from "@imgly/background-removal";
 import Sidebar from "../components/Sidebar";
 import { hrStore } from "../store/hrStore";
@@ -195,20 +195,7 @@ export default function HRManagement() {
                 <div className="bg-white rounded-2xl shadow-md p-4 sm:p-6 flex flex-col max-h-[calc(100vh-180px)] sm:max-h-[calc(100vh-220px)]">
                   <div className="mb-4 flex-shrink-0">
                     <div className="flex items-center gap-3 border rounded-xl px-4 py-3">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 text-gray-400 flex-shrink-0"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M21 21l-4.35-4.35m1.85-5.65a7.5 7.5 0 11-15 0 7.5 7.5 0 0115 0z"
-                        />
-                      </svg>
+                      <Search className="h-5 w-5 text-gray-400 flex-shrink-0"/>
                       <input
                         type="text"
                         placeholder="Search by name or position..."
