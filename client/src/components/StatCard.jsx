@@ -10,4 +10,4 @@ function StatCard({ icon, label, count }) {
   );
 }
 
-export default StatCard
+export default StatCard;

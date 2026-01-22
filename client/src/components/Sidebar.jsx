@@ -1,19 +1,23 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutGrid,
   Contact,
   NotebookText,
   Loader,
-  ShieldUser,
   Users,
-  Plus, // ✅ NEW ICON
+  Plus,
+  Menu,
+  X,
+  Shield,
 } from "lucide-react";
 import { FaSignOutAlt } from "react-icons/fa";
 import logo from "../assets/images/logo.png";
 import { logoutStore, authCheckStore } from "../store/authStore";
 
 export default function Sidebar({ expanded, onMouseEnter, onMouseLeave }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  
   const {
     logout,
     loading,
@@ -42,27 +46,51 @@ export default function Sidebar({ expanded, onMouseEnter, onMouseLeave }) {
   }, [success, error, logoutMsg, navigate, reset]);
 
   return (
-    <aside
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      className={`${
-        expanded ? "w-60" : "w-20"
-      } bg-[#262046] text-white min-h-screen p-5 flex flex-col justify-between transition-all duration-300`}
-    >
-      <div className="space-y-6">
-        <SidebarLogo expanded={expanded} />
-        <SidebarNav expanded={expanded} role={userRole} />
-      </div>
-      <SidebarFooter
-        expanded={expanded}
-        handleLogout={handleLogout}
-        loading={loading}
-      />
-    </aside>
+    <>
+      <button
+        onClick={() => setMobileOpen(!mobileOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 bg-[#262046] text-white p-2 rounded-lg shadow-lg"
+      >
+        {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+
+      <aside
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        className={`${
+          expanded ? "lg:w-60" : "lg:w-20"
+        } ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0 fixed lg:static w-60 bg-[#262046] text-white min-h-screen p-5 flex flex-col justify-between transition-all duration-300 z-40`}
+      >
+        <div className="space-y-6">
+          <SidebarLogo expanded={expanded} mobileOpen={mobileOpen} />
+          <SidebarNav
+            expanded={expanded}
+            role={userRole}
+            mobileOpen={mobileOpen}
+            onLinkClick={() => setMobileOpen(false)}
+          />
+        </div>
+        <SidebarFooter
+          expanded={expanded}
+          handleLogout={handleLogout}
+          loading={loading}
+          mobileOpen={mobileOpen}
+        />
+      </aside>
+
+      {mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+        />
+      )}
+    </>
   );
 }
 
-function SidebarNav({ expanded, role }) {
+function SidebarNav({ expanded, role, mobileOpen, onLinkClick }) {
   let navItems = [];
 
   if (role === "Admin") {
@@ -79,13 +107,13 @@ function SidebarNav({ expanded, role }) {
         label: "Generated IDs",
       },
       {
-        to: "/hr-management", // ✅ NEW ROUTE
-        icon: <Users size={20} />, // ✅ HR icon
+        to: "/hr-management",
+        icon: <Users size={20} />,
         label: "HR Management",
       },
       {
         to: "/admin",
-        icon: <ShieldUser size={20} />,
+        icon: <Shield size={20} />,
         label: "User Management",
       },
       {
@@ -118,19 +146,21 @@ function SidebarNav({ expanded, role }) {
           icon={icon}
           label={label}
           expanded={expanded}
+          mobileOpen={mobileOpen}
+          onClick={onLinkClick}
         />
       ))}
     </nav>
   );
 }
 
-function SidebarLogo({ expanded }) {
+function SidebarLogo({ expanded, mobileOpen }) {
   return (
     <div className="flex items-center gap-3">
       <img src={logo} alt="Logo" className="w-8 h-8" />
       <span
         className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${
-          expanded ? "opacity-100 w-auto" : "opacity-0 w-0"
+          expanded || mobileOpen ? "opacity-100 w-auto" : "opacity-0 w-0"
         } text-xl font-bold`}
       >
         IT Squarehub
@@ -139,7 +169,7 @@ function SidebarLogo({ expanded }) {
   );
 }
 
-function SidebarFooter({ expanded, handleLogout, loading }) {
+function SidebarFooter({ expanded, handleLogout, loading, mobileOpen }) {
   return (
     <div className="pt-6 border-t border-gray-600">
       <button
@@ -155,23 +185,28 @@ function SidebarFooter({ expanded, handleLogout, loading }) {
         ) : (
           <FaSignOutAlt />
         )}
-        <span className={expanded ? "block" : "hidden"}>Logout</span>
+        <span className={expanded || mobileOpen ? "block" : "hidden"}>
+          Logout
+        </span>
       </button>
     </div>
   );
 }
 
-function NavItem({ icon, label, to, expanded }) {
+function NavItem({ icon, label, to, expanded, mobileOpen, onClick }) {
   return (
     <NavLink
       to={to}
+      onClick={onClick}
       className={({ isActive }) =>
         `flex items-center gap-3 px-2 py-1 rounded-md transition-colors duration-200
          ${isActive ? "bg-[#3E3862] text-white" : "hover:text-purple-400"}`
       }
     >
       {icon}
-      <span className={expanded ? "block" : "hidden"}>{label}</span>
+      <span className={expanded || mobileOpen ? "block" : "hidden"}>
+        {label}
+      </span>
     </NavLink>
   );
 }

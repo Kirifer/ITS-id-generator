@@ -85,15 +85,15 @@ export default function ViewPanel({ row, onEdit, onClose }) {
   const backAvailable = Boolean(row.generatedBackImagePath);
 
   return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
+    <div className="flex flex-col h-full">
+      <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">View ID</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">View ID</h2>
           <p className="text-gray-600 text-sm">Preview and details.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           <button
-            className={`px-3 py-1 rounded ${
+            className={`flex-1 sm:flex-none px-3 py-1 rounded ${
               side === "front"
                 ? "bg-purple-600 text-white"
                 : "bg-gray-200 text-gray-700"
@@ -103,7 +103,7 @@ export default function ViewPanel({ row, onEdit, onClose }) {
             Front
           </button>
           <button
-            className={`px-3 py-1 rounded ${
+            className={`flex-1 sm:flex-none px-3 py-1 rounded ${
               side === "back"
                 ? "bg-purple-600 text-white"
                 : "bg-gray-200 text-gray-700"
@@ -116,12 +116,12 @@ export default function ViewPanel({ row, onEdit, onClose }) {
         </div>
       </div>
 
-      <div className="border rounded-xl p-3 bg-gray-50">
+      <div className="border rounded-xl p-3 bg-gray-50 mb-3">
         {src ? (
           <img
             src={src}
             alt="ID Preview"
-            className="w-full h-auto max-h-80 object-contain rounded-lg"
+            className="w-full h-auto max-h-60 sm:max-h-80 object-contain rounded-lg"
           />
         ) : (
           <div className="h-48 flex items-center justify-center text-gray-400 text-sm">
@@ -130,19 +130,19 @@ export default function ViewPanel({ row, onEdit, onClose }) {
         )}
       </div>
 
-      <div className="mt-3 flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
         {src && (
           <>
             <button
               onClick={downloadImage}
-              className="flex-1 inline-flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 rounded-md"
+              className="flex-1 inline-flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 rounded-md text-sm"
             >
               Download ({side})
             </button>
 
             <button
               onClick={() => printImage(src)}
-              className="flex-1 inline-flex items-center justify-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-md"
+              className="flex-1 inline-flex items-center justify-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-md text-sm"
             >
               Print ({side})
             </button>
@@ -150,7 +150,7 @@ export default function ViewPanel({ row, onEdit, onClose }) {
         )}
       </div>
 
-      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm mb-6 overflow-y-auto flex-1">
         <InfoField
           label="Name"
           value={`${row.firstName} ${
@@ -175,11 +175,11 @@ export default function ViewPanel({ row, onEdit, onClose }) {
         <InfoField label="HR Position" value={row.hrPosition} />
       </div>
 
-      <div className="mt-6 flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3 mt-auto">
         {typeof onEdit === "function" && (
           <button
             onClick={onEdit}
-            className="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 rounded-md"
+            className="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 rounded-md text-sm"
           >
             Edit
           </button>
@@ -187,7 +187,7 @@ export default function ViewPanel({ row, onEdit, onClose }) {
 
         <button
           onClick={onClose}
-          className="flex-1 bg-gray-300 hover:bg-gray-400 text-white font-semibold py-2 rounded-md"
+          className="flex-1 bg-gray-300 hover:bg-gray-400 text-white font-semibold py-2 rounded-md text-sm"
         >
           Close
         </button>
