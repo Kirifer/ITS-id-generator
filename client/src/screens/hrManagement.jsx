@@ -165,18 +165,18 @@ export default function HRManagement() {
     <div className="flex h-screen w-screen font-inter overflow-hidden">
       <Sidebar expanded={!showForm} />
 
-      <main className="flex-1 overflow-hidden custom-bg">
+      <main className="flex-1 overflow-hidden custom-bg lg:ml-0 ml-0">
         <div className="h-full flex transition-all duration-300 ease-in-out">
           <div
             className={`transition-all duration-300 overflow-auto ${
-              showForm ? "w-2/3" : "w-full"
+              showForm ? "lg:w-2/3 lg:pr-6 w-full" : "w-full"
             }`}
           >
-            <div className="p-6">
+            <div className="p-4 sm:p-6 pt-16 lg:pt-6">
               <div className="flex flex-col gap-6 max-w-screen-xl mx-auto">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
-                    <h1 className="text-3xl font-bold text-gray-800">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
                       HR Management
                     </h1>
                     <p className="text-sm text-gray-600">
@@ -186,18 +186,18 @@ export default function HRManagement() {
 
                   <button
                     onClick={openCreateForm}
-                    className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold"
+                    className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base w-full sm:w-auto justify-center"
                   >
                     <Plus size={18} /> Add HR
                   </button>
                 </div>
 
-                <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col max-h-[calc(100vh-220px)]">
+                <div className="bg-white rounded-2xl shadow-md p-4 sm:p-6 flex flex-col max-h-[calc(100vh-180px)] sm:max-h-[calc(100vh-220px)]">
                   <div className="mb-4 flex-shrink-0">
                     <div className="flex items-center gap-3 border rounded-xl px-4 py-3">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 text-gray-400"
+                        className="h-5 w-5 text-gray-400 flex-shrink-0"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -223,10 +223,10 @@ export default function HRManagement() {
                     <table className="w-full text-sm">
                       <thead className="sticky top-0 bg-white z-10 border-b">
                         <tr>
-                          <th className="text-left py-4 px-4">Name</th>
-                          <th className="text-left py-4 px-4">Position</th>
-                          <th className="text-left py-4 px-4">Signature</th>
-                          <th className="text-center py-4 px-4">Actions</th>
+                          <th className="text-left py-3 sm:py-4 px-2 sm:px-4 whitespace-nowrap">Name</th>
+                          <th className="text-left py-3 sm:py-4 px-2 sm:px-4 whitespace-nowrap">Position</th>
+                          <th className="text-left py-3 sm:py-4 px-2 sm:px-4 whitespace-nowrap">Signature</th>
+                          <th className="text-center py-3 sm:py-4 px-2 sm:px-4 whitespace-nowrap">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -234,7 +234,7 @@ export default function HRManagement() {
                           <tr>
                             <td
                               colSpan="4"
-                              className="py-10 text-center text-gray-500"
+                              className="py-10 text-center text-gray-500 text-xs sm:text-sm"
                             >
                               No matching HR records found
                             </td>
@@ -245,27 +245,27 @@ export default function HRManagement() {
                               key={hr._id}
                               className="border-b hover:bg-gray-50"
                             >
-                              <td className="py-4 px-4">{hr.name}</td>
-                              <td className="py-4 px-4">{hr.position}</td>
-                              <td className="py-4 px-4">
+                              <td className="py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm">{hr.name}</td>
+                              <td className="py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm">{hr.position}</td>
+                              <td className="py-3 sm:py-4 px-2 sm:px-4">
                                 <img
                                   src={getImageUrl(hr.signaturePath)}
-                                  className="h-10 object-contain"
+                                  className="h-8 sm:h-10 object-contain"
                                   alt="signature"
                                 />
                               </td>
-                              <td className="py-4 px-4 flex justify-center gap-3">
+                              <td className="py-3 sm:py-4 px-2 sm:px-4 flex justify-center gap-2 sm:gap-3">
                                 <button
                                   onClick={() => openEditForm(hr)}
                                   className="text-purple-500"
                                 >
-                                  <Pencil size={18} />
+                                  <Pencil size={16} className="sm:w-[18px] sm:h-[18px]" />
                                 </button>
                                 <button
                                   onClick={() => handleDelete(hr)}
                                   className="text-purple-500"
                                 >
-                                  <Trash2 size={18} />
+                                  <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
                                 </button>
                               </td>
                             </tr>
@@ -280,26 +280,32 @@ export default function HRManagement() {
           </div>
 
           {showForm && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 z-30" />
+            <>
+              <div 
+                onClick={closeForm}
+                className="lg:hidden fixed inset-0 bg-black bg-opacity-40 z-30" 
+              />
+              <div className="hidden lg:block fixed inset-0 bg-black bg-opacity-40 z-30" />
+            </>
           )}
 
           <div
             className={`fixed top-0 right-0 h-full bg-white shadow-xl transition-all duration-300 z-40 ${
-              showForm ? "w-1/3" : "w-0"
+              showForm ? "lg:w-1/3 w-full sm:w-3/4" : "w-0"
             } overflow-hidden`}
           >
             {showForm && (
-              <div className="h-full p-6 flex flex-col">
+              <div className="h-full p-4 sm:p-6 flex flex-col">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold">
+                  <h2 className="text-lg sm:text-xl font-bold">
                     {isEditing ? "Edit HR" : "Create HR"}
                   </h2>
-                  <button onClick={closeForm}>
-                    <X />
+                  <button onClick={closeForm} className="p-1">
+                    <X size={20} />
                   </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1">
                   <InputField
                     placeholder="HR Name"
                     value={formData.name}
@@ -335,18 +341,18 @@ export default function HRManagement() {
                     isProcessing={signatureProcessing}
                   />
 
-                  <div className="flex gap-3 pt-4">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
                     <button
                       type="submit"
                       disabled={loading || signatureProcessing}
-                      className="flex-1 bg-purple-500 text-white py-2 rounded-lg"
+                      className="flex-1 bg-purple-500 text-white py-2 rounded-lg disabled:bg-purple-300 text-sm sm:text-base"
                     >
                       {isEditing ? "Update" : "Create"}
                     </button>
                     <button
                       type="button"
                       onClick={closeForm}
-                      className="flex-1 border py-2 rounded-lg"
+                      className="flex-1 border py-2 rounded-lg text-sm sm:text-base"
                     >
                       Cancel
                     </button>
