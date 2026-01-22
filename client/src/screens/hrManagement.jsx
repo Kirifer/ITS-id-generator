@@ -172,7 +172,7 @@ export default function HRManagement() {
               showForm ? "lg:w-2/3 lg:pr-6 w-full" : "w-full"
             }`}
           >
-            <div className="p-4 sm:p-6 pt-16 lg:pt-6">
+               <div className="p-2 sm:px-6 pt-20 lg:pt-10">
               <div className="flex flex-col gap-6 max-w-screen-xl mx-auto">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>

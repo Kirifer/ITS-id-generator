@@ -72,7 +72,7 @@ const AdminManagement = () => {
     <div className="flex h-screen w-screen font-inter overflow-hidden">
       <Sidebar expanded={sidebarExpanded} />
       <main className="flex-1 overflow-auto custom-bg lg:ml-0 ml-0">
-        <div className="p-4 sm:p-6 pt-16 lg:pt-6">
+        <div className="p-2 sm:px-6 pt-10 md:pt-20 lg:pt-10">
           <div className="flex flex-col gap-6 w-full max-w-screen-xl mx-auto">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center space-x-3 pl-12 sm:pl-0">
