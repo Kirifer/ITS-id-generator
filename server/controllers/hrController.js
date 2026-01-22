@@ -1,10 +1,16 @@
 // server/controllers/hrController.js
 
-const fs = require("fs");
-const path = require("path");
 const sharp = require("sharp");
 const mongoose = require("mongoose");
 const Hr = require("../models/Hr");
+const AWS = require("aws-sdk");
+
+// Create S3 instance for deletes
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
 
 /* =========================
    GET ALL HR
@@ -82,20 +88,16 @@ const createHr = async (req, res) => {
       });
     }
 
-    try {
-      await sharp(signature.path).metadata();
-    } catch {
-      fs.unlink(signature.path, () => {});
-      return res.status(400).json({
-        success: false,
-        error: "Invalid signature image",
-      });
-    }
+    
 
     const hr = await Hr.create({
       name,
       position,
-      signaturePath: `/uploads/photos/${signature.filename}`,
+
+      // SAVE S3 URL IN DB
+      signaturePath: signature.location,   // full https URL
+      signatureKey: signature.key,          // S3 object key (for deletion)
+
       isManual: true,
       createdBy: req.user.id,
     });
@@ -157,27 +159,19 @@ const patchHr = async (req, res) => {
     }
 
     if (signature) {
-      try {
-        await sharp(signature.path).metadata();
-      } catch {
-        fs.unlink(signature.path, () => {});
-        return res.status(400).json({
-          success: false,
-          error: "Invalid signature image",
-        });
+      // Delete old signature from S3
+      if (hr.signatureKey) {
+        await s3
+          .deleteObject({
+            Bucket: process.env.AWS_BUCKET_NAME,
+            Key: hr.signatureKey,
+          })
+          .promise();
       }
 
-      // delete old signature
-      if (hr.signaturePath) {
-        const oldPath = path.join(
-          __dirname,
-          "..",
-          hr.signaturePath.replace(/^\//, "")
-        );
-        fs.existsSync(oldPath) && fs.unlink(oldPath, () => {});
-      }
-
-      hr.signaturePath = `/uploads/photos/${signature.filename}`;
+      // Save new S3 info
+      hr.signaturePath = signature.location;
+      hr.signatureKey = signature.key;
       updated = true;
     }
 
@@ -231,13 +225,14 @@ const deleteHr = async (req, res) => {
       });
     }
 
-    if (hr.signaturePath) {
-      const filePath = path.join(
-        __dirname,
-        "..",
-        hr.signaturePath.replace(/^\//, "")
-      );
-      fs.existsSync(filePath) && fs.unlink(filePath, () => {});
+    // Delete signature from S3
+    if (hr.signatureKey) {
+      await s3
+        .deleteObject({
+          Bucket: process.env.AWS_BUCKET_NAME,
+          Key: hr.signatureKey,
+        })
+        .promise();
     }
 
     await hr.deleteOne();
@@ -257,6 +252,6 @@ module.exports = {
   getHrList,
   getHrById,
   createHr,
-  patchHr, // ✅ THIS FIXES THE CRASH
+  patchHr,
   deleteHr,
 };

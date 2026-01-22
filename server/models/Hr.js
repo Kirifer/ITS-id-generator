@@ -16,7 +16,15 @@ const HrSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // Full S3 URL (used by frontend & ID generation)
     signaturePath: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    // S3 object key (used only for deleting from S3)
+    signatureKey: {
       type: String,
       required: true,
       trim: true,

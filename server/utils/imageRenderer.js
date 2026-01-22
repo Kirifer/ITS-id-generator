@@ -1,6 +1,6 @@
 const { createCanvas, loadImage } = require("canvas");
 const path = require("path");
-const fs = require("fs");
+const AWS = require("aws-sdk");
 
 const {
   SERVER_ROOT,
@@ -11,6 +11,13 @@ const {
 } = require("./imageHelper");
 
 const { renderInternFront } = require("./internLayout");
+
+// S3 setup
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
 
 async function renderSide(card, templateKey, suffix) {
   const tpl = await loadTemplate(templateKey);
@@ -26,11 +33,9 @@ async function renderSide(card, templateKey, suffix) {
     tpl.bgH * scale,
   );
 
+  // FRONT PHOTO
   if (suffix === "front" && card.photoPath && tpl.photo) {
-    const img = await loadImage(
-      path.join(SERVER_ROOT, card.photoPath.replace(/^\//, "")),
-    );
-
+    const img = await loadImage(card.photoPath);
     drawImageCover(
       ctx,
       img,
@@ -41,6 +46,7 @@ async function renderSide(card, templateKey, suffix) {
     );
   }
 
+  // EMPLOYEE OVERLAY
   if (suffix === "front" && templateKey.toLowerCase().includes("employee")) {
     try {
       const overlayPath = path.join(
@@ -72,6 +78,7 @@ async function renderSide(card, templateKey, suffix) {
     }
   }
 
+  // BARCODE
   if (suffix === "back" && tpl.barcode && card.idNumber) {
     const bw = toPx(tpl.barcode.width, tpl.designW);
     const bh = toPx(tpl.barcode.height, tpl.designH);
@@ -85,6 +92,8 @@ async function renderSide(card, templateKey, suffix) {
       bh,
     );
   }
+
+  /* ---------------- TEXT HELPERS ---------------- */
 
   const drawText = (value, spec) => {
     if (!value || !spec) return;
@@ -182,6 +191,8 @@ async function renderSide(card, templateKey, suffix) {
     });
   };
 
+  /* ---------------- FRONT / BACK CONTENT ---------------- */
+
   if (suffix === "front") {
     if (templateKey.toLowerCase().includes("employee")) {
       drawEmployeeNameShrink(card.fullName, tpl.text.name);
@@ -228,9 +239,7 @@ async function renderSide(card, templateKey, suffix) {
     drawText(card.hrDetails.position, tpl.text.hrTitle);
 
     if (tpl.signature && card.hrDetails.signaturePath) {
-      const sig = await loadImage(
-        path.join(SERVER_ROOT, card.hrDetails.signaturePath.replace(/^\//, "")),
-      );
+      const sig = await loadImage(card.hrDetails.signaturePath);
       ctx.drawImage(
         sig,
         toPx(tpl.signature.x, tpl.designW),
@@ -241,13 +250,25 @@ async function renderSide(card, templateKey, suffix) {
     }
   }
 
-  const outDir = path.join(SERVER_ROOT, "uploads", "generated");
-  fs.mkdirSync(outDir, { recursive: true });
+  /* ---------------- UPLOAD RESULT TO S3 ---------------- */
 
-  const file = `${Date.now()}-${card.idNumber}-${suffix}.png`;
-  fs.writeFileSync(path.join(outDir, file), canvas.toBuffer());
+  const buffer = canvas.toBuffer("image/png");
+  const fileName = `${Date.now()}-${card.idNumber}-${suffix}.png`;
+  const key = `generated/${fileName}`;
 
-  return `/uploads/generated/${file}`;
+  const uploadResult = await s3
+    .upload({
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: key,
+      Body: buffer,
+      ContentType: "image/png",
+    })
+    .promise();
+
+  return {
+    url: uploadResult.Location, // full S3 URL
+    key: key,                   // S3 key for deletion later
+  };
 }
 
 module.exports = { renderSide };

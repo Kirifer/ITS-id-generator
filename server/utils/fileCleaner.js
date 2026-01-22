@@ -1,16 +1,29 @@
-const fs = require("fs");
-const path = require("path");
+// server/utils/fileCleaner.js
 
-const SERVER_ROOT = path.join(__dirname, "..");
+const AWS = require("aws-sdk");
 
-function fileCleaner(relativePath) {
-  if (!relativePath) return;
-  if (!relativePath.startsWith("/uploads/generated")) return;
+// S3 client
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
 
-  const fullPath = path.join(SERVER_ROOT, relativePath.replace(/^\//, ""));
+/**
+ * Delete file from S3 using stored key
+ */
+async function fileCleaner(s3Key) {
+  if (!s3Key) return;
 
-  if (fs.existsSync(fullPath)) {
-    fs.unlink(fullPath, () => {});
+  try {
+    await s3
+      .deleteObject({
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: s3Key,
+      })
+      .promise();
+  } catch (err) {
+    console.error("S3 delete failed:", err.message);
   }
 }
 
