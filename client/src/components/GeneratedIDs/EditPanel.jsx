@@ -132,20 +132,20 @@ export default function EditPanel({
   const isProcessing = photoProcessing;
 
   return (
-    <>
+    <div className="flex flex-col h-full">
       <div className="mb-4">
-        <h2 className="text-2xl font-bold text-gray-800">Edit Details:</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Edit Details:</h2>
         <p className="text-gray-600 text-sm">
           Please provide the required information below.
         </p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 overflow-y-auto flex-1">
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Full Name
           </label>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <InputWithIcon
               Icon={User}
               value={selectedId.firstName}
@@ -209,7 +209,7 @@ export default function EditPanel({
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-800 mb-1">
               Position
@@ -273,7 +273,7 @@ export default function EditPanel({
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Emergency Contact Person
           </label>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <InputWithIcon
               Icon={User}
               value={selectedId.emFirstName || ""}
@@ -359,24 +359,24 @@ export default function EditPanel({
             />
           </div>
         </div>
-
-        <div className="mt-6 flex gap-4">
-          <button
-            onClick={onSubmit}
-            disabled={isProcessing}
-            className="flex-1 bg-purple-400 hover:bg-purple-500 disabled:bg-purple-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-md transition duration-200 text-lg"
-          >
-            Update
-          </button>
-          <button
-            onClick={onCancel}
-            disabled={isProcessing}
-            className="flex-1 bg-gray-300 hover:bg-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-md transition duration-200 text-lg"
-          >
-            Cancel
-          </button>
-        </div>
       </div>
-    </>
+
+      <div className="mt-4 pt-4 border-t flex flex-col sm:flex-row gap-3">
+        <button
+          onClick={onSubmit}
+          disabled={isProcessing}
+          className="flex-1 bg-purple-400 hover:bg-purple-500 disabled:bg-purple-300 disabled:cursor-not-allowed text-white font-semibold py-2 sm:py-3 rounded-md transition duration-200 text-sm sm:text-base"
+        >
+          Update
+        </button>
+        <button
+          onClick={onCancel}
+          disabled={isProcessing}
+          className="flex-1 bg-gray-300 hover:bg-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed text-white font-semibold py-2 sm:py-3 rounded-md transition duration-200 text-sm sm:text-base"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
   );
 }
