@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const Hr = require("../models/Hr");
-const s3 = require("../config/s3")
+const { s3 } = require("../config/s3");
 
 
 const getHrList = async (req, res) => {
