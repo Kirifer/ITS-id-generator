@@ -97,7 +97,6 @@ export default function Admin_GeneratedIDs() {
 
   useEffect(() => {
     if (updateSuccess) {
-      // showMessageBox(updateMessage);
       updateReset();
       setPanelMode(null);
       setSelectedId(null);
@@ -131,7 +130,6 @@ export default function Admin_GeneratedIDs() {
 
   useEffect(() => {
     if (generateSuccess) {
-      // showMessageBox(generateMessage);
       generateReset();
       fetchIdCards();
       setGenerateModalOpen(false);
@@ -226,7 +224,6 @@ export default function Admin_GeneratedIDs() {
     formData.append("hrName", selectedId.hrName);
     formData.append("hrPosition", selectedId.hrPosition);
     formData.append("employeeNumber", selectedId.employeeNumber); 
-
 
     if (photo) {
       formData.append("photo", photo);
@@ -328,15 +325,19 @@ export default function Admin_GeneratedIDs() {
     approveLoading ||
     rejectLoading;
 
+  const panelOpen = !!selectedId;
+
   return (
     <div className="flex h-screen w-screen font-inter overflow-hidden">
       <Sidebar expanded={sidebarExpanded} />
-      <main ref={mainRef} className="flex-1 overflow-auto custom-bg">
-        <div className="p-6">
+      <main ref={mainRef} className="flex-1 overflow-auto custom-bg lg:ml-0 ml-0">
+        <div className="p-4 sm:p-6 pt-16 lg:pt-6">
           <div className="flex flex-col lg:flex-row gap-6 w-full max-w-screen-xl mx-auto items-start">
             <div
               ref={tableRef}
-              className="lg:w-[60%] bg-white rounded-2xl shadow-md p-6 flex flex-col transition-all duration-300"
+              className={`bg-white rounded-2xl shadow-md p-4 sm:p-6 flex flex-col transition-all duration-300 ${
+                panelOpen ? "lg:w-[60%]" : "w-full"
+              } w-full`}
               style={{ height: `${tableHeight}px` }}
             >
               <FilterBar />
@@ -357,44 +358,76 @@ export default function Admin_GeneratedIDs() {
                 externalLoading={isActionLoading}
               />
             </div>
-            <div
-              ref={formRef}
-              className="lg:w-[40%] bg-white rounded-2xl shadow-md p-6 overflow-auto"
-              style={{ maxHeight: `${tableHeight}px` }}
-            >
-              {panelMode === "view" && selectedId && (
-                <ViewPanel
-                  row={selectedId}
-                  onEdit={() => onEdit(selectedId)}
-                  onClose={() => {
-                    setSelectedId(null);
-                    setPanelMode(null);
-                  }}
-                />
-              )}
-              {panelMode === "edit" && selectedId && (
-                <EditPanel
-                  selectedId={selectedId}
-                  setSelectedId={setSelectedId}
-                  photo={photo}
-                  setPhoto={setPhoto}
-                  hrSignature={hrSignature}
-                  setHrSignature={setHrSignature}
-                  onSubmit={onSubmitUpdate}
-                  onCancel={() => {
-                    setSelectedId(null);
-                    setPanelMode(null);
-                    setPhoto(null);
-                    setHrSignature(null);
-                  }}
-                />
-              )}
-              {!panelMode && (
-                <p className="text-gray-800 text-sm font-extrabold">
-                  Select an ID to view or edit.
-                </p>
-              )}
-            </div>
+
+            {panelOpen && selectedId && (
+              <>
+                <div
+                  ref={formRef}
+                  className="hidden lg:block lg:w-[40%] bg-white rounded-2xl shadow-md p-4 sm:p-6 overflow-auto"
+                  style={{ maxHeight: `${tableHeight}px` }}
+                >
+                  {panelMode === "view" && (
+                    <ViewPanel
+                      row={selectedId}
+                      onEdit={() => onEdit(selectedId)}
+                      onClose={() => {
+                        setSelectedId(null);
+                        setPanelMode(null);
+                      }}
+                    />
+                  )}
+                  {panelMode === "edit" && (
+                    <EditPanel
+                      selectedId={selectedId}
+                      setSelectedId={setSelectedId}
+                      photo={photo}
+                      setPhoto={setPhoto}
+                      hrSignature={hrSignature}
+                      setHrSignature={setHrSignature}
+                      onSubmit={onSubmitUpdate}
+                      onCancel={() => {
+                        setSelectedId(null);
+                        setPanelMode(null);
+                        setPhoto(null);
+                        setHrSignature(null);
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                  <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-auto p-4 sm:p-6">
+                    {panelMode === "view" && (
+                      <ViewPanel
+                        row={selectedId}
+                        onEdit={() => onEdit(selectedId)}
+                        onClose={() => {
+                          setSelectedId(null);
+                          setPanelMode(null);
+                        }}
+                      />
+                    )}
+                    {panelMode === "edit" && (
+                      <EditPanel
+                        selectedId={selectedId}
+                        setSelectedId={setSelectedId}
+                        photo={photo}
+                        setPhoto={setPhoto}
+                        hrSignature={hrSignature}
+                        setHrSignature={setHrSignature}
+                        onSubmit={onSubmitUpdate}
+                        onCancel={() => {
+                          setSelectedId(null);
+                          setPanelMode(null);
+                          setPhoto(null);
+                          setHrSignature(null);
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </main>

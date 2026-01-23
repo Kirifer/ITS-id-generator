@@ -84,23 +84,25 @@ export default function AdminDashboard() {
   return (
     <div className="flex h-screen w-screen font-inter overflow-hidden">
       <Sidebar expanded={sidebarExpanded} />
-      <main ref={mainRef} className="flex-1 overflow-auto custom-bg">
-        <div className="p-6">
+      <main ref={mainRef} className="flex-1 overflow-auto custom-bg lg:ml-0 ml-0">
+        <div className="p-4 sm:p-6 pt-16 lg:pt-6">
           <div className="flex flex-col gap-6 w-full max-w-screen-xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {statCards.map((stat, idx) => (
-                <StatCard
-                  key={idx}
-                  icon={stat.icon}
-                  label={stat.label}
-                  count={stat.count}
-                />
-              ))}
+            <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+              <div className="flex lg:grid lg:grid-cols-4 gap-6">
+                {statCards.map((stat, idx) => (
+                  <StatCard
+                    key={idx}
+                    icon={stat.icon}
+                    label={stat.label}
+                    count={stat.count}
+                  />
+                ))}
+              </div>
             </div>
             <div className="flex flex-col lg:flex-row gap-6 items-start">
               <div
                 ref={tableRef}
-                className={`bg-white rounded-2xl shadow-md p-6 flex flex-col transition-all duration-300 ${
+                className={`bg-white rounded-2xl shadow-md p-4 sm:p-6 flex flex-col transition-all duration-300 ${
                   panelOpen ? "lg:w-[60%]" : "w-full"
                 }`}
                 style={{ height: `${tableHeight}px` }}
@@ -116,12 +118,19 @@ export default function AdminDashboard() {
                 />
               </div>
               {panelOpen && viewRow && (
-                <div
-                  className="lg:w-[40%] bg-white rounded-2xl shadow-md p-6 overflow-auto"
-                  style={{ maxHeight: `${tableHeight}px` }}
-                >
-                  <ViewPanel row={viewRow} onClose={handleClose} />
-                </div>
+                <>
+                  <div
+                    className="hidden lg:block lg:w-[40%] bg-white rounded-2xl shadow-md p-4 sm:p-6 overflow-auto"
+                    style={{ maxHeight: `${tableHeight}px` }}
+                  >
+                    <ViewPanel row={viewRow} onClose={handleClose} />
+                  </div>
+                  <div className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-auto p-4 sm:p-6">
+                      <ViewPanel row={viewRow} onClose={handleClose} />
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           </div>

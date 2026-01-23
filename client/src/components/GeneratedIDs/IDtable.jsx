@@ -66,10 +66,7 @@ export default function IDTable({
 
   return (
     <div className="rounded-2xl overflow-hidden flex flex-col h-full">
-      <div
-        className="overflow-y-auto custom-scrollbar"
-        style={{ height: "630px" }}
-      >
+      <div className="overflow-x-auto overflow-y-auto custom-scrollbar" style={{ height: "630px" }}>
         {isLoading ? (
           <div className="p-6 text-gray-600 text-sm">Loading…</div>
         ) : error ? (
@@ -78,14 +75,14 @@ export default function IDTable({
           <table className="min-w-full text-sm text-center border-separate border-spacing-0">
             <thead className="sticky top-0 z-10 bg-[#D0CAF3] text-gray-800 font-extrabold">
               <tr>
-                <th className="p-4 rounded-tl-2xl">Name</th>
-                <th className="p-4">Type</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Generated</th>
-                <th className="p-4">Date Generated</th>
-                {showActions && <th className="p-4">Actions</th>}
+                <th className="p-4 rounded-tl-2xl whitespace-nowrap">Name</th>
+                <th className="p-4 whitespace-nowrap">Type</th>
+                <th className="p-4 whitespace-nowrap">Status</th>
+                <th className="p-4 whitespace-nowrap">Generated</th>
+                <th className="p-4 whitespace-nowrap">Date Generated</th>
+                {showActions && <th className="p-4 whitespace-nowrap">Actions</th>}
                 {showStatusColumn && (
-                  <th className="p-4 rounded-tr-2xl">Approval</th>
+                  <th className="p-4 rounded-tr-2xl whitespace-nowrap">Approval</th>
                 )}
               </tr>
             </thead>
@@ -96,11 +93,11 @@ export default function IDTable({
                     key={id._id || index}
                     className="bg-white even:bg-gray-100"
                   >
-                    <td className="p-4">
+                    <td className="p-4 whitespace-nowrap">
                       {id.firstName} {id.lastName}
                     </td>
-                    <td className="p-4">{id.type}</td>
-                    <td className="p-4">{id.status}</td>
+                    <td className="p-4 whitespace-nowrap">{id.type}</td>
+                    <td className="p-4 whitespace-nowrap">{id.status}</td>
                     <td className="p-4">
                       <div className="flex justify-center">
                         {id.isGenerated ? (
@@ -110,7 +107,7 @@ export default function IDTable({
                         )}
                       </div>
                     </td>
-                    <td className="p-4">{id.date}</td>
+                    <td className="p-4 whitespace-nowrap">{id.date}</td>
                     {showActions && (
                       <td className="p-4 text-purple-600">
                         <div className="flex justify-center gap-3">
@@ -155,7 +152,7 @@ export default function IDTable({
                               {id.status === "Pending" && canApprove && (
                                 <button
                                   onClick={() => onApprove(id)}
-                                  className="bg-green-500 text-white px-2 py-1 rounded text-xs"
+                                  className="bg-green-500 text-white px-2 py-1 rounded text-xs whitespace-nowrap"
                                 >
                                   Approve
                                 </button>
@@ -163,7 +160,7 @@ export default function IDTable({
                               {id.status === "Pending" && canReject && (
                                 <button
                                   onClick={() => onReject(id)}
-                                  className="bg-red-500 text-white px-2 py-1 rounded text-xs"
+                                  className="bg-red-500 text-white px-2 py-1 rounded text-xs whitespace-nowrap"
                                 >
                                   Reject
                                 </button>
@@ -171,7 +168,7 @@ export default function IDTable({
                               {id.status === "Approved" && canReject && (
                                 <button
                                   onClick={() => onReject(id)}
-                                  className="bg-red-500 text-white px-2 py-1 rounded text-xs"
+                                  className="bg-red-500 text-white px-2 py-1 rounded text-xs whitespace-nowrap"
                                 >
                                   Reject
                                 </button>
@@ -179,7 +176,7 @@ export default function IDTable({
                               {id.status === "Rejected" && canApprove && (
                                 <button
                                   onClick={() => onApprove(id)}
-                                  className="bg-green-500 text-white px-2 py-1 rounded text-xs"
+                                  className="bg-green-500 text-white px-2 py-1 rounded text-xs whitespace-nowrap"
                                 >
                                   Approve
                                 </button>

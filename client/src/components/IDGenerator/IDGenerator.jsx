@@ -55,6 +55,26 @@ export default function IDGeneratorForm({
     setHrResetKey((prev) => prev + 1);
   };
 
+  const isFormValid = () => {
+    return (
+      formData.firstName?.trim() &&
+      formData.lastName?.trim() &&
+      formData.type &&
+      formData.employeeNumber?.length >= getEmployeePrefix().length + 5 &&
+      formData.position &&
+      formData.email?.trim() &&
+      formData.phone?.length === 13 &&
+      formData.emFirstName?.trim() &&
+      formData.emLastName?.trim() &&
+      formData.emPhone?.length === 13 &&
+      hr_name?.trim() &&
+      hr_position?.trim() &&
+      (hr_id || hrSignature) &&
+      photo &&
+      !photoProcessing
+    );
+  };
+
   const handleSubmit = async (e) => {
     await onSubmit(e);
     resetHr();
@@ -361,8 +381,8 @@ export default function IDGeneratorForm({
 
         <button
           type="submit"
-          disabled={photoProcessing}
-          className="w-full bg-purple-400 hover:bg-purple-500 disabled:bg-purple-300 text-white font-semibold py-3 rounded-md transition duration-200 text-lg"
+          disabled={!isFormValid() || photoProcessing}
+          className="w-full bg-purple-400 hover:bg-purple-500 disabled:bg-purple-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-md transition duration-200 text-lg"
         >
           Generate
         </button>
