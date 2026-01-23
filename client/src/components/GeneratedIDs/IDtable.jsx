@@ -94,7 +94,7 @@ export default function IDTable({
                     className="bg-white even:bg-gray-100"
                   >
                     <td className="p-4 whitespace-nowrap">
-                      {id.firstName} {id.lastName}
+                      {id.firstName} {id.middleInitial} {id.lastName}
                     </td>
                     <td className="p-4 whitespace-nowrap">{id.type}</td>
                     <td className="p-4 whitespace-nowrap">{id.status}</td>
