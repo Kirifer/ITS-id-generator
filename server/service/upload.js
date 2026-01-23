@@ -2,10 +2,6 @@ const multer = require("multer");
 const multerS3 = require("multer-s3");
 const AWS = require("aws-sdk");
 
-console.log("🪣 AWS BUCKET =", process.env.AWS_BUCKET_NAME);
-console.log("🌏 AWS REGION =", process.env.AWS_REGION);
-
-// Create S3 instance
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -26,7 +22,7 @@ const upload = multer({
     },
   }),
 
-  limits: { fileSize: 4 * 1024 * 1024 }, // 4MB limit
+  limits: { fileSize: 4 * 1024 * 1024 },
 
   fileFilter: (_req, file, cb) => {
     const ok = ["image/jpeg", "image/png", "image/jpg"].includes(file.mimetype);
@@ -35,7 +31,7 @@ const upload = multer({
   },
 });
 
-// Error handler
+
 const handleMulterError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === "LIMIT_FILE_SIZE") {

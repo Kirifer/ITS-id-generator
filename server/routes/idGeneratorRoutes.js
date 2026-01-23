@@ -1,5 +1,3 @@
-// server/routes/idGenerator.js
-
 const express = require('express');
 const { verifyToken, requireRole } = require('../middleware/authMiddleware');
 const { postIdGenerator } = require('../controllers/idGeneratorController');
