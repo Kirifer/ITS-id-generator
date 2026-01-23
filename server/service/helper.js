@@ -1,7 +1,6 @@
-const s3 = require("../config/s3")
-const crypto = require("crypto")
+const { s3 } = require("../config/s3");   
+const crypto = require("crypto");
 const IdCard = require("../models/IdCard");
-
 
 const normalizePhone = (value) => {
   if (!value) return value;
@@ -15,7 +14,6 @@ const normalizePhone = (value) => {
     "Invalid phone number format. Use 09XXXXXXXXX or +639XXXXXXXXX."
   );
 };
-
 
 const generateUniqueIdNumber = async () => {
   let idNumber;
@@ -48,5 +46,4 @@ const deleteFromS3 = async (key) => {
   }
 };
 
-
-module.exports = {normalizePhone, generateUniqueIdNumber, deleteFromS3}
+module.exports = { normalizePhone, generateUniqueIdNumber, deleteFromS3 };
