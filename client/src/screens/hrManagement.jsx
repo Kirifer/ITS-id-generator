@@ -9,6 +9,51 @@ import ToggleSwitch from "../components/Forms/ToggleSwitch";
 import { getImageUrl } from "../utils/imageUrl";
 import HrDeleteConfirmModal from "../components/Modal/HrDeleteConfirmModal";
 
+function HrSignatureImage({ signaturePath }) {
+  const [imageUrl, setImageUrl] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadImage = async () => {
+      if (!signaturePath) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      const url = await getImageUrl(signaturePath);
+      setImageUrl(url);
+      setLoading(false);
+    };
+
+    loadImage();
+  }, [signaturePath]);
+
+  if (loading) {
+    return (
+      <div className="h-8 sm:h-10 flex items-center">
+        <span className="text-xs text-gray-400">Loading...</span>
+      </div>
+    );
+  }
+
+  if (!imageUrl) {
+    return (
+      <div className="h-8 sm:h-10 flex items-center">
+        <span className="text-xs text-gray-400">No image</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={imageUrl}
+      className="h-8 sm:h-10 object-contain"
+      alt="signature"
+    />
+  );
+}
+
 export default function HRManagement() {
   const {
     loading,
@@ -172,7 +217,7 @@ export default function HRManagement() {
               showForm ? "lg:w-2/3 lg:pr-6 w-full" : "w-full"
             }`}
           >
-               <div className="p-2 sm:px-6 pt-20 lg:pt-10">
+            <div className="p-2 sm:px-6 pt-20 lg:pt-10">
               <div className="flex flex-col gap-6 max-w-screen-xl mx-auto">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
@@ -235,11 +280,7 @@ export default function HRManagement() {
                               <td className="py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm">{hr.name}</td>
                               <td className="py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm">{hr.position}</td>
                               <td className="py-3 sm:py-4 px-2 sm:px-4">
-                                <img
-                                  src={getImageUrl(hr.signaturePath)}
-                                  className="h-8 sm:h-10 object-contain"
-                                  alt="signature"
-                                />
+                                <HrSignatureImage signaturePath={hr.signaturePath} />
                               </td>
                               <td className="py-3 sm:py-4 px-2 sm:px-4 flex justify-center gap-2 sm:gap-3">
                                 <button

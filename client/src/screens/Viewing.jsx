@@ -1,13 +1,16 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { idCardDetailStore } from "../store/cardStore";
 import { getImageUrl } from "../utils/imageUrl";
-import { saveAs } from "file-saver";
+import { downloadImage } from "../utils/downloadUtils";
 
 export default function GeneratedID() {
   const { idNumber } = useParams();
   const { data, loading, error, message, getIdCardDetail } = idCardDetailStore();
   const [side, setSide] = useState("front");
+  const [imgUrl, setImgUrl] = useState("");
+  const [imageLoading, setImageLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     if (idNumber) {
@@ -15,18 +18,50 @@ export default function GeneratedID() {
     }
   }, [idNumber, getIdCardDetail]);
 
-  const imgUrl = useMemo(() => {
-    if (!data) return "";
-    const path =
-      side === "back"
-        ? data.generatedBackImagePath
-        : data.generatedFrontImagePath;
-    return path ? getImageUrl(path) : "";
+  useEffect(() => {
+    const loadImage = async () => {
+      if (!data) {
+        setImgUrl("");
+        return;
+      }
+
+      const path =
+        side === "back"
+          ? data.generatedBackImagePath
+          : data.generatedFrontImagePath;
+
+      if (!path) {
+        setImgUrl("");
+        setImageLoading(false);
+        return;
+      }
+
+      setImageLoading(true);
+      const url = await getImageUrl(path);
+      setImgUrl(url);
+      setImageLoading(false);
+    };
+
+    loadImage();
   }, [data, side]);
 
-  const handleDownload = () => {
-    if (!imgUrl) return;
-    saveAs(imgUrl, `ID-${idNumber}-${side}.png`);
+  const handleDownload = async () => {
+    if (!data) return;
+    
+    const path = side === "back" 
+      ? data.generatedBackImagePath 
+      : data.generatedFrontImagePath;
+      
+    if (!path) return;
+
+    setDownloading(true);
+    try {
+      await downloadImage(path, `ID-${idNumber}-${side}.png`);
+    } catch (err) {
+      alert("Download failed. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -65,7 +100,11 @@ export default function GeneratedID() {
             </div>
 
             <div className="border rounded-xl p-3 bg-gray-50 mb-6">
-              {imgUrl ? (
+              {imageLoading ? (
+                <div className="h-48 flex items-center justify-center text-gray-400 text-sm">
+                  Loading image...
+                </div>
+              ) : imgUrl ? (
                 <img
                   src={imgUrl}
                   alt="Generated ID"
@@ -85,13 +124,14 @@ export default function GeneratedID() {
               <Info label="ID Number" value={data?.employeeNumber || idNumber} />
             </div>
 
-            {imgUrl && (
+            {imgUrl && !imageLoading && (
               <div className="mt-6 flex gap-3">
                 <button
                   onClick={handleDownload}
-                  className="flex-1 text-center bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 rounded-md"
+                  disabled={downloading}
+                  className="flex-1 text-center bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 rounded-md disabled:bg-purple-300 disabled:cursor-not-allowed"
                 >
-                  Download
+                  {downloading ? "Downloading..." : "Download"}
                 </button>
                 <button
                   onClick={() => window.print()}

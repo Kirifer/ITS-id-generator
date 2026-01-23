@@ -1,17 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import InfoField from "../Common/InfoFile";
 import { getImageUrl } from "../../utils/imageUrl";
-import { saveAs } from "file-saver";
+import { downloadImage } from "../../utils/downloadUtils";
 
 export default function ViewPanel({ row, onEdit, onClose }) {
   const [side, setSide] = useState("front");
+  const [src, setSrc] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
 
   const relativePath =
     side === "back"
       ? row.generatedBackImagePath || ""
       : row.generatedFrontImagePath || row.photoPath;
 
-  const src = getImageUrl(relativePath);
+  useEffect(() => {
+    const loadImage = async () => {
+      if (!relativePath) {
+        setSrc("");
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      const url = await getImageUrl(relativePath);
+      setSrc(url);
+      setLoading(false);
+    };
+
+    loadImage();
+  }, [relativePath]);
 
   const filenameBase = `${row.firstName || "ID"}-${row.lastName || ""}-${
     row.employeeNumber || ""
@@ -70,15 +88,16 @@ export default function ViewPanel({ row, onEdit, onClose }) {
     w.document.close();
   }
 
-  async function downloadImage() {
-    if (!src) return;
+  async function handleDownload() {
+    if (!relativePath) return;
 
+    setDownloading(true);
     try {
-      const response = await fetch(src);
-      const blob = await response.blob();
-      saveAs(blob, `${filenameBase}-${side}.png`);
+      await downloadImage(relativePath, `${filenameBase}-${side}.png`);
     } catch (err) {
-      console.error("Download failed:", err);
+      alert("Download failed. Please try again.");
+    } finally {
+      setDownloading(false);
     }
   }
 
@@ -117,7 +136,11 @@ export default function ViewPanel({ row, onEdit, onClose }) {
       </div>
 
       <div className="border rounded-xl p-3 bg-gray-50 mb-3">
-        {src ? (
+        {loading ? (
+          <div className="h-48 flex items-center justify-center text-gray-400 text-sm">
+            Loading...
+          </div>
+        ) : src ? (
           <img
             src={src}
             alt="ID Preview"
@@ -131,13 +154,14 @@ export default function ViewPanel({ row, onEdit, onClose }) {
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        {src && (
+        {src && !loading && (
           <>
             <button
-              onClick={downloadImage}
-              className="flex-1 inline-flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 rounded-md text-sm"
+              onClick={handleDownload}
+              disabled={downloading}
+              className="flex-1 inline-flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 rounded-md text-sm disabled:bg-purple-300 disabled:cursor-not-allowed"
             >
-              Download ({side})
+              {downloading ? "Downloading..." : `Download (${side})`}
             </button>
 
             <button
