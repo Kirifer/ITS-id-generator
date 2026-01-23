@@ -1,4 +1,3 @@
-// 🔴 MUST BE FIRST — LOAD ENV BEFORE ANYTHING ELSE
 require("dotenv").config();
 
 const express = require("express");
