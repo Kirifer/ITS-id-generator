@@ -66,7 +66,7 @@ const HrSnapshotSchema = new mongoose.Schema(
     hrRef: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Hr",
-      required: false, // ✅ FIX: allow manual HR
+      required: false, // ✅ allow manual HR
     },
     name: {
       type: String,
@@ -79,8 +79,14 @@ const HrSnapshotSchema = new mongoose.Schema(
       trim: true,
     },
     signaturePath: {
-      type: String,
+      type: String, // S3 URL
       required: true,
+      trim: true,
+    },
+
+    // 🔴 ADDED — S3 KEY FOR DELETION
+    signatureKey: {
+      type: String,
       trim: true,
     },
   },
@@ -170,17 +176,32 @@ const IdCardSchema = new mongoose.Schema(
       required: true,
     },
 
+    // 🔴 EMPLOYEE PHOTO (S3)
     photoPath: {
       type: String,
       trim: true,
     },
-
-    generatedFrontImagePath: {
+    photoKey: {
       type: String,
       trim: true,
     },
 
+    // 🔴 GENERATED FRONT IMAGE (S3)
+    generatedFrontImagePath: {
+      type: String,
+      trim: true,
+    },
+    generatedFrontKey: {
+      type: String,
+      trim: true,
+    },
+
+    // 🔴 GENERATED BACK IMAGE (S3)
     generatedBackImagePath: {
+      type: String,
+      trim: true,
+    },
+    generatedBackKey: {
       type: String,
       trim: true,
     },

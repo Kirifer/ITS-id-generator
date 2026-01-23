@@ -16,6 +16,7 @@ const postIdGenerator = async (req, res) => {
         message: "ID must be approved before generation",
       });
     }
+
     if (card.isGenerated) {
       return res.status(400).json({ message: "ID already generated" });
     }
@@ -46,19 +47,31 @@ const postIdGenerator = async (req, res) => {
       });
     }
 
-    const { front, back } = await generateIDImages(cardData);
+    // 🔴 FIX: receive URLs + keys
+    const {
+      frontUrl,
+      frontKey,
+      backUrl,
+      backKey,
+    } = await generateIDImages(cardData);
 
-    card.generatedFrontImagePath = front;
-    card.generatedBackImagePath = back;
+    // 🔴 SAVE BOTH URL + KEY
+    card.generatedFrontImagePath = frontUrl;
+    card.generatedFrontKey = frontKey;
+
+    card.generatedBackImagePath = backUrl;
+    card.generatedBackKey = backKey;
+
     card.templateVersion = `${card.type}_V1`;
     card.isGenerated = true;
     card.issuedAt = new Date();
+
     await card.save();
 
     res.json({
       success: true,
-      front,
-      back,
+      front: frontUrl,
+      back: backUrl,
     });
   } catch (err) {
     console.error("ID generation error:", err);
