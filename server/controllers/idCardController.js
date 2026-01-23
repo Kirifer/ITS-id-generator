@@ -2,9 +2,14 @@ const mongoose = require("mongoose");
 const IdCard = require("../models/IdCard");
 const Hr = require("../models/Hr");
 const { processPhotoByType } = require("../utils/padding");
-const {normalizePhone, generateUniqueIdNumber, deleteFromS3} = require("../service/helper")
+const {
+  normalizePhone,
+  generateUniqueIdNumber,
+  deleteFromS3,
+} = require("../service/helper");
 
 
+// ================= GET DETAIL =================
 const getDetailIdCard = async (req, res) => {
   try {
     const item = await IdCard.findOne({
@@ -31,6 +36,8 @@ const getDetailIdCard = async (req, res) => {
   }
 };
 
+
+// ================= CREATE =================
 const postIdCard = async (req, res) => {
   try {
     const {
@@ -67,7 +74,17 @@ const postIdCard = async (req, res) => {
     for (const [k, v] of required)
       if (!v) return res.status(400).json({ message: `Missing field: ${k}` });
 
-    if (await IdCard.exists({ employeeNumber }))
+    // normalize + enforce prefix by type
+    const digits = employeeNumber.replace(/\D/g, "").slice(0, 10);
+
+    let finalEmployeeNumber;
+    if (type === "Intern") {
+      finalEmployeeNumber = `ITSIN-${digits}`;
+    } else {
+      finalEmployeeNumber = `ITS-${digits}`;
+    }
+
+    if (await IdCard.exists({ employeeNumber: finalEmployeeNumber }))
       return res
         .status(400)
         .json({ message: "Employee number already exists" });
@@ -94,11 +111,9 @@ const postIdCard = async (req, res) => {
         name: hr.name,
         position: hr.position,
         signaturePath: hr.signaturePath,
-        signatureKey: hr.signatureKey, 
+        signatureKey: hr.signatureKey,
       };
-    }
-
-    else {
+    } else {
       if (!hrName || !hrPosition || !hrSignature) {
         return res.status(400).json({
           message: "HR name, position, and signature are required",
@@ -118,7 +133,7 @@ const postIdCard = async (req, res) => {
 
     const doc = await IdCard.create({
       fullName: { firstName, middleInitial, lastName },
-      employeeNumber,
+      employeeNumber: finalEmployeeNumber,
       idNumber,
       position,
       type,
@@ -146,6 +161,8 @@ const postIdCard = async (req, res) => {
   }
 };
 
+
+// ================= LIST =================
 const getIdCard = async (req, res) => {
   try {
     const filter = req.query.status ? { status: req.query.status } : {};
@@ -156,6 +173,8 @@ const getIdCard = async (req, res) => {
   }
 };
 
+
+// ================= APPROVE / REJECT =================
 const patchIdCardApprove = async (req, res) => {
   try {
     const { id } = req.params;
@@ -194,6 +213,8 @@ const patchIdCardReject = async (req, res) => {
   }
 };
 
+
+// ================= UPDATE DETAILS =================
 const patchIdCardDetails = async (req, res) => {
   try {
     const { id } = req.params;
@@ -210,7 +231,6 @@ const patchIdCardDetails = async (req, res) => {
     const oldBackKey = card.generatedBackKey;
     const oldPhotoKey = card.photoKey;
     const oldSignatureKey = card.hrDetails?.signatureKey;
-
 
     const updates = {
       "fullName.firstName": req.body.firstName,
@@ -242,28 +262,59 @@ const patchIdCardDetails = async (req, res) => {
       updated = true;
     }
 
+    // 🔥 TYPE + EMPLOYEE NUMBER HANDLING
+    const newType = req.body.type;
+    const newEmployeeNumber = req.body.employeeNumber;
+
+    if (newType || newEmployeeNumber) {
+      const typeToUse = newType || card.type;
+      const numberToUse = newEmployeeNumber || card.employeeNumber;
+
+      const digits = numberToUse.replace(/\D/g, "").slice(0, 10);
+
+      if (typeToUse === "Intern") {
+        card.employeeNumber = `ITSIN-${digits}`;
+      } else {
+        card.employeeNumber = `ITS-${digits}`;
+      }
+
+      card.type = typeToUse;
+
+      // prevent duplicate on update
+      const exists = await IdCard.exists({
+        _id: { $ne: card._id },
+        employeeNumber: card.employeeNumber,
+      });
+
+      if (exists) {
+        return res.status(400).json({
+          message: "Employee number already exists",
+        });
+      }
+
+      updated = true;
+    }
+
+    // photo update
     const photo = req.files?.photo?.[0];
     if (photo) {
       await deleteFromS3(oldPhotoKey);
-
       const processed = await processPhotoByType(photo, card.type);
-
       card.photoPath = processed.location;
       card.photoKey = processed.key;
       updated = true;
     }
 
-
+    // hr signature update
     const hrSignature = req.files?.hrSignature?.[0];
     if (hrSignature) {
       await deleteFromS3(oldSignatureKey);
-
       card.hrDetails.signaturePath = hrSignature.location;
       card.hrDetails.signatureKey = hrSignature.key;
       updated = true;
     }
 
-
+    // reset generation if anything changed
     if (updated) {
       await deleteFromS3(oldFrontKey);
       await deleteFromS3(oldBackKey);
@@ -286,6 +337,8 @@ const patchIdCardDetails = async (req, res) => {
   }
 };
 
+
+// ================= DELETE =================
 const deleteIdCard = async (req, res) => {
   try {
     const { id } = req.params;
@@ -305,6 +358,7 @@ const deleteIdCard = async (req, res) => {
     res.status(500).json({ message: e.message });
   }
 };
+
 
 module.exports = {
   getDetailIdCard,
