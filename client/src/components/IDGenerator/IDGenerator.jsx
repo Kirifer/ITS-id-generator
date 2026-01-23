@@ -5,6 +5,7 @@ import {
   Tag,
   Phone,
   UploadCloud,
+  Loader2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { removeBackground } from "@imgly/background-removal";
@@ -31,6 +32,7 @@ export default function IDGeneratorForm({
 }) {
   const [photoProcessing, setPhotoProcessing] = useState(false);
   const [removePhotoBg, setRemovePhotoBg] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [hr_name, set_hr_name] = useState("");
   const [hr_position, set_hr_position] = useState("");
@@ -76,8 +78,14 @@ export default function IDGeneratorForm({
   };
 
   const handleSubmit = async (e) => {
-    await onSubmit(e);
-    resetHr();
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await onSubmit(e);
+      resetHr();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (field, value) => {
@@ -381,10 +389,17 @@ export default function IDGeneratorForm({
 
         <button
           type="submit"
-          disabled={!isFormValid() || photoProcessing}
-          className="w-full bg-purple-400 hover:bg-purple-500 disabled:bg-purple-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-md transition duration-200 text-lg"
+          disabled={!isFormValid() || photoProcessing || isSubmitting}
+          className="w-full bg-purple-400 hover:bg-purple-500 disabled:bg-purple-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-md transition duration-200 text-lg flex items-center justify-center gap-2"
         >
-          Generate
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            "Generate"
+          )}
         </button>
       </form>
     </div>

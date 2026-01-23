@@ -32,9 +32,6 @@ export default function Admin_IDGenerator() {
 
   const [photo, setPhoto] = useState(null);
   const [photoError, setPhotoError] = useState("");
-
-  // 🔑 hrSignature can be:
-  // File (manual upload) OR string (existing signaturePath)
   const [hrSignature, setHrSignature] = useState(null);
   const [hrSignatureError, setHrSignatureError] = useState("");
 
@@ -53,25 +50,14 @@ export default function Admin_IDGenerator() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    /* =====================
-       BASIC REQUIRED CHECKS
-    ===================== */
-
     if (!photo) {
       showMessageBoxIdGen("Please upload a photo.");
       return;
     }
-
-    // Require signature ONLY if manual HR (no hrId)
     if (!formData.hrId && !hrSignature) {
       showMessageBoxIdGen("Please upload HR signature.");
       return;
     }
-
-    /* =====================
-       PHOTO VALIDATION
-    ===================== */
 
     if (!["image/jpeg", "image/png", "image/jpg"].includes(photo.type)) {
       showMessageBoxIdGen(
@@ -87,10 +73,6 @@ export default function Admin_IDGenerator() {
       return;
     }
 
-    /* =====================
-       HR SIGNATURE VALIDATION
-       (ONLY IF FILE)
-    ===================== */
 
     if (hrSignature instanceof File) {
       if (
@@ -110,13 +92,9 @@ export default function Admin_IDGenerator() {
       }
     }
 
-    /* =====================
-       FORM DATA
-    ===================== */
 
     const formDataToSend = new FormData();
 
-    // =======
     Object.keys(formData).forEach((key) => {
       let value = formData[key];
 
@@ -129,18 +107,12 @@ export default function Admin_IDGenerator() {
 
       formDataToSend.append(key, value);
     });
-    // =======
 
     formDataToSend.append("photo", photo);
 
-    // ✅ Manual HR upload
     if (hrSignature instanceof File) {
       formDataToSend.append("hrSignature", hrSignature);
     }
-
-    /* =====================
-       SUBMIT
-    ===================== */
 
     const result = await idCardPost(formDataToSend);
 
