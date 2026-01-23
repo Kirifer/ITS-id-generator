@@ -16,7 +16,6 @@ const { adminRoutes } = require("./routes/adminRoutes");
 const hrRoutes = require("./routes/hrRoutes");
 const { positionRoutes } = require("./routes/positionRoutes");
 
-// 🔹 ENV VALIDATION
 if (
   !process.env.MONGO_URI ||
   !process.env.FRONTEND_URL ||
@@ -35,7 +34,7 @@ if (
 
 const app = express();
 
-// ===== CORS =====
+
 const corsOptions = {
   origin: [
     process.env.FRONTEND_URL,
@@ -51,16 +50,16 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(cookieParser());
 
-// ===== BODY PARSERS =====
+
 app.use(express.json({ limit: "10mb", strict: false }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// ===== STATIC FILES (legacy local uploads, still supported) =====
+
 const primaryUploads = path.join(__dirname, "uploads");
 console.log("[static] /uploads →", primaryUploads);
 app.use("/uploads", express.static(primaryUploads));
 
-// ===== ROUTES =====
+
 app.use("/api/auth", authRoutes);
 app.use("/api/id-cards", idCardsRouter);
 app.use("/api/id-generator", idGeneratorRoutes);
@@ -70,7 +69,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/hr", hrRoutes);
 app.use("/api/position", positionRoutes);
 
-// ===== 404 HANDLER =====
+
 app.use((req, res) => {
   console.log("404 - Route Not Found:", req.method, req.url);
   res.status(404).json({
@@ -80,7 +79,6 @@ app.use((req, res) => {
   });
 });
 
-// ===== GLOBAL ERROR HANDLER =====
 app.use((err, req, res, next) => {
   console.error("Unhandled error:", err);
   res.status(500).json({
@@ -89,7 +87,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ===== MONGODB CONNECTION & SERVER START =====
+
 const PORT = process.env.PORT || 5000;
 
 mongoose
