@@ -1,81 +1,9 @@
-// server/controllers/idCardController.js
-
-const path = require("path");
-const fs = require("fs");
-const sharp = require("sharp");
 const mongoose = require("mongoose");
-const crypto = require("crypto");
-const AWS = require("aws-sdk");
-
 const IdCard = require("../models/IdCard");
 const Hr = require("../models/Hr");
-const { fileCleaner } = require("../utils/fileCleaner");
 const { processPhotoByType } = require("../utils/padding");
+const {normalizePhone, generateUniqueIdNumber, deleteFromS3} = require("../service/helper")
 
-// 🔴 S3 client (for deletes + processing)
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
-
-/* -------------------- helpers -------------------- */
-
-const normalizePhone = (value) => {
-  if (!value) return value;
-
-  const phone = value.replace(/[^\d+]/g, "");
-
-  if (phone.startsWith("+639")) return "0" + phone.slice(3);
-  if (/^09\d{9}$/.test(phone)) return phone;
-
-  throw new Error(
-    "Invalid phone number format. Use 09XXXXXXXXX or +639XXXXXXXXX."
-  );
-};
-
-// ⚠️ OLD LOCAL DELETE (KEPT FOR STRUCTURE – DISABLED)
-const unlinkIfExists = (p) => {
-  // Local uploads no longer used (S3 now)
-  // if (p?.startsWith("/uploads/")) {
-  //   fs.unlink(path.join(__dirname, "..", p.replace(/^\//, "")), () => {});
-  // }
-};
-
-// Generate unique ID number (UNCHANGED)
-const generateUniqueIdNumber = async () => {
-  let idNumber;
-  let exists = true;
-
-  while (exists) {
-    const digits = crypto
-      .randomInt(1_000_000_000, 10_000_000_000)
-      .toString();
-
-    idNumber = `ITS-${digits}`;
-    exists = await IdCard.exists({ idNumber });
-  }
-
-  return idNumber;
-};
-
-// 🔴 Delete any file from S3 by key
-const deleteFromS3 = async (key) => {
-  if (!key) return;
-
-  try {
-    await s3
-      .deleteObject({
-        Bucket: process.env.AWS_BUCKET_NAME,
-        Key: key,
-      })
-      .promise();
-  } catch (err) {
-    console.error("S3 delete failed:", err.message);
-  }
-};
-
-/* -------------------- controllers -------------------- */
 
 const getDetailIdCard = async (req, res) => {
   try {
@@ -155,9 +83,6 @@ const postIdCard = async (req, res) => {
 
     let hrSnapshot;
 
-    /* ============================
-       HR FROM DATABASE
-    ============================ */
     if (hrId) {
       const hr = await Hr.findById(hrId);
       if (!hr) {
@@ -169,13 +94,10 @@ const postIdCard = async (req, res) => {
         name: hr.name,
         position: hr.position,
         signaturePath: hr.signaturePath,
-        signatureKey: hr.signatureKey, // 🔴 KEEP KEY
+        signatureKey: hr.signatureKey, 
       };
     }
 
-    /* ============================
-       MANUAL HR UPLOAD
-    ============================ */
     else {
       if (!hrName || !hrPosition || !hrSignature) {
         return res.status(400).json({
@@ -187,21 +109,13 @@ const postIdCard = async (req, res) => {
         hrRef: null,
         name: hrName,
         position: hrPosition,
-
-        // 🔴 DIRECT S3 SIGNATURE
         signaturePath: hrSignature.location,
         signatureKey: hrSignature.key,
       };
     }
 
-    /* ============================
-       PROCESS PHOTO (PADDING + S3 REUPLOAD)
-    ============================ */
     const processed = await processPhotoByType(photo, type);
 
-    /* ============================
-       CREATE DOCUMENT
-    ============================ */
     const doc = await IdCard.create({
       fullName: { firstName, middleInitial, lastName },
       employeeNumber,
@@ -217,7 +131,6 @@ const postIdCard = async (req, res) => {
       },
       hrDetails: hrSnapshot,
 
-      // 🔴 PADDED PHOTO FROM S3
       photoPath: processed.location,
       photoKey: processed.key,
 
@@ -293,17 +206,12 @@ const patchIdCardDetails = async (req, res) => {
 
     let updated = false;
 
-    /* ============================
-       SAVE OLD S3 KEYS
-    ============================ */
     const oldFrontKey = card.generatedFrontKey;
     const oldBackKey = card.generatedBackKey;
     const oldPhotoKey = card.photoKey;
     const oldSignatureKey = card.hrDetails?.signatureKey;
 
-    /* ============================
-       TEXT UPDATES (UNCHANGED)
-    ============================ */
+
     const updates = {
       "fullName.firstName": req.body.firstName,
       "fullName.middleInitial": req.body.middleInitial,
@@ -334,9 +242,6 @@ const patchIdCardDetails = async (req, res) => {
       updated = true;
     }
 
-    /* ============================
-       NEW PHOTO (REPROCESS + DELETE OLD)
-    ============================ */
     const photo = req.files?.photo?.[0];
     if (photo) {
       await deleteFromS3(oldPhotoKey);
@@ -348,9 +253,7 @@ const patchIdCardDetails = async (req, res) => {
       updated = true;
     }
 
-    /* ============================
-       NEW HR SIGNATURE
-    ============================ */
+
     const hrSignature = req.files?.hrSignature?.[0];
     if (hrSignature) {
       await deleteFromS3(oldSignatureKey);
@@ -360,9 +263,7 @@ const patchIdCardDetails = async (req, res) => {
       updated = true;
     }
 
-    /* ============================
-       RESET GENERATED FILES IF UPDATED
-    ============================ */
+
     if (updated) {
       await deleteFromS3(oldFrontKey);
       await deleteFromS3(oldBackKey);
@@ -394,9 +295,6 @@ const deleteIdCard = async (req, res) => {
     const doc = await IdCard.findByIdAndDelete(id);
     if (!doc) return res.status(404).json({ message: "Not found" });
 
-    /* ============================
-       DELETE ALL S3 FILES
-    ============================ */
     await deleteFromS3(doc.photoKey);
     await deleteFromS3(doc.generatedFrontKey);
     await deleteFromS3(doc.generatedBackKey);

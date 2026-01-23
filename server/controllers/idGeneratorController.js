@@ -1,5 +1,3 @@
-// server/controllers/idGeneratorController.js
-
 const IdCard = require("../models/IdCard");
 const { generateIDImages } = require("../utils/generateImage");
 
@@ -47,7 +45,6 @@ const postIdGenerator = async (req, res) => {
       });
     }
 
-    // 🔴 FIX: receive URLs + keys
     const {
       frontUrl,
       frontKey,
@@ -55,7 +52,6 @@ const postIdGenerator = async (req, res) => {
       backKey,
     } = await generateIDImages(cardData);
 
-    // 🔴 SAVE BOTH URL + KEY
     card.generatedFrontImagePath = frontUrl;
     card.generatedFrontKey = frontKey;
 

@@ -14,9 +14,6 @@ const {
 
 const hrRoutes = express.Router();
 
-/* =========================
-   GET ALL HR
-========================= */
 hrRoutes.get(
   "/",
   verifyToken,
@@ -24,9 +21,7 @@ hrRoutes.get(
   getHrList
 );
 
-/* =========================
-   GET HR BY ID
-========================= */
+
 hrRoutes.get(
   "/:id",
   verifyToken,
@@ -34,9 +29,6 @@ hrRoutes.get(
   getHrById
 );
 
-/* =========================
-   CREATE HR
-========================= */
 hrRoutes.post(
   "/",
   verifyToken,
@@ -46,9 +38,6 @@ hrRoutes.post(
   createHr
 );
 
-/* =========================
-   UPDATE HR (PATCH)
-========================= */
 hrRoutes.patch(
   "/:id",
   verifyToken,
@@ -58,9 +47,7 @@ hrRoutes.patch(
   patchHr
 );
 
-/* =========================
-   DELETE HR
-========================= */
+
 hrRoutes.delete(
   "/:id",
   verifyToken,

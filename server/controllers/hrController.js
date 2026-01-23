@@ -1,20 +1,8 @@
-// server/controllers/hrController.js
-
-const sharp = require("sharp");
 const mongoose = require("mongoose");
 const Hr = require("../models/Hr");
-const AWS = require("aws-sdk");
+const s3 = require("../config/s3")
 
-// Create S3 instance for deletes
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
 
-/* =========================
-   GET ALL HR
-========================= */
 const getHrList = async (req, res) => {
   try {
     const hrs = await Hr.find().sort({ name: 1, position: 1 });
@@ -31,9 +19,7 @@ const getHrList = async (req, res) => {
   }
 };
 
-/* =========================
-   GET HR BY ID
-========================= */
+
 const getHrById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -66,9 +52,7 @@ const getHrById = async (req, res) => {
   }
 };
 
-/* =========================
-   CREATE HR
-========================= */
+
 const createHr = async (req, res) => {
   try {
     const { name, position } = req.body;
@@ -93,10 +77,8 @@ const createHr = async (req, res) => {
     const hr = await Hr.create({
       name,
       position,
-
-      // SAVE S3 URL IN DB
-      signaturePath: signature.location,   // full https URL
-      signatureKey: signature.key,          // S3 object key (for deletion)
+      signaturePath: signature.location,  
+      signatureKey: signature.key,          
 
       isManual: true,
       createdBy: req.user.id,
@@ -121,9 +103,7 @@ const createHr = async (req, res) => {
   }
 };
 
-/* =========================
-   PATCH HR
-========================= */
+
 const patchHr = async (req, res) => {
   try {
     const { id } = req.params;
@@ -159,7 +139,7 @@ const patchHr = async (req, res) => {
     }
 
     if (signature) {
-      // Delete old signature from S3
+    
       if (hr.signatureKey) {
         await s3
           .deleteObject({
@@ -169,7 +149,7 @@ const patchHr = async (req, res) => {
           .promise();
       }
 
-      // Save new S3 info
+
       hr.signaturePath = signature.location;
       hr.signatureKey = signature.key;
       updated = true;
@@ -203,9 +183,7 @@ const patchHr = async (req, res) => {
   }
 };
 
-/* =========================
-   DELETE HR
-========================= */
+
 const deleteHr = async (req, res) => {
   try {
     const { id } = req.params;
@@ -225,7 +203,7 @@ const deleteHr = async (req, res) => {
       });
     }
 
-    // Delete signature from S3
+
     if (hr.signatureKey) {
       await s3
         .deleteObject({
