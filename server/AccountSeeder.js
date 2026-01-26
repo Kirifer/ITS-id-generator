@@ -6,12 +6,14 @@ dotenv.config()
 
 const seedUsers = async () => {
   try {
+    console.log("Connecting to database...{0}", process.env.MONGO_URI)
     await mongoose.connect(process.env.MONGO_URI)
 
     const usersToSeed = [
       { username: "admin", password: "Admin@123", role: "Admin" },
     ]
 
+    console.log("Connected. Seeding users...")
     for (const u of usersToSeed) {
       const existing = await User.findOne({ username: u.username })
       if (existing) {
@@ -25,7 +27,9 @@ const seedUsers = async () => {
         isActive: true,
       })
 
+      console.log(`- Seeding user: ${u.username} / ${u.password} (${u.role})`)
       await newUser.save()
+      console.log("  → Saved.")
     }
 
     await mongoose.disconnect()

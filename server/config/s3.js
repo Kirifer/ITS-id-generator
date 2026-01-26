@@ -1,11 +1,11 @@
-const AWS = require("aws-sdk");
+const { S3Client, ListBucketsCommand } = require("@aws-sdk/client-s3");
 
-const s3 = new AWS.S3({
+const s3 = new S3Client({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   region: process.env.AWS_REGION,
+  endpoint: process.env.AWS_ENDPOINT_URL,
 });
-
 
 const getPresignedUrl = (s3Key) => {
   const params = {

@@ -1,6 +1,6 @@
 const { createCanvas, loadImage } = require("canvas");
 const path = require("path");
-const AWS = require("aws-sdk");
+const AWS = require("@aws-sdk/client-s3");
 
 const {
   SERVER_ROOT,
