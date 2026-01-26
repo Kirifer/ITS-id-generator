@@ -12,7 +12,7 @@ const {
 
 const { renderInternFront } = require("./internLayout");
 
-// S3 setup
+
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -33,7 +33,7 @@ async function renderSide(card, templateKey, suffix) {
     tpl.bgH * scale,
   );
 
-  // FRONT PHOTO
+
   if (suffix === "front" && card.photoPath && tpl.photo) {
     const img = await loadImage(card.photoPath);
     drawImageCover(
@@ -46,7 +46,7 @@ async function renderSide(card, templateKey, suffix) {
     );
   }
 
-  // EMPLOYEE OVERLAY
+
   if (suffix === "front" && templateKey.toLowerCase().includes("employee")) {
     try {
       const overlayPath = path.join(
@@ -78,7 +78,6 @@ async function renderSide(card, templateKey, suffix) {
     }
   }
 
-  // BARCODE
   if (suffix === "back" && tpl.barcode && card.idNumber) {
     const bw = toPx(tpl.barcode.width, tpl.designW);
     const bh = toPx(tpl.barcode.height, tpl.designH);
@@ -93,7 +92,6 @@ async function renderSide(card, templateKey, suffix) {
     );
   }
 
-  /* ---------------- TEXT HELPERS ---------------- */
 
   const drawText = (value, spec) => {
     if (!value || !spec) return;
@@ -191,7 +189,6 @@ async function renderSide(card, templateKey, suffix) {
     });
   };
 
-  /* ---------------- FRONT / BACK CONTENT ---------------- */
 
   if (suffix === "front") {
     if (templateKey.toLowerCase().includes("employee")) {
@@ -250,7 +247,6 @@ async function renderSide(card, templateKey, suffix) {
     }
   }
 
-  /* ---------------- UPLOAD RESULT TO S3 ---------------- */
 
   const buffer = canvas.toBuffer("image/png");
   const fileName = `${Date.now()}-${card.idNumber}-${suffix}.png`;
@@ -266,8 +262,8 @@ async function renderSide(card, templateKey, suffix) {
     .promise();
 
   return {
-    url: uploadResult.Location, // full S3 URL
-    key: key,                   // S3 key for deletion later
+    url: uploadResult.Location, 
+    key: key,                  
   };
 }
 

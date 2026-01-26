@@ -1,9 +1,8 @@
-// src/components/Login2.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/images/logo.png";
 import { FaUser } from "react-icons/fa";
-import "../index.css"; // Poppins font + .custom-bg
+import "../index.css"; 
 
 export default function ViewIDForm() {
   const [idNumber, setIdNumber] = useState("");
@@ -18,14 +17,12 @@ export default function ViewIDForm() {
       return;
     }
     setError("");
-    // Navigate to the viewer page with the ID number in the path
     navigate(`/view-generated-id/${encodeURIComponent(trimmed)}`);
   }
 
   return (
     <div className="flex items-center justify-center min-h-screen custom-bg p-4 sm:p-6">
       <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-6 sm:p-10 md:p-12 w-full max-w-lg text-center">
-        {/* Logo & Title */}
         <div className="flex items-center justify-center mb-4 sm:mb-6">
           <img src={logo} alt="Logo" className="w-12 h-12 sm:w-16 sm:h-16 mr-3 sm:mr-4" />
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-800">IT Squarehub</h1>

@@ -1,8 +1,7 @@
-// testPassword.js
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const User = require("../models/User.js"); // adjust path if needed
+const User = require("../models/User.js");
 
 dotenv.config();
 
@@ -16,8 +15,6 @@ const testPassword = async () => {
     const username = "approver1";
     const plainPassword = "approver123";
 
-    // testHashPassword = await bcrypt.hash(plainPassword, 10);
-    // console.log("Test hashed password for comparison:", testHashPassword);
 
     const user = await User.findOne({ username });
     if (!user) {
@@ -25,8 +22,8 @@ const testPassword = async () => {
       return;
     }
 
-    console.log("Full user document:", user); // <-- see all fields
-    console.log("Stored password field:", user.password); // <-- see password
+    console.log("Full user document:", user); 
+    console.log("Stored password field:", user.password); 
 
     if (!user.password) {
       console.log("⚠️ No password field stored for this user!");

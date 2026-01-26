@@ -22,7 +22,6 @@ const createUser = async (username, password, role = 'Employee') => {
       return;
     }
 
-    // const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = new User({
       username,
@@ -44,11 +43,11 @@ const createUser = async (username, password, role = 'Employee') => {
   }
 };
 
-// Allow running with arguments
+
 if (require.main === module) {
   const username = process.argv[2];
   const password = process.argv[3];
-  const role = process.argv[4] || 'Employee'; // default Employee
+  const role = process.argv[4] || 'Employee';
 
   if (!username || !password) {
     console.error('Usage: node createUser.js <username> <password> <role>');

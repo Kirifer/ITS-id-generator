@@ -8,7 +8,6 @@ mongoose.connect(process.env.MONGO_URI)
   .then(async () => {
     console.log('✅ MongoDB connected');
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email: 'test@example.com' });
     if (existingUser) {
       console.log('⚠️ User already exists. Please delete it before running this script.');
@@ -17,7 +16,7 @@ mongoose.connect(process.env.MONGO_URI)
 
     const user = new User({
       username: 'approver2',
-      password: 'approver123', // This will be hashed by the model
+      password: 'approver123', 
       role: 'Approver',
       isActive: true
     });
