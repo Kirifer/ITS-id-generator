@@ -26,6 +26,8 @@ if (
   !process.env.AWS_REGION ||
   !process.env.AWS_BUCKET_NAME
 ) {
+
+  console.log(process.env);
   console.error(
     "❌ Missing required environment variables. Check .env file."
   );
