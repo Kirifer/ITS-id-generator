@@ -280,7 +280,7 @@ export default function HRManagement() {
                               <td className="py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm">{hr.name}</td>
                               <td className="py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm">{hr.position}</td>
                               <td className="py-3 sm:py-4 px-2 sm:px-4">
-                                <HrSignatureImage signaturePath={hr.signaturePath} />
+                                <HrSignatureImage signaturePath={hr.signatureKey} />
                               </td>
                               <td className="py-3 sm:py-4 px-2 sm:px-4 flex justify-center gap-2 sm:gap-3">
                                 <button

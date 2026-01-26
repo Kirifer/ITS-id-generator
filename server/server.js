@@ -80,8 +80,12 @@ app.get("/api/images/url", async (req, res) => {
       return res.status(400).json({ error: "S3 key is required" });
     }
 
-    const presignedUrl = getPresignedUrl(key);
+    console.log("Generating pre-signed URL for key:", key);
+
+    const presignedUrl = await getPresignedUrl(key);
     
+    console.log("Generated pre-signed URL:", presignedUrl);
+
     res.json({ url: presignedUrl });
   } catch (error) {
     console.error("Failed to generate pre-signed URL:", error);
