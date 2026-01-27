@@ -37,9 +37,9 @@ export default function HrSelector({
       return false
     }
 
-    if (file.size > 2 * 1024 * 1024) {
+    if (file.size > 4 * 1024 * 1024) {
       set_hr_signature(null)
-      set_hr_signature_error("Max 2MB")
+      set_hr_signature_error("Max 4MB")
       return false
     }
 

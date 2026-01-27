@@ -8,6 +8,7 @@ const {
   drawImageCover,
   generateBarcodeImage,
   loadTemplate,
+  loadImageFromSource,
 } = require("./imageHelper");
 
 const { renderInternFront } = require("./internLayout");
@@ -16,7 +17,17 @@ const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   region: process.env.AWS_REGION,
+  signatureVersion: "v4",
 });
+
+function getPresignedUrl(s3Key, expiresIn = 900) {
+  const params = {
+    Bucket: process.env.AWS_BUCKET_NAME,
+    Key: s3Key,
+    Expires: expiresIn,
+  };
+  return s3.getSignedUrl("getObject", params);
+}
 
 async function renderSide(card, templateKey, suffix) {
   const tpl = await loadTemplate(templateKey);
@@ -33,7 +44,25 @@ async function renderSide(card, templateKey, suffix) {
   );
 
   if (suffix === "front" && card.photoPath && tpl.photo) {
-    const img = await loadImage(card.photoPath);
+    let photoSource = card.photoPath;
+
+    if (!photoSource.startsWith("http")) {
+      photoSource = getPresignedUrl(photoSource, 900);
+
+    } else {
+
+      try {
+        const url = new URL(photoSource);
+        const key = url.pathname.substring(1);
+
+        photoSource = getPresignedUrl(key, 900);
+
+      } catch (err) {
+        console.error("Failed to parse URL:", err);
+      }
+    }
+
+    const img = await loadImageFromSource(photoSource);
     drawImageCover(
       ctx,
       img,
@@ -231,7 +260,25 @@ async function renderSide(card, templateKey, suffix) {
     drawText(card.hrDetails.position, tpl.text.hrTitle);
 
     if (tpl.signature && card.hrDetails.signaturePath) {
-      const sig = await loadImage(card.hrDetails.signaturePath);
+      let signatureSource = card.hrDetails.signaturePath;
+
+
+      if (!signatureSource.startsWith("http")) {
+        signatureSource = getPresignedUrl(signatureSource, 900);
+
+      } else {
+        console.log("Signature already a URL, extracting key...");
+        try {
+          const url = new URL(signatureSource);
+          const key = url.pathname.substring(1);
+
+          signatureSource = getPresignedUrl(key, 900);
+        } catch (err) {
+          console.error("Failed to parse signature URL:", err);
+        }
+      }
+
+      const sig = await loadImageFromSource(signatureSource);
       ctx.drawImage(
         sig,
         toPx(tpl.signature.x, tpl.designW),

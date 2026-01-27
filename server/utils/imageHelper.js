@@ -2,6 +2,8 @@ const path = require("path");
 const fs = require("fs");
 const bwipjs = require("bwip-js");
 const { loadImage } = require("canvas");
+const https = require("https");
+const http = require("http");
 
 const SERVER_ROOT = path.join(__dirname, "..");
 const TEMPLATES_DIR = path.join(SERVER_ROOT, "templates");
@@ -47,6 +49,39 @@ async function generateBarcodeImage(text, height) {
   return loadImage(buf);
 }
 
+async function loadImageFromSource(source) {
+  if (source.startsWith("http://") || source.startsWith("https://")) {
+    return new Promise((resolve, reject) => {
+      const client = source.startsWith("https://") ? https : http;
+
+      client
+        .get(source, (res) => {
+          if (res.statusCode !== 200) {
+            reject(
+              new Error(`Failed to load image from URL: ${res.statusCode}`),
+            );
+            return;
+          }
+
+          const chunks = [];
+          res.on("data", (chunk) => chunks.push(chunk));
+          res.on("end", async () => {
+            try {
+              const buffer = Buffer.concat(chunks);
+              const img = await loadImage(buffer);
+              resolve(img);
+            } catch (err) {
+              reject(err);
+            }
+          });
+        })
+        .on("error", reject);
+    });
+  }
+
+  return loadImage(source);
+}
+
 async function loadTemplate(templateKey) {
   const raw = JSON.parse(
     fs.readFileSync(path.join(TEMPLATES_DIR, `${templateKey}.json`), "utf-8"),
@@ -72,5 +107,6 @@ module.exports = {
   toPx,
   drawImageCover,
   generateBarcodeImage,
+  loadImageFromSource,
   loadTemplate,
 };
