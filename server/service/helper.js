@@ -1,4 +1,4 @@
-const { s3 } = require("../config/s3");   
+const { s3 } = require("../config/s3");
 const crypto = require("crypto");
 const IdCard = require("../models/IdCard");
 
@@ -11,7 +11,7 @@ const normalizePhone = (value) => {
   if (/^09\d{9}$/.test(phone)) return phone;
 
   throw new Error(
-    "Invalid phone number format. Use 09XXXXXXXXX or +639XXXXXXXXX."
+    "Invalid phone number format. Use 09XXXXXXXXX or +639XXXXXXXXX.",
   );
 };
 
@@ -20,9 +20,7 @@ const generateUniqueIdNumber = async () => {
   let exists = true;
 
   while (exists) {
-    const digits = crypto
-      .randomInt(1_000_000_000, 10_000_000_000)
-      .toString();
+    const digits = crypto.randomInt(1_000_000_000, 10_000_000_000).toString();
 
     idNumber = `ITS-${digits}`;
     exists = await IdCard.exists({ idNumber });

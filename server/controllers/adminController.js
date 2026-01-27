@@ -57,7 +57,7 @@ const getAdminById = async (req, res) => {
 const createAdmin = async (req, res) => {
   try {
     const { username, password, role = "Admin", isActive = true } = req.body;
-    console.log(isActive)
+    console.log(isActive);
     const errors = {};
 
     if (!username || validator.isEmpty(username.trim())) {
@@ -182,7 +182,8 @@ const updateAdmin = async (req, res) => {
       } else {
         const isSamePassword = await admin.comparePassword(password);
         if (isSamePassword) {
-          errors.password = "New password cannot be the same as current password";
+          errors.password =
+            "New password cannot be the same as current password";
         }
       }
     }
@@ -197,8 +198,9 @@ const updateAdmin = async (req, res) => {
 
     if (Object.keys(errors).length > 0) {
       const errorValues = Object.values(errors);
-      const message = errorValues.length === 1 ? errorValues[0] : "Validation failed";
-      
+      const message =
+        errorValues.length === 1 ? errorValues[0] : "Validation failed";
+
       return res.status(400).json({
         success: false,
         message,

@@ -4,7 +4,6 @@ const getFilteredIdCards = async (req, res) => {
   try {
     const { type, status, search, isGenerated } = req.query;
 
-
     const query = {};
 
     if (type) {

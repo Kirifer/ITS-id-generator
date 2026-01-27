@@ -45,12 +45,8 @@ const postIdGenerator = async (req, res) => {
       });
     }
 
-    const {
-      frontUrl,
-      frontKey,
-      backUrl,
-      backKey,
-    } = await generateIDImages(cardData);
+    const { frontUrl, frontKey, backUrl, backKey } =
+      await generateIDImages(cardData);
 
     card.generatedFrontImagePath = frontUrl;
     card.generatedFrontKey = frontKey;
