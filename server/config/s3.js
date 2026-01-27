@@ -4,14 +4,14 @@ const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   region: process.env.AWS_REGION,
+  signatureVersion: 'v4', 
 });
 
-
-const getPresignedUrl = (s3Key) => {
+const getPresignedUrl = (s3Key, expiresIn = 3600) => {
   const params = {
     Bucket: process.env.AWS_BUCKET_NAME,
     Key: s3Key,
-    Expires: 3600,
+    Expires: expiresIn,
   };
 
   return s3.getSignedUrl("getObject", params);

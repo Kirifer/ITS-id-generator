@@ -5,7 +5,6 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const path = require("path");
 const cookieParser = require("cookie-parser");
-const { getPresignedUrl } = require("./config/s3");
 const authRoutes = require("./routes/authRoutes");
 const idCardsRouter = require("./routes/idCardRoutes");
 const idGeneratorRoutes = require("./routes/idGeneratorRoutes");
@@ -14,7 +13,7 @@ const { dashboardRoutes } = require("./routes/dashboardRoutes");
 const { adminRoutes } = require("./routes/adminRoutes");
 const hrRoutes = require("./routes/hrRoutes");
 const { positionRoutes } = require("./routes/positionRoutes");
-const downloadRoutes = require("./routes/downloadRoutes");
+const s3Routes = require("./routes/s3Routes")
 
 if (
   !process.env.MONGO_URI ||
@@ -62,24 +61,7 @@ app.use("/api/stats", dashboardRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/hr", hrRoutes);
 app.use("/api/position", positionRoutes);
-app.use("/api/images", downloadRoutes);
-
-app.get("/api/images/url", async (req, res) => {
-  try {
-    const { key } = req.query;
-
-    if (!key) {
-      return res.status(400).json({ error: "S3 key is required" });
-    }
-
-    const presignedUrl = getPresignedUrl(key);
-
-    res.json({ url: presignedUrl });
-  } catch (error) {
-    console.error("Failed to generate pre-signed URL:", error);
-    res.status(500).json({ error: "Failed to generate image URL" });
-  }
-});
+app.use("/api/images", s3Routes);
 
 app.use((req, res) => {
   console.log("404 - Route Not Found:", req.method, req.url);
