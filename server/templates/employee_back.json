@@ -35,7 +35,7 @@
       "minFontSize": 16,
       "maxWidth": 480,
       "fill": "#111",
-      "weight": 500
+      "weight": 700
     },
 
     "hrTitle": {
@@ -46,7 +46,7 @@
       "minFontSize": 14,
       "maxWidth": 460,
       "fill": "#111",
-      "weight": 700
+      "weight": 500
     }
   },
 
