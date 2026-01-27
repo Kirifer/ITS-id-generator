@@ -1,39 +1,42 @@
-const mongoose = require("mongoose")
-const dotenv = require("dotenv")
-const User = require("./models/User")
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+const User = require("./models/User");
 
-dotenv.config()
+dotenv.config();
+
+if (!process.env.RUN_SEED) {
+  console.log("Seeder skipped. Set RUN_SEED=true to run.");
+  process.exit(0);
+}
 
 const seedUsers = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI)
+    console.log("Connecting to database...");
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("Connected.");
 
-    const usersToSeed = [
-      { username: "admin", password: "Admin@123", role: "Admin" },
-    ]
-
-    for (const u of usersToSeed) {
-      const existing = await User.findOne({ username: u.username })
-      if (existing) {
-        await User.deleteOne({ _id: existing._id })
-      }
-
+    const existing = await User.findOne({ username: process.env.ADMIN_USERNAME });
+    if (existing) {
+      console.log(`User "${process.env.ADMIN_USERNAME}" already exists. Skipping.`);
+    } else {
       const newUser = new User({
-        username: u.username,
-        password: u.password,
-        role: u.role,
+        username: process.env.ADMIN_USERNAME,
+        password: process.env.ADMIN_PASSWORD,
+        role: "Admin",
         isActive: true,
-      })
-
-      await newUser.save()
+      });
+      await newUser.save();
+      console.log(`User "${process.env.ADMIN_USERNAME}" created.`);
     }
 
-    await mongoose.disconnect()
-    process.exit(0)
+    await mongoose.disconnect();
+    console.log("Disconnected from database.");
+    process.exit(0);
   } catch (err) {
-    await mongoose.disconnect()
-    process.exit(1)
+    console.error("Seeder error:", err);
+    await mongoose.disconnect();
+    process.exit(1);
   }
-}
+};
 
-seedUsers()
+seedUsers();
