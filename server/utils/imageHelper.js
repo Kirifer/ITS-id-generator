@@ -49,7 +49,7 @@ async function generateBarcodeImage(text, height) {
 
 async function loadTemplate(templateKey) {
   const raw = JSON.parse(
-    fs.readFileSync(path.join(TEMPLATES_DIR, `${templateKey}.json`), "utf-8")
+    fs.readFileSync(path.join(TEMPLATES_DIR, `${templateKey}.json`), "utf-8"),
   );
 
   const bgImage = await loadImage(path.join(TEMPLATES_DIR, raw.background));

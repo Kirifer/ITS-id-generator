@@ -9,16 +9,11 @@ const {
   patchIdCardDetails,
   deleteIdCard,
 } = require("../controllers/idCardController");
-const {
-  upload,
-  handleMulterError,
-} = require("../service/upload");
+const { upload, handleMulterError } = require("../service/upload");
 
 const idCardRoutes = express.Router();
 
-
 idCardRoutes.get("/by-employee-number/:employeeNumber", getDetailIdCard);
-
 
 idCardRoutes.post(
   "/",
@@ -48,7 +43,6 @@ idCardRoutes.patch(
   patchIdCardReject,
 );
 
-
 idCardRoutes.patch(
   "/:id",
   verifyToken,
@@ -59,7 +53,6 @@ idCardRoutes.patch(
   ]),
   patchIdCardDetails,
 );
-
 
 idCardRoutes.delete("/:id", verifyToken, requireRole("Admin"), deleteIdCard);
 

@@ -122,7 +122,9 @@ const patchPosition = async (req, res) => {
     if (name !== undefined) updateData.name = name;
     if (isActive !== undefined) updateData.isActive = isActive;
 
-    const position = await Position.findByIdAndUpdate(id, updateData, { new: true });
+    const position = await Position.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
 
     if (!position) {
       return res.status(404).json({
@@ -159,7 +161,7 @@ const deletePosition = async (req, res) => {
     const position = await Position.findByIdAndUpdate(
       id,
       { isActive: false },
-      { new: true }
+      { new: true },
     );
 
     if (!position) {

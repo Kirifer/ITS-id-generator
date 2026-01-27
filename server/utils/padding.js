@@ -35,7 +35,7 @@ async function processPhotoByType(file, type) {
     }
     const newKey = `photos/padded-${Date.now()}-${file.originalname.replace(
       /\s+/g,
-      "_"
+      "_",
     )}`;
 
     const uploadResult = await s3
@@ -55,8 +55,8 @@ async function processPhotoByType(file, type) {
       .promise();
 
     return {
-      location: uploadResult.Location, 
-      key: newKey,                    
+      location: uploadResult.Location,
+      key: newKey,
     };
   } catch (error) {
     console.error("Error processing photo:", error);

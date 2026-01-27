@@ -8,8 +8,6 @@ const {
   deleteFromS3,
 } = require("../service/helper");
 
-
-// ================= GET DETAIL =================
 const getDetailIdCard = async (req, res) => {
   try {
     const item = await IdCard.findOne({
@@ -37,7 +35,6 @@ const getDetailIdCard = async (req, res) => {
 };
 
 
-// ================= CREATE =================
 const postIdCard = async (req, res) => {
   try {
     const {
@@ -74,7 +71,6 @@ const postIdCard = async (req, res) => {
     for (const [k, v] of required)
       if (!v) return res.status(400).json({ message: `Missing field: ${k}` });
 
-    // normalize + enforce prefix by type
     const digits = employeeNumber.replace(/\D/g, "").slice(0, 10);
 
     let finalEmployeeNumber;
@@ -162,7 +158,6 @@ const postIdCard = async (req, res) => {
 };
 
 
-// ================= LIST =================
 const getIdCard = async (req, res) => {
   try {
     const filter = req.query.status ? { status: req.query.status } : {};
@@ -174,7 +169,6 @@ const getIdCard = async (req, res) => {
 };
 
 
-// ================= APPROVE / REJECT =================
 const patchIdCardApprove = async (req, res) => {
   try {
     const { id } = req.params;
@@ -214,7 +208,6 @@ const patchIdCardReject = async (req, res) => {
 };
 
 
-// ================= UPDATE DETAILS =================
 const patchIdCardDetails = async (req, res) => {
   try {
     const { id } = req.params;
@@ -262,7 +255,6 @@ const patchIdCardDetails = async (req, res) => {
       updated = true;
     }
 
-    // 🔥 TYPE + EMPLOYEE NUMBER HANDLING
     const newType = req.body.type;
     const newEmployeeNumber = req.body.employeeNumber;
 
@@ -280,7 +272,6 @@ const patchIdCardDetails = async (req, res) => {
 
       card.type = typeToUse;
 
-      // prevent duplicate on update
       const exists = await IdCard.exists({
         _id: { $ne: card._id },
         employeeNumber: card.employeeNumber,
@@ -295,7 +286,6 @@ const patchIdCardDetails = async (req, res) => {
       updated = true;
     }
 
-    // photo update
     const photo = req.files?.photo?.[0];
     if (photo) {
       await deleteFromS3(oldPhotoKey);
@@ -305,7 +295,6 @@ const patchIdCardDetails = async (req, res) => {
       updated = true;
     }
 
-    // hr signature update
     const hrSignature = req.files?.hrSignature?.[0];
     if (hrSignature) {
       await deleteFromS3(oldSignatureKey);
@@ -314,7 +303,6 @@ const patchIdCardDetails = async (req, res) => {
       updated = true;
     }
 
-    // reset generation if anything changed
     if (updated) {
       await deleteFromS3(oldFrontKey);
       await deleteFromS3(oldBackKey);
@@ -338,7 +326,6 @@ const patchIdCardDetails = async (req, res) => {
 };
 
 
-// ================= DELETE =================
 const deleteIdCard = async (req, res) => {
   try {
     const { id } = req.params;
