@@ -335,16 +335,29 @@ const deleteIdCard = async (req, res) => {
     const doc = await IdCard.findByIdAndDelete(id);
     if (!doc) return res.status(404).json({ message: "Not found" });
 
-    await deleteFromS3(doc.photoKey);
-    await deleteFromS3(doc.generatedFrontKey);
-    await deleteFromS3(doc.generatedBackKey);
-    await deleteFromS3(doc.hrDetails?.signatureKey);
+    if (doc.photoKey) {
+      await deleteFromS3(doc.photoKey);
+    }
+
+    if (doc.generatedFrontKey) {
+      await deleteFromS3(doc.generatedFrontKey);
+    }
+
+    if (doc.generatedBackKey) {
+      await deleteFromS3(doc.generatedBackKey);
+    }
+
+    if (!doc.hrDetails?.hrRef && doc.hrDetails?.signatureKey) {
+      await deleteFromS3(doc.hrDetails.signatureKey);
+    }
 
     res.json({ ok: true });
   } catch (e) {
+    console.error(e);
     res.status(500).json({ message: e.message });
   }
 };
+
 
 
 module.exports = {
