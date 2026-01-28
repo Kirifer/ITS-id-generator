@@ -39,7 +39,19 @@ const login = async (req, res) => {
       process.env.JWT_REFRESH_SECRET,
       { expiresIn: "7d", algorithm: "HS256" },
     );
+    console.log("JWT_ACCESS_SECRET exists:", !!process.env.JWT_ACCESS_SECRET);
 
+    const isProduction = process.env.NODE_ENV === "production";
+
+    console.log(
+      "Cookie Settings - Secure:",
+      isProduction,
+      "SameSite:",
+      isProduction ? "none" : "lax",
+    );
+
+
+    
     user.refreshToken = await bcrypt.hash(refreshToken, 10);
     await user.save();
 
