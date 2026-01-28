@@ -42,18 +42,20 @@ const login = async (req, res) => {
 
     user.refreshToken = await bcrypt.hash(refreshToken, 10);
     await user.save();
-
+    console.log("partitioned: ",process.env.NODE_ENV === "production",)
      res
       .cookie("accessToken", accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        partitioned: process.env.NODE_ENV === "production",
         maxAge: 15 * 60 * 1000,
       })
       .cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        partitioned: process.env.NODE_ENV === "production",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
       .status(200)
@@ -115,6 +117,7 @@ const refresher = async (req, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        partitioned: process.env.NODE_ENV === "production",
         maxAge: 15 * 60 * 1000,
       })
       .status(200)
