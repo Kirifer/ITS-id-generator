@@ -152,20 +152,24 @@ const logout = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("_id");
 
-    if (!user) {
-      return res.status(401).json({ error: "You are not authenticated." });
+    if (user) {
+      user.refreshToken = null;
+      await user.save();
     }
-
-    user.refreshToken = null;
-    await user.save();
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
+      partitioned: process.env.NODE_ENV === "production",
+    };
 
     return res
-      .clearCookie("accessToken")
-      .clearCookie("refreshToken")
+      .clearCookie("accessToken", cookieOptions)
+      .clearCookie("refreshToken", cookieOptions)
       .status(200)
       .json({ success: "Successfully logged out." });
   } catch (err) {
-    console.error(err);
+    console.error("Logout error:", err);
     return res.status(500).json({ error: "Something went wrong." });
   }
 };
