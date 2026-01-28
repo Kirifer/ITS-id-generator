@@ -42,8 +42,8 @@ const login = async (req, res) => {
 
     user.refreshToken = await bcrypt.hash(refreshToken, 10);
     await user.save();
-    console.log("partitioned: ",process.env.NODE_ENV === "production",)
-     res
+    console.log("partitioned: ", process.env.NODE_ENV === "production");
+    res
       .cookie("accessToken", accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -134,7 +134,6 @@ const checkAuth = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("_id role");
 
-
     if (!user) {
       return res.status(401).json({ error: "You are not authenticated." });
     }
@@ -158,8 +157,8 @@ const logout = async (req, res) => {
     }
     const cookieOptions = {
       httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       partitioned: process.env.NODE_ENV === "production",
     };
 
