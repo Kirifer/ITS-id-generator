@@ -39,21 +39,11 @@ const login = async (req, res) => {
       process.env.JWT_REFRESH_SECRET,
       { expiresIn: "7d", algorithm: "HS256" },
     );
-    console.log("JWT_ACCESS_SECRET exists:", !!process.env.JWT_ACCESS_SECRET);
-
-    const isProduction = process.env.NODE_ENV === "production";
-
-    console.log(
-      "Cookie Settings - Secure:",
-      isProduction,
-      "SameSite:",
-      isProduction ? "none" : "lax",
-    );
 
     user.refreshToken = await bcrypt.hash(refreshToken, 10);
     await user.save();
 
-    return res
+     res
       .cookie("accessToken", accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -140,10 +130,7 @@ const refresher = async (req, res) => {
 const checkAuth = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("_id role");
--
-    console.log(">>> AUTH CHECK COOKIES:", req.cookies);
-    
-    console.log(">>> USER FROM REQ:", req.user ? req.user.id : "No User Found");
+
 
     if (!user) {
       return res.status(401).json({ error: "You are not authenticated." });
