@@ -50,8 +50,6 @@ const login = async (req, res) => {
       isProduction ? "none" : "lax",
     );
 
-
-    
     user.refreshToken = await bcrypt.hash(refreshToken, 10);
     await user.save();
 
@@ -142,6 +140,10 @@ const refresher = async (req, res) => {
 const checkAuth = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("_id role");
+-
+    console.log(">>> AUTH CHECK COOKIES:", req.cookies);
+    
+    console.log(">>> USER FROM REQ:", req.user ? req.user.id : "No User Found");
 
     if (!user) {
       return res.status(401).json({ error: "You are not authenticated." });
