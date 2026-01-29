@@ -12,15 +12,24 @@ export default function UpdatePositionModal({ position, onClose, onSuccess }) {
   const success = patchPositionStore((state) => state.success);
   const error = patchPositionStore((state) => state.error);
   const message = patchPositionStore((state) => state.message);
+  const reset = patchPositionStore((state) => state.reset);
 
   useEffect(() => {
     if (success && message) {
       toast.success(message);
+      reset();
     }
     if (error && message) {
       toast.error(message);
+      reset();
     }
-  }, [success, error, message]);
+  }, [success, error, message, reset]);
+
+  useEffect(() => {
+    return () => {
+      reset();
+    };
+  }, [reset]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

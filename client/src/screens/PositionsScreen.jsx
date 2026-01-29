@@ -18,6 +18,7 @@ export default function PositionsScreen() {
   const createSuccess = createPositionStore((state) => state.success);
   const createError = createPositionStore((state) => state.error);
   const createMessage = createPositionStore((state) => state.message);
+  const resetCreate = createPositionStore((state) => state.reset);
 
   const [positionName, setPositionName] = useState("");
   const [updateModal, setUpdateModal] = useState(null);
@@ -33,11 +34,13 @@ export default function PositionsScreen() {
   useEffect(() => {
     if (createSuccess && createMessage) {
       toast.success(createMessage);
+      resetCreate();
     }
     if (createError && createMessage) {
       toast.error(createMessage);
+      resetCreate();
     }
-  }, [createSuccess, createError, createMessage]);
+  }, [createSuccess, createError, createMessage, resetCreate]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -84,7 +87,6 @@ export default function PositionsScreen() {
               </form>
             </div>
 
-
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6 flex flex-col max-h-[calc(100vh-220px)] sm:max-h-[calc(100vh-280px)]">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4 flex-shrink-0">
                 All Positions
@@ -130,7 +132,8 @@ export default function PositionsScreen() {
                           </button>
                           <button
                             onClick={() => setDeleteModal(position)}
-                            className="flex-1 px-3 py-2 text-sm text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                            disabled={!position.isActive}
+                            className="flex-1 px-3 py-2 text-sm text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
                           >
                             Delete
                           </button>
@@ -180,7 +183,8 @@ export default function PositionsScreen() {
                               </button>
                               <button
                                 onClick={() => setDeleteModal(position)}
-                                className="text-red-600 hover:text-red-900 mx-2"
+                                disabled={!position.isActive}
+                                className="text-red-600 hover:text-red-900 mx-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-400 disabled:hover:text-gray-400"
                               >
                                 Delete
                               </button>
