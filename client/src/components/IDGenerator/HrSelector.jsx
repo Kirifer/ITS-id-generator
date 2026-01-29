@@ -28,6 +28,16 @@ export default function HrSelector({
     getHrList()
   }, [])
 
+  /* -------------------- RESET HELPERS -------------------- */
+  const reset_hr_fields = () => {
+    set_hr_name("")
+    set_hr_position("")
+    set_hr_id(null)
+    set_hr_signature(null)
+    set_hr_signature_error("")
+  }
+
+  /* -------------------- FILE HANDLING -------------------- */
   const validate_file = (file) => {
     if (!file) return false
 
@@ -69,6 +79,7 @@ export default function HrSelector({
     }
   }
 
+  /* -------------------- HR SELECTION -------------------- */
   const hr_options = hrList.map((hr) => hr.name)
 
   const handle_hr_select = (value) => {
@@ -82,6 +93,7 @@ export default function HrSelector({
     set_hr_signature_error("")
   }
 
+  /* -------------------- RENDER -------------------- */
   return (
     <div className="border rounded-xl p-4 space-y-4">
       <h3 className="font-semibold text-gray-800">HR Details</h3>
@@ -92,10 +104,7 @@ export default function HrSelector({
         checked={use_dropdown}
         onChange={(val) => {
           set_use_dropdown(val)
-          if (!val) {
-            set_hr_id(null)
-            set_hr_signature(null)
-          }
+          reset_hr_fields()
         }}
       />
 
@@ -141,7 +150,9 @@ export default function HrSelector({
             icon={UploadCloud}
             file={hr_signature}
             error={hr_signature_error}
-            onFileChange={(e) => handle_signature_upload(e.target.files[0])}
+            onFileChange={(e) =>
+              handle_signature_upload(e.target.files[0])
+            }
             label="HR Signature"
             isProcessing={signature_processing}
           />
