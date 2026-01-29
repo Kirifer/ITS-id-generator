@@ -18,6 +18,9 @@ import PositionSelect from "../Forms/PositionSelect";
 const getEmployeePrefix = (type) =>
   type === "Intern" ? "ITSIN-" : "ITS-";
 
+const sanitizeName = (value) => value.replace(/[^a-zA-Z\s]/g, "");
+
+
 const formatEmployeeNumber = (type, value) => {
   const prefix = getEmployeePrefix(type);
   let digits = value.replace(prefix, "").replace(/\D/g, "");
@@ -150,12 +153,16 @@ export default function EditPanel({
               Icon={User}
               value={selectedId.firstName}
               onChange={(e) =>
-                setSelectedId({ ...selectedId, firstName: e.target.value })
+                setSelectedId({
+                  ...selectedId,
+                  firstName: sanitizeName(e.target.value),
+                })
               }
               placeholder="First Name"
               required
               disabled={isProcessing}
             />
+
             <InputWithIcon
               Icon={User}
               value={selectedId.middleInitial}
@@ -171,12 +178,16 @@ export default function EditPanel({
               Icon={User}
               value={selectedId.lastName}
               onChange={(e) =>
-                setSelectedId({ ...selectedId, lastName: e.target.value })
+                setSelectedId({
+                  ...selectedId,
+                  lastName: sanitizeName(e.target.value),
+                })
               }
               placeholder="Last Name"
               required
               disabled={isProcessing}
             />
+
           </div>
         </div>
 
@@ -275,15 +286,19 @@ export default function EditPanel({
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <InputWithIcon
-              Icon={User}
-              value={selectedId.emFirstName || ""}
-              onChange={(e) =>
-                setSelectedId({ ...selectedId, emFirstName: e.target.value })
-              }
-              placeholder="First Name"
-              required
-              disabled={isProcessing}
-            />
+                Icon={User}
+                value={selectedId.emFirstName || ""}
+                onChange={(e) =>
+                  setSelectedId({
+                    ...selectedId,
+                    emFirstName: sanitizeName(e.target.value),
+                  })
+                }
+                placeholder="First Name"
+                required
+                disabled={isProcessing}
+              />
+
             <InputWithIcon
               Icon={User}
               value={selectedId.emMiddleInitial || ""}
@@ -295,15 +310,19 @@ export default function EditPanel({
               disabled={isProcessing}
             />
             <InputWithIcon
-              Icon={User}
-              value={selectedId.emLastName || ""}
-              onChange={(e) =>
-                setSelectedId({ ...selectedId, emLastName: e.target.value })
-              }
-              placeholder="Last Name"
-              required
-              disabled={isProcessing}
-            />
+                Icon={User}
+                value={selectedId.emLastName || ""}
+                onChange={(e) =>
+                  setSelectedId({
+                    ...selectedId,
+                    emLastName: sanitizeName(e.target.value),
+                  })
+                }
+                placeholder="Last Name"
+                required
+                disabled={isProcessing}
+              />
+
           </div>
         </div>
 
