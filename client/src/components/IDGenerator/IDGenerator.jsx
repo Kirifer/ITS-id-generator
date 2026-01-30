@@ -48,6 +48,8 @@ export default function IDGeneratorForm({
     }));
   }, [hr_id, hr_name, hr_position]);
 
+  const sanitizeName = (value) => value.replace(/[^a-zA-Z\s]/g, "");
+
   const resetHr = () => {
     set_hr_name("");
     set_hr_position("");
@@ -194,7 +196,7 @@ export default function IDGeneratorForm({
               icon={User}
               placeholder="First Name"
               value={formData.firstName}
-              onChange={(e) => handleChange("firstName", e.target.value)}
+              onChange={(e) => handleChange("firstName", sanitizeName(e.target.value))}
               required
             />
             <InputField
@@ -202,15 +204,17 @@ export default function IDGeneratorForm({
               placeholder="Middle Initial"
               maxLength={1}
               value={formData.middleInitial}
-              onChange={(e) =>
-                handleChange("middleInitial", e.target.value.toUpperCase())
-              }
+              onChange={(e) => {
+                const letter = sanitizeName(e.target.value).charAt(0).toUpperCase();
+                handleChange("middleInitial", letter);
+              }}
+
             />
             <InputField
               icon={User}
               placeholder="Last Name"
               value={formData.lastName}
-              onChange={(e) => handleChange("lastName", e.target.value)}
+              onChange={(e) => handleChange("lastName", sanitizeName(e.target.value))}
               required
             />
           </div>
@@ -310,7 +314,7 @@ export default function IDGeneratorForm({
               icon={User}
               placeholder="First Name"
               value={formData.emFirstName}
-              onChange={(e) => handleChange("emFirstName", e.target.value)}
+              onChange={(e) => handleChange("emFirstName", sanitizeName(e.target.value))}
               required
             />
             <InputField
@@ -318,15 +322,17 @@ export default function IDGeneratorForm({
               placeholder="Middle Initial"
               maxLength={1}
               value={formData.emMiddleInitial}
-              onChange={(e) =>
-                handleChange("emMiddleInitial", e.target.value.toUpperCase())
-              }
+              onChange={(e) => {
+                const letter = sanitizeName(e.target.value).charAt(0).toUpperCase();
+                handleChange("emMiddleInitial", letter);
+              }}
+
             />
             <InputField
               icon={User}
               placeholder="Last Name"
               value={formData.emLastName}
-              onChange={(e) => handleChange("emLastName", e.target.value)}
+              onChange={(e) => handleChange("emLastName", sanitizeName(e.target.value))}
               required
             />
           </div>
