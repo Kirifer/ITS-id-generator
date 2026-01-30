@@ -153,10 +153,14 @@ export default function EditPanel({
               Icon={User}
               value={selectedId.firstName}
               onChange={(e) =>
+
+                 setSelectedId({ ...selectedId, firstName: sanitizeName(e.target.value) })
+
                 setSelectedId({
                   ...selectedId,
                   firstName: sanitizeName(e.target.value),
                 })
+
               }
               placeholder="First Name"
               required
@@ -178,10 +182,9 @@ export default function EditPanel({
               Icon={User}
               value={selectedId.lastName}
               onChange={(e) =>
-                setSelectedId({
-                  ...selectedId,
-                  lastName: sanitizeName(e.target.value),
-                })
+                setSelectedId({ ...selectedId, lastName: sanitizeName(e.target.value) })
+
+       
               }
               placeholder="Last Name"
               required
@@ -286,18 +289,15 @@ export default function EditPanel({
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <InputWithIcon
-                Icon={User}
-                value={selectedId.emFirstName || ""}
-                onChange={(e) =>
-                  setSelectedId({
-                    ...selectedId,
-                    emFirstName: sanitizeName(e.target.value),
-                  })
-                }
-                placeholder="First Name"
-                required
-                disabled={isProcessing}
-              />
+              Icon={User}
+              value={selectedId.emFirstName || ""}
+              onChange={(e) =>
+                setSelectedId({ ...selectedId, emFirstName: sanitizeName(e.target.value) })
+              }
+              placeholder="First Name"
+              required
+              disabled={isProcessing}
+            />
 
             <InputWithIcon
               Icon={User}
@@ -310,18 +310,16 @@ export default function EditPanel({
               disabled={isProcessing}
             />
             <InputWithIcon
-                Icon={User}
-                value={selectedId.emLastName || ""}
-                onChange={(e) =>
-                  setSelectedId({
-                    ...selectedId,
-                    emLastName: sanitizeName(e.target.value),
-                  })
-                }
-                placeholder="Last Name"
-                required
-                disabled={isProcessing}
-              />
+
+              Icon={User}
+              value={selectedId.emLastName || ""}
+              onChange={(e) =>
+                setSelectedId({ ...selectedId, emLastName: sanitizeName(e.target.value) })
+              }
+              placeholder="Last Name"
+              required
+              disabled={isProcessing}
+            />
 
           </div>
         </div>
