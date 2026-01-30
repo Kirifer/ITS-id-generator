@@ -51,10 +51,10 @@
   },
 
   "signature": {
-    "x": 300,
-    "y": 670,
-    "width": 150,
-    "height": 55
+    "x": 275,
+    "y": 650,
+    "width": 220,
+    "height": 90
   },
 
   "barcode": {
