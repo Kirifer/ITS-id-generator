@@ -147,72 +147,75 @@ async function renderSide(card, templateKey, suffix) {
     });
   };
 
-  const drawEmployeeNameShrink = (fullName, spec) => {
-    if (!fullName || !spec) return;
+const drawEmployeeNameShrink = (fullName, spec) => {
+  if (!fullName || !spec) return;
 
-    let size = spec.fontSize || 30;
-    const minSize = spec.minFontSize || 16;
+  let size = spec.fontSize || 30;
+  const minSize = spec.minFontSize || 16;
 
-    ctx.fillStyle = spec.fill || "#000";
-    ctx.textAlign = spec.align || "left";
-    ctx.textBaseline = "top";
+  ctx.fillStyle = spec.fill || "#000";
+  ctx.textAlign = spec.align || "left";
+  ctx.textBaseline = "top";
 
-    const firstName = fullName.firstName || "";
-    const middleInitial = fullName.middleInitial || "";
-    const lastName = fullName.lastName || "";
+  const firstName = fullName.firstName || "";
+  const middleInitial = fullName.middleInitial || "";
+  const lastName = fullName.lastName || "";
 
-    const firstNameParts = firstName.trim().split(/\s+/);
+  const firstNameParts = firstName.trim().split(/\s+/);
 
-    let nameValue;
+  let nameValue;
+  let sizeMultiplier = 1.0; 
 
-    if (firstNameParts.length === 2) {
-      nameValue =
-        `${firstNameParts[0]}\n${firstNameParts[1]}\n${middleInitial ? middleInitial + " " : ""}${lastName}`.trim();
-      size = Math.floor(size * 0.7);
-    } else if (firstNameParts.length === 3 || firstNameParts.length === 4) {
-      const line1 = firstNameParts.slice(0, 2).join(" ");
-      const line2 = firstNameParts.slice(2).join(" ");
-      nameValue =
-        `${line1}\n${line2}\n${middleInitial ? middleInitial + " " : ""}${lastName}`.trim();
-      size = Math.floor(size * 0.7);
-    } else if (firstNameParts.length >= 5) {
-      const line1 = firstNameParts.slice(0, 2).join(" ");
-      const line2 = firstNameParts.slice(2, 5).join(" ");
-      const line3Parts = firstNameParts.slice(5);
-      const line3 =
-        `${line3Parts.join(" ")}${line3Parts.length > 0 ? " " : ""}${middleInitial ? middleInitial + " " : ""}${lastName}`.trim();
-      nameValue = `${line1}\n${line2}\n${line3}`;
-      size = Math.floor(size * 0.7);
+  if (firstNameParts.length === 2) {
+    nameValue =
+      `${firstNameParts[0]}\n${firstNameParts[1]}\n${middleInitial ? middleInitial + " " : ""}${lastName}`.trim();
+    sizeMultiplier = 0.85; 
+  } else if (firstNameParts.length === 3 || firstNameParts.length === 4) {
+    const line1 = firstNameParts.slice(0, 2).join(" ");
+    const line2 = firstNameParts.slice(2).join(" ");
+    nameValue =
+      `${line1}\n${line2}\n${middleInitial ? middleInitial + " " : ""}${lastName}`.trim();
+    sizeMultiplier = 0.75; 
+  } else if (firstNameParts.length >= 5) {
+    const line1 = firstNameParts.slice(0, 2).join(" ");
+    const line2 = firstNameParts.slice(2, 5).join(" ");
+    const line3Parts = firstNameParts.slice(5);
+    const line3 =
+      `${line3Parts.join(" ")}${line3Parts.length > 0 ? " " : ""}${middleInitial ? middleInitial + " " : ""}${lastName}`.trim();
+    nameValue = `${line1}\n${line2}\n${line3}`;
+    sizeMultiplier = 0.65;
+  } else {
+    if (middleInitial) {
+      nameValue = `${firstName} ${middleInitial}\n${lastName}`.trim();
     } else {
-      if (middleInitial) {
-        nameValue = `${firstName} ${middleInitial}\n${lastName}`.trim();
-      } else {
-        nameValue = `${firstName}\n${lastName}`.trim();
-      }
+      nameValue = `${firstName}\n${lastName}`.trim();
     }
+  }
 
-    const maxWidth = spec.maxWidth ? toPx(spec.maxWidth, tpl.designW) : null;
+  const maxWidth = spec.maxWidth ? toPx(spec.maxWidth, tpl.designW) : null;
 
-    while (maxWidth && size >= minSize) {
-      ctx.font = `${spec.weight || 700} ${size}px Arial`;
-      const lines = nameValue.split("\n");
-      const maxLineWidth = Math.max(
-        ...lines.map((l) => ctx.measureText(l).width),
-      );
-      if (maxLineWidth <= maxWidth) break;
-      size--;
-    }
+  size = Math.floor(size * sizeMultiplier);
 
-    const x = toPx(spec.x, tpl.designW);
-    const y = toPx(spec.y, tpl.designH);
-
+  while (maxWidth && size >= minSize) {
+    ctx.font = `${spec.weight || 700} ${size}px Arial`;
     const lines = nameValue.split("\n");
-    const lineHeight = size * 1.15;
+    const maxLineWidth = Math.max(
+      ...lines.map((l) => ctx.measureText(l).width),
+    );
+    if (maxLineWidth <= maxWidth) break;
+    size--;
+  }
 
-    lines.forEach((line, i) => {
-      ctx.fillText(line, x, y + i * lineHeight);
-    });
-  };
+  const x = toPx(spec.x, tpl.designW);
+  const y = toPx(spec.y, tpl.designH);
+
+  const lines = nameValue.split("\n");
+  const lineHeight = size * 1.15;
+
+  lines.forEach((line, i) => {
+    ctx.fillText(line, x, y + i * lineHeight);
+  });
+};
 
   if (suffix === "front") {
     if (templateKey.toLowerCase().includes("employee")) {
