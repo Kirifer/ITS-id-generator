@@ -64,6 +64,59 @@ export default function GeneratedID() {
     }
   };
 
+  const handlePrint = () => {
+    if (!imgUrl) return;
+
+    const w = window.open("", "PRINT", "height=700,width=900");
+    if (!w) return;
+
+    w.document.write(`
+      <html>
+        <head>
+          <title>Print ID-${idNumber} (${side})</title>
+          <style>
+            @page {
+              margin: 0;
+            }
+            html, body {
+              width: 100%;
+              height: 100%;
+              margin: 0;
+            }
+            body {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .card {
+              width: 350mm;
+              height: 150mm;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            img {
+              width: 100%;
+              height: 100%;
+              object-fit: contain;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <img
+              src="${imgUrl}"
+              onload="window.focus();window.print();window.close();"
+              alt="ID ${side}"
+            />
+          </div>
+        </body>
+      </html>
+    `);
+
+    w.document.close();
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen custom-bg p-6">
       <div className="bg-white rounded-3xl shadow-lg p-8 w-full max-w-3xl">
@@ -134,7 +187,7 @@ export default function GeneratedID() {
                   {downloading ? "Downloading..." : "Download"}
                 </button>
                 <button
-                  onClick={() => window.print()}
+                  onClick={handlePrint}
                   className="flex-1 bg-gray-300 hover:bg-gray-400 text-white font-semibold py-2 rounded-md"
                 >
                   Print
