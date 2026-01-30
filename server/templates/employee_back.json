@@ -50,12 +50,12 @@
     }
   },
 
-  "signature": {
-    "x": 275,
-    "y": 650,
-    "width": 220,
-    "height": 90
-  },
+    "signature": {
+  "x": 253,
+  "y": 640,
+  "width": 264,
+  "height": 108
+},
 
   "barcode": {
     "x": 225,
