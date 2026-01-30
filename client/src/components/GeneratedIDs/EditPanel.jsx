@@ -153,13 +153,20 @@ export default function EditPanel({
               Icon={User}
               value={selectedId.firstName}
               onChange={(e) =>
+
                  setSelectedId({ ...selectedId, firstName: sanitizeName(e.target.value) })
+
+                setSelectedId({
+                  ...selectedId,
+                  firstName: sanitizeName(e.target.value),
+                })
 
               }
               placeholder="First Name"
               required
               disabled={isProcessing}
             />
+
             <InputWithIcon
               Icon={User}
               value={selectedId.middleInitial}
@@ -176,11 +183,14 @@ export default function EditPanel({
               value={selectedId.lastName}
               onChange={(e) =>
                 setSelectedId({ ...selectedId, lastName: sanitizeName(e.target.value) })
+
+       
               }
               placeholder="Last Name"
               required
               disabled={isProcessing}
             />
+
           </div>
         </div>
 
@@ -288,6 +298,7 @@ export default function EditPanel({
               required
               disabled={isProcessing}
             />
+
             <InputWithIcon
               Icon={User}
               value={selectedId.emMiddleInitial || ""}
@@ -299,6 +310,7 @@ export default function EditPanel({
               disabled={isProcessing}
             />
             <InputWithIcon
+
               Icon={User}
               value={selectedId.emLastName || ""}
               onChange={(e) =>
@@ -308,6 +320,7 @@ export default function EditPanel({
               required
               disabled={isProcessing}
             />
+
           </div>
         </div>
 
