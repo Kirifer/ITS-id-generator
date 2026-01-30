@@ -161,6 +161,6 @@ function Info({ label, value }) {
 
 function formatName(n) {
   if (!n) return "";
-  const mi = n.middleInitial ? `${n.middleInitial}. ` : "";
+  const mi = n.middleInitial ? `${n.middleInitial} ` : "";
   return `${n.firstName || ""} ${mi}${n.lastName || ""}`.trim();
 }
