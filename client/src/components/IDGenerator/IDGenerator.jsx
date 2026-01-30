@@ -67,14 +67,18 @@ export default function IDGeneratorForm({
       formData.employeeNumber?.length >= getEmployeePrefix().length + 5 &&
       formData.position &&
       formData.email?.trim() &&
-      formData.phone?.length === 13 &&
+      formData.phone?.length >= 13 &&
+
       formData.emFirstName?.trim() &&
       formData.emLastName?.trim() &&
-      formData.emPhone?.length === 13 &&
+      formData.emPhone?.length >= 13 &&
+
       hr_name?.trim() &&
       hr_position?.trim() &&
       (hr_id || hrSignature) &&
-      photo &&
+      photo instanceof File &&
+      photo.size > 0 &&
+
       !photoProcessing
     );
   };
@@ -165,9 +169,19 @@ export default function IDGeneratorForm({
     try {
       const image = await removeBackground(file);
       const blob = image instanceof Blob ? image : await image.blob();
-      const processedFile = new File([blob], file.name, { type: "image/png" });
-      setPhoto(processedFile);
-      setPhotoError("");
+      const processedFile = new File(
+  [blob],
+  file.name.replace(/\.(jpg|jpeg)$/i, ".png"),
+  { type: "image/png" }
+);
+
+if (!processedFile.size) {
+  throw new Error("Processed image empty");
+}
+
+setPhoto(processedFile);
+setPhotoError("");
+
     } catch {
       setPhoto(null);
       setPhotoError("Failed to remove background.");
