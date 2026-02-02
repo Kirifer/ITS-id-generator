@@ -31,6 +31,7 @@ export default function IDGeneratorForm({
   setHrSignatureError,
 }) {
   const [photoProcessing, setPhotoProcessing] = useState(false);
+  const [photoReady, setPhotoReady] = useState(false); 
   const [removePhotoBg, setRemovePhotoBg] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -73,13 +74,13 @@ export default function IDGeneratorForm({
       formData.emLastName?.trim() &&
       formData.emPhone?.length >= 13 &&
 
-      hr_name?.trim() &&
-      hr_position?.trim() &&
-      (hr_id || hrSignature) &&
-      photo instanceof File &&
-      photo.size > 0 &&
+     hr_name?.trim() &&
+    hr_position?.trim() &&
+    (hr_id || hrSignature) &&
+    photoReady &&          // ✅ NEW: single source of truth
 
-      !photoProcessing
+    !photoProcessing
+
     );
   };
 
@@ -157,38 +158,46 @@ export default function IDGeneratorForm({
   };
 
   const handlePhotoUpload = async (file) => {
-    if (!validateFile(file, setPhoto, setPhotoError)) return;
+  setPhotoReady(false); // ✅ reset on every new upload
 
-    if (!removePhotoBg) {
-      setPhoto(file);
-      setPhotoError("");
-      return;
+  if (!validateFile(file, setPhoto, setPhotoError)) return;
+
+  // ✅ NO background removal
+  if (!removePhotoBg) {
+    setPhoto(file);
+    setPhotoReady(true); // ✅ READY immediately
+    setPhotoError("");
+    return;
+  }
+
+  // ✅ WITH background removal
+  setPhotoProcessing(true);
+  try {
+    const image = await removeBackground(file);
+    const blob = image instanceof Blob ? image : await image.blob();
+
+    const processedFile = new File(
+      [blob],
+      file.name.replace(/\.(jpg|jpeg)$/i, ".png"),
+      { type: "image/png" }
+    );
+
+    if (!processedFile.size) {
+      throw new Error("Processed image empty");
     }
 
-    setPhotoProcessing(true);
-    try {
-      const image = await removeBackground(file);
-      const blob = image instanceof Blob ? image : await image.blob();
-      const processedFile = new File(
-  [blob],
-  file.name.replace(/\.(jpg|jpeg)$/i, ".png"),
-  { type: "image/png" }
-);
+    setPhoto(processedFile);
+    setPhotoReady(true); // ✅ READY only after processing
+    setPhotoError("");
+  } catch {
+    setPhoto(null);
+    setPhotoReady(false);
+    setPhotoError("Failed to remove background.");
+  } finally {
+    setPhotoProcessing(false);
+  }
+};
 
-if (!processedFile.size) {
-  throw new Error("Processed image empty");
-}
-
-setPhoto(processedFile);
-setPhotoError("");
-
-    } catch {
-      setPhoto(null);
-      setPhotoError("Failed to remove background.");
-    } finally {
-      setPhotoProcessing(false);
-    }
-  };
 
   return (
     <div
