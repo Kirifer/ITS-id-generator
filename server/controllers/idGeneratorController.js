@@ -34,7 +34,7 @@ const postIdGenerator = async (req, res) => {
       });
     }
 
-    // 🔑 validate HR using signatureKey, NOT signaturePath
+
     if (
       !card.hrDetails ||
       !card.hrDetails.name ||
@@ -56,10 +56,7 @@ const postIdGenerator = async (req, res) => {
 
     const cardData = card.toObject();
 
-    // ─────────────────────────────────────────────
-    // CASE 1: HR selected from HR Management
-    // → Always pull latest HR signature
-    // ─────────────────────────────────────────────
+
     if (card.hrDetails.hrRef) {
       const hr = await Hr.findById(card.hrDetails.hrRef);
 
@@ -70,7 +67,7 @@ const postIdGenerator = async (req, res) => {
         });
       }
 
-      // normalize HR data for generator
+
       cardData.hrDetails = {
         hrRef: hr._id,
         name: hr.name,
@@ -79,17 +76,14 @@ const postIdGenerator = async (req, res) => {
         signaturePath: hr.signaturePath || null,
       };
 
-      // sync snapshot back to card
+
       card.hrDetails.name = hr.name;
       card.hrDetails.position = hr.position;
       card.hrDetails.signatureKey = hr.signatureKey;
       card.hrDetails.signaturePath = hr.signaturePath || null;
     }
 
-    // ─────────────────────────────────────────────
-    // CASE 2: Manual HR upload
-    // → Use stored snapshot ONLY
-    // ─────────────────────────────────────────────
+
     if (!card.hrDetails.hrRef) {
       cardData.hrDetails = {
         name: card.hrDetails.name,
@@ -99,9 +93,7 @@ const postIdGenerator = async (req, res) => {
       };
     }
 
-    // ─────────────────────────────────────────────
-    // Generate ID images (S3 KEYS ONLY)
-    // ─────────────────────────────────────────────
+
     const { frontUrl, frontKey, backUrl, backKey } =
       await generateIDImages(cardData);
 
