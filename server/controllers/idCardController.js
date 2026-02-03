@@ -221,13 +221,6 @@ const patchIdCardDetails = async (req, res) => {
     if (!card) return res.status(404).json({ message: "Not found" });
 
     let updated = false;
-       console.log("=== PATCH ID CARD DEBUG ===");
-    console.log("req.body.hrRef:", req.body.hrRef);
-    console.log("req.body.hrName:", req.body.hrName);
-    console.log("req.body.hrPosition:", req.body.hrPosition);
-    console.log("req.body.isManual:", req.body.isManual);
-    console.log("req.files?.hrSignature:", req.files?.hrSignature?.[0]?.originalname);
-    console.log("========================");
 
     const oldFrontKey = card.generatedFrontKey;
     const oldBackKey = card.generatedBackKey;
@@ -252,39 +245,37 @@ const patchIdCardDetails = async (req, res) => {
       }
     }
 
-if (req.body.hrRef) {
-  const hr = await Hr.findById(req.body.hrRef);
+    if (req.body.isManual === 'true' || req.body.isManual === true) {
+      card.hrDetails.hrRef = null;
+      card.hrDetails.isManual = true;
 
-  if (!hr) {
-    return res.status(404).json({ message: "Selected HR not found" });
-  }
+      if (req.body.hrName !== undefined) {
+        card.set("hrDetails.name", req.body.hrName);
+        updated = true;
+      }
 
-  card.hrDetails = {
-    hrRef: hr._id,
-    name: hr.name,
-    position: hr.position,
-    signatureKey: hr.signatureKey,
-    signaturePath: hr.signaturePath || null,
-    isManual: req.body.isManual || false,
-  };
+      if (req.body.hrPosition !== undefined) {
+        card.set("hrDetails.position", req.body.hrPosition);
+        updated = true;
+      }
+    } else if (req.body.hrRef) {
+      const hr = await Hr.findById(req.body.hrRef);
 
-  updated = true;
-} else {
-  if (req.body.hrName !== undefined || req.body.hrPosition !== undefined) {
-    card.hrDetails.hrRef = null;
-    card.hrDetails.isManual = req.body.isManual !== undefined ? req.body.isManual : true;
-  }
+      if (!hr) {
+        return res.status(404).json({ message: "Selected HR not found" });
+      }
 
-  if (req.body.hrName !== undefined) {
-    card.set("hrDetails.name", req.body.hrName);
-    updated = true;
-  }
+      card.hrDetails = {
+        hrRef: hr._id,
+        name: hr.name,
+        position: hr.position,
+        signatureKey: hr.signatureKey,
+        signaturePath: hr.signaturePath || null,
+        isManual: false,
+      };
 
-  if (req.body.hrPosition !== undefined) {
-    card.set("hrDetails.position", req.body.hrPosition);
-    updated = true;
-  }
-}
+      updated = true;
+    }
 
     if (req.body.phone !== undefined) {
       card.contactDetails.phone = normalizePhone(req.body.phone);
@@ -338,7 +329,7 @@ if (req.body.hrRef) {
 
     const hrSignature = req.files?.hrSignature?.[0];
     if (hrSignature) {
-      await deleteFromS3(oldSignatureKey);
+      // await deleteFromS3(oldSignatureKey);
       card.hrDetails.signaturePath = hrSignature.location;
       card.hrDetails.signatureKey = hrSignature.key;
       card.hrDetails.hrRef = null;
@@ -366,7 +357,6 @@ if (req.body.hrRef) {
     res.status(500).json({ message: e.message });
   }
 };
-
 const deleteIdCard = async (req, res) => {
   try {
     const { id } = req.params;

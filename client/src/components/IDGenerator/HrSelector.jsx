@@ -98,7 +98,7 @@ export default function HrSelector({
     if (setFormData) {
       setFormData((prev) => ({
         ...prev,
-        hrRef: selected_hr._id, // Backend expects hrRef
+        hrRef: selected_hr._id,
         hrId: selected_hr._id,
         hrSignaturePath: selected_hr.signaturePath,
         hrSignatureKey: selected_hr.signatureKey,
@@ -106,36 +106,32 @@ export default function HrSelector({
     }
   }
 
-  /* -------------------- RENDER -------------------- */
-  return (
-    <div className="border rounded-xl p-4 space-y-4">
-      <h3 className="font-semibold text-gray-800">HR Details</h3>
 
-      <ToggleSwitch
-        id="use_hr_dropdown"
-        label="Select HR from list"
-        checked={use_dropdown}
-        onChange={(val) => {
-          set_use_dropdown(val)
-          
-          if (!val) {
-            // Switching to manual mode - reset everything
-            reset_hr_fields()
-          }
-          // When switching to dropdown mode, don't reset signature
-          // It will be set when user selects an HR from dropdown
-          set_hr_signature_error("")
-          
-          // Update isManual state
-          if (setIsManual) {
-            setIsManual(!val)
-          }
-          
-          if (setFormData) {
-            setFormData((prev) => ({ ...prev, isManual: !val }))
-          }
-        }}
-      />
+  /* -------------------- RENDER -------------------- */
+return (
+  <div className="border rounded-xl p-4 space-y-4">
+    <h3 className="font-semibold text-gray-800">HR Details</h3>
+
+    <ToggleSwitch
+      id="use_hr_dropdown"
+      label="Select HR from list"
+      checked={use_dropdown}
+      onChange={(val) => {
+        set_use_dropdown(val)
+        
+        // Always reset fields when toggling between modes
+        reset_hr_fields()
+        
+        // Update isManual state
+        if (setIsManual) {
+          setIsManual(!val)
+        }
+        
+        if (setFormData) {
+          setFormData((prev) => ({ ...prev, isManual: !val }))
+        }
+      }}
+    />
 
       {use_dropdown ? (
         <SelectField
