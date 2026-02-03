@@ -53,7 +53,7 @@ async function renderSide(card, templateKey, suffix) {
 
       try {
         const url = new URL(photoSource);
-        const key = url.pathname.substring(1);
+        const key = decodeURIComponent(url.pathname.substring(1));
 
         photoSource = getPresignedUrl(key, 900);
 
@@ -272,7 +272,7 @@ const drawEmployeeNameShrink = (fullName, spec) => {
       } else {
         try {
           const url = new URL(signatureSource);
-          const key = url.pathname.substring(1);
+          const key = decodeURIComponent(url.pathname.substring(1));
 
           signatureSource = getPresignedUrl(key, 900);
         } catch (err) {

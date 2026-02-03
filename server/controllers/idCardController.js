@@ -373,10 +373,6 @@ const deleteIdCard = async (req, res) => {
       await deleteFromS3(doc.generatedBackKey);
     }
 
-    if (!doc.hrDetails?.hrRef && doc.hrDetails?.signatureKey) {
-      await deleteFromS3(doc.hrDetails.signatureKey);
-    }
-
     res.json({ ok: true });
   } catch (e) {
     console.error(e);
