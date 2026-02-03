@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  User,
-  CreditCard,
-  Tag,
-  Phone,
-  Mail,
-  UploadCloud,
-} from "lucide-react";
+import { User, CreditCard, Tag, Phone, Mail, UploadCloud } from "lucide-react";
 import { removeBackground } from "@imgly/background-removal";
 import InputWithIcon from "../Common/InputWithIcon";
 import SelectWithIcon from "../Common/SelectWithIcon";
@@ -15,11 +8,9 @@ import ToggleSwitch from "../Forms/ToggleSwitch";
 import HrSelector from "../IDGenerator/HrSelector";
 import PositionSelect from "../Forms/PositionSelect";
 
-const getEmployeePrefix = (type) =>
-  type === "Intern" ? "ITSIN-" : "ITS-";
+const getEmployeePrefix = (type) => (type === "Intern" ? "ITSIN-" : "ITS-");
 
 const sanitizeName = (value) => value.replace(/[^a-zA-Z\s]/g, "");
-
 
 const formatEmployeeNumber = (type, value) => {
   const prefix = getEmployeePrefix(type);
@@ -42,28 +33,30 @@ export default function EditPanel({
   const [hrSignatureError, setHrSignatureError] = React.useState("");
   const [photoProcessing, setPhotoProcessing] = React.useState(false);
   const [removePhotoBg, setRemovePhotoBg] = React.useState(false);
-
   const [hrName, setHrName] = React.useState(selectedId.hrName || "");
   const [hrPosition, setHrPosition] = React.useState(
-    selectedId.hrPosition || ""
+    selectedId.hrPosition || "",
   );
-const [hrId, setHrId] = React.useState(selectedId.hrId || null);
-
+  const [hrId, setHrId] = React.useState(selectedId.hrId || null);
+  const [isManual, setIsManual] = React.useState(
+    selectedId.hrDetails?.isManual || false,
+  );
   React.useEffect(() => {
     setSelectedId((prev) => ({
       ...prev,
       hrId: hrId || prev.hrId || null,
       hrName,
       hrPosition,
+      isManual,
     }));
-  }, [hrId, hrName, hrPosition]);
+  }, [hrId, hrName, hrPosition, isManual]);
   React.useEffect(() => {
     if (!selectedId.type) return;
     setSelectedId((prev) => ({
       ...prev,
       employeeNumber: formatEmployeeNumber(
         prev.type,
-        prev.employeeNumber || ""
+        prev.employeeNumber || "",
       ),
     }));
   }, [selectedId.type]);
@@ -136,7 +129,9 @@ const [hrId, setHrId] = React.useState(selectedId.hrId || null);
   return (
     <div className="flex flex-col h-full">
       <div className="mb-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Edit Details:</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+          Edit Details:
+        </h2>
         <p className="text-gray-600 text-sm">
           Please provide the required information below.
         </p>
@@ -186,7 +181,6 @@ const [hrId, setHrId] = React.useState(selectedId.hrId || null);
               required
               disabled={isProcessing}
             />
-
           </div>
         </div>
 
@@ -197,22 +191,16 @@ const [hrId, setHrId] = React.useState(selectedId.hrId || null);
           <InputWithIcon
             Icon={CreditCard}
             value={
-              selectedId.employeeNumber ||
-              getEmployeePrefix(selectedId.type)
+              selectedId.employeeNumber || getEmployeePrefix(selectedId.type)
             }
             onChange={(e) =>
               setSelectedId((prev) => ({
                 ...prev,
-                employeeNumber: formatEmployeeNumber(
-                  prev.type,
-                  e.target.value
-                ),
+                employeeNumber: formatEmployeeNumber(prev.type, e.target.value),
               }))
             }
             placeholder={
-              selectedId.type === "Intern"
-                ? "ITSIN-12345"
-                : "ITS-12345"
+              selectedId.type === "Intern" ? "ITSIN-12345" : "ITS-12345"
             }
             required
             disabled={isProcessing || !selectedId.type}
@@ -285,18 +273,18 @@ const [hrId, setHrId] = React.useState(selectedId.hrId || null);
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <InputWithIcon
-                Icon={User}
-                value={selectedId.emFirstName || ""}
-                onChange={(e) =>
-                  setSelectedId({
-                    ...selectedId,
-                    emFirstName: sanitizeName(e.target.value),
-                  })
-                }
-                placeholder="First Name"
-                required
-                disabled={isProcessing}
-              />
+              Icon={User}
+              value={selectedId.emFirstName || ""}
+              onChange={(e) =>
+                setSelectedId({
+                  ...selectedId,
+                  emFirstName: sanitizeName(e.target.value),
+                })
+              }
+              placeholder="First Name"
+              required
+              disabled={isProcessing}
+            />
 
             <InputWithIcon
               Icon={User}
@@ -309,19 +297,18 @@ const [hrId, setHrId] = React.useState(selectedId.hrId || null);
               disabled={isProcessing}
             />
             <InputWithIcon
-                Icon={User}
-                value={selectedId.emLastName || ""}
-                onChange={(e) =>
-                  setSelectedId({
-                    ...selectedId,
-                    emLastName: sanitizeName(e.target.value),
-                  })
-                }
-                placeholder="Last Name"
-                required
-                disabled={isProcessing}
-              />
-
+              Icon={User}
+              value={selectedId.emLastName || ""}
+              onChange={(e) =>
+                setSelectedId({
+                  ...selectedId,
+                  emLastName: sanitizeName(e.target.value),
+                })
+              }
+              placeholder="Last Name"
+              required
+              disabled={isProcessing}
+            />
           </div>
         </div>
 
@@ -338,7 +325,6 @@ const [hrId, setHrId] = React.useState(selectedId.hrId || null);
             disabled={isProcessing}
           />
         </div>
-
         <HrSelector
           hr_name={hrName}
           set_hr_name={setHrName}
@@ -349,6 +335,9 @@ const [hrId, setHrId] = React.useState(selectedId.hrId || null);
           set_hr_id={setHrId}
           hr_signature_error={hrSignatureError}
           set_hr_signature_error={setHrSignatureError}
+          setFormData={setSelectedId}
+          initialIsManual={selectedId.hrDetails?.isManual || false}
+          setIsManual={setIsManual}
         />
 
         <div className="border-t pt-4">

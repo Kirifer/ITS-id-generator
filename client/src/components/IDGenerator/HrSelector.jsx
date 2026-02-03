@@ -17,10 +17,13 @@ export default function HrSelector({
   set_hr_id,
   hr_signature_error,
   set_hr_signature_error,
+  setFormData, 
+  initialIsManual = false,
+  setIsManual,
 }) {
   const { hrList, getHrList } = hrStore()
-
-  const [use_dropdown, set_use_dropdown] = useState(true)
+  
+  const [use_dropdown, set_use_dropdown] = useState(!initialIsManual)
   const [remove_signature_bg, set_remove_signature_bg] = useState(false)
   const [signature_processing, set_signature_processing] = useState(false)
 
@@ -91,6 +94,16 @@ export default function HrSelector({
     set_hr_signature(null)
     set_hr_id(selected_hr._id)
     set_hr_signature_error("")
+    
+    if (setFormData) {
+      setFormData((prev) => ({
+        ...prev,
+        hrRef: selected_hr._id, // Backend expects hrRef
+        hrId: selected_hr._id,
+        hrSignaturePath: selected_hr.signaturePath,
+        hrSignatureKey: selected_hr.signatureKey,
+      }))
+    }
   }
 
   /* -------------------- RENDER -------------------- */
@@ -104,7 +117,23 @@ export default function HrSelector({
         checked={use_dropdown}
         onChange={(val) => {
           set_use_dropdown(val)
-          reset_hr_fields()
+          
+          if (!val) {
+            // Switching to manual mode - reset everything
+            reset_hr_fields()
+          }
+          // When switching to dropdown mode, don't reset signature
+          // It will be set when user selects an HR from dropdown
+          set_hr_signature_error("")
+          
+          // Update isManual state
+          if (setIsManual) {
+            setIsManual(!val)
+          }
+          
+          if (setFormData) {
+            setFormData((prev) => ({ ...prev, isManual: !val }))
+          }
         }}
       />
 

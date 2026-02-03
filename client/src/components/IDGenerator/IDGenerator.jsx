@@ -387,6 +387,7 @@ export default function IDGeneratorForm({
           set_hr_id={set_hr_id}
           hr_signature_error={hrSignatureError}
           set_hr_signature_error={setHrSignatureError}
+          setFormData={setFormData}
         />
 
         <div className="border-t pt-4">

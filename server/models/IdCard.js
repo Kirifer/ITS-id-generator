@@ -81,6 +81,11 @@ const HrSnapshotSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    isManual: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
   },
   { _id: false },
 );

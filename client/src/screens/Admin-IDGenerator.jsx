@@ -28,6 +28,7 @@ export default function Admin_IDGenerator() {
     emPhone: "",
     hrName: "",
     hrPosition: "",
+    isManual: false,
   });
 
   const [photo, setPhoto] = useState(null);
@@ -135,6 +136,7 @@ export default function Admin_IDGenerator() {
         emPhone: "",
         hrName: "",
         hrPosition: "",
+        isManual: false,
       });
 
       setPhoto(null);

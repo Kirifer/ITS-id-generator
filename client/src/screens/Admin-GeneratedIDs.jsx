@@ -198,11 +198,13 @@ export default function Admin_GeneratedIDs() {
   }
 
 function onEdit(row) {
+  console.log(row)
     setSelectedId({
       ...row,
       hrId: row.hrDetails?.hrRef || null,
       hrName: row.hrDetails?.name || "",
       hrPosition: row.hrDetails?.position || "",
+      hrDetails: row.hrDetails,
     });
     setPanelMode("edit");
     setPhoto(null);
@@ -241,6 +243,7 @@ function onEdit(row) {
 
     try {
       await idCardUpdate(formData, selectedId._id);
+      console.log(formData)
     } catch (e) {}
   }
 
