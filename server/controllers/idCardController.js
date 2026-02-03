@@ -34,7 +34,6 @@ const getDetailIdCard = async (req, res) => {
   }
 };
 
-
 const postIdCard = async (req, res) => {
   try {
     const {
@@ -157,7 +156,6 @@ const postIdCard = async (req, res) => {
   }
 };
 
-
 const getIdCard = async (req, res) => {
   try {
     const filter = req.query.status ? { status: req.query.status } : {};
@@ -168,7 +166,6 @@ const getIdCard = async (req, res) => {
   }
 };
 
-
 const patchIdCardApprove = async (req, res) => {
   try {
     const { id } = req.params;
@@ -178,7 +175,7 @@ const patchIdCardApprove = async (req, res) => {
     const updated = await IdCard.findByIdAndUpdate(
       id,
       { status: "Approved", approvedBy: req.user.id },
-      { new: true }
+      { new: true },
     );
 
     if (!updated) return res.status(404).json({ message: "Not found" });
@@ -197,7 +194,7 @@ const patchIdCardReject = async (req, res) => {
     const updated = await IdCard.findByIdAndUpdate(
       id,
       { status: "Rejected", approvedBy: req.user.id },
-      { new: true }
+      { new: true },
     );
 
     if (!updated) return res.status(404).json({ message: "Not found" });
@@ -206,7 +203,6 @@ const patchIdCardReject = async (req, res) => {
     res.status(500).json({ message: e.message });
   }
 };
-
 
 const patchIdCardDetails = async (req, res) => {
   try {
@@ -234,13 +230,43 @@ const patchIdCardDetails = async (req, res) => {
       "emergencyContact.firstName": req.body.emFirstName,
       "emergencyContact.middleInitial": req.body.emMiddleInitial,
       "emergencyContact.lastName": req.body.emLastName,
-      "hrDetails.name": req.body.hrName,
-      "hrDetails.position": req.body.hrPosition,
     };
 
     for (const [path, value] of Object.entries(updates)) {
       if (value !== undefined) {
         card.set(path, value);
+        updated = true;
+      }
+    }
+
+    if (req.body.hrRef) {
+      const hr = await Hr.findById(req.body.hrRef);
+
+      if (!hr) {
+        return res.status(404).json({ message: "Selected HR not found" });
+      }
+
+      card.hrDetails = {
+        hrRef: hr._id,
+        name: hr.name,
+        position: hr.position,
+        signatureKey: hr.signatureKey,
+        signaturePath: hr.signaturePath || null,
+      };
+
+      updated = true;
+    } else {
+      if (req.body.hrName !== undefined || req.body.hrPosition !== undefined) {
+        card.hrDetails.hrRef = null;
+      }
+
+      if (req.body.hrName !== undefined) {
+        card.set("hrDetails.name", req.body.hrName);
+        updated = true;
+      }
+
+      if (req.body.hrPosition !== undefined) {
+        card.set("hrDetails.position", req.body.hrPosition);
         updated = true;
       }
     }
@@ -300,6 +326,7 @@ const patchIdCardDetails = async (req, res) => {
       await deleteFromS3(oldSignatureKey);
       card.hrDetails.signaturePath = hrSignature.location;
       card.hrDetails.signatureKey = hrSignature.key;
+      card.hrDetails.hrRef = null;
       updated = true;
     }
 
@@ -324,7 +351,6 @@ const patchIdCardDetails = async (req, res) => {
     res.status(500).json({ message: e.message });
   }
 };
-
 
 const deleteIdCard = async (req, res) => {
   try {
@@ -357,8 +383,6 @@ const deleteIdCard = async (req, res) => {
     res.status(500).json({ message: e.message });
   }
 };
-
-
 
 module.exports = {
   getDetailIdCard,
