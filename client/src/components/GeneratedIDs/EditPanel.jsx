@@ -47,17 +47,16 @@ export default function EditPanel({
   const [hrPosition, setHrPosition] = React.useState(
     selectedId.hrPosition || ""
   );
-  const [hrId, setHrId] = React.useState(selectedId.hrId || null);
+const [hrId, setHrId] = React.useState(selectedId.hrId || null);
 
   React.useEffect(() => {
     setSelectedId((prev) => ({
       ...prev,
-      hrId: hrId || "",
+      hrId: hrId || prev.hrId || null,
       hrName,
       hrPosition,
     }));
   }, [hrId, hrName, hrPosition]);
-
   React.useEffect(() => {
     if (!selectedId.type) return;
     setSelectedId((prev) => ({

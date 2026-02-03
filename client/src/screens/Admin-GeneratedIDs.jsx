@@ -197,14 +197,18 @@ export default function Admin_GeneratedIDs() {
     mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function onEdit(row) {
-    setSelectedId({ ...row });
+function onEdit(row) {
+    setSelectedId({
+      ...row,
+      hrId: row.hrDetails?.hrRef || null,
+      hrName: row.hrDetails?.name || "",
+      hrPosition: row.hrDetails?.position || "",
+    });
     setPanelMode("edit");
     setPhoto(null);
     setHrSignature(null);
     mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
-
   async function onSubmitUpdate(e) {
     e.preventDefault();
     if (!selectedId?._id) return;
@@ -225,6 +229,9 @@ export default function Admin_GeneratedIDs() {
     formData.append("hrPosition", selectedId.hrPosition);
     formData.append("employeeNumber", selectedId.employeeNumber); 
 
+    if (selectedId.hrId) {
+      formData.append("hrRef", selectedId.hrId);
+    }
     if (photo) {
       formData.append("photo", photo);
     }
