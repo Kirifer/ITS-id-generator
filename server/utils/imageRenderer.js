@@ -270,7 +270,6 @@ const drawEmployeeNameShrink = (fullName, spec) => {
         signatureSource = getPresignedUrl(signatureSource, 900);
 
       } else {
-        console.log("Signature already a URL, extracting key...");
         try {
           const url = new URL(signatureSource);
           const key = url.pathname.substring(1);
