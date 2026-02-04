@@ -9,13 +9,12 @@ export const getImageUrl = async (s3Key) => {
   if (s3Key.startsWith("http://") || s3Key.startsWith("https://")) {
     try {
       const url = new URL(s3Key);
-      key = url.pathname.substring(1);
+      key = decodeURIComponent(url.pathname.substring(1));
     } catch (error) {
       console.error("Failed to parse S3 URL:", error);
       return "";
     }
   }
-
 
   const cached = urlCache.get(key);
   if (cached && Date.now() - cached.timestamp < 55 * 60 * 1000) {
