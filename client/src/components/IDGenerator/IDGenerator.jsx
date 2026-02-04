@@ -31,7 +31,7 @@ export default function IDGeneratorForm({
   setHrSignatureError,
 }) {
   const [photoProcessing, setPhotoProcessing] = useState(false);
-  const [photoReady, setPhotoReady] = useState(false); 
+  const [photoReady, setPhotoReady] = useState(false);
   const [removePhotoBg, setRemovePhotoBg] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -69,18 +69,14 @@ export default function IDGeneratorForm({
       formData.position &&
       formData.email?.trim() &&
       formData.phone?.length >= 13 &&
-
       formData.emFirstName?.trim() &&
       formData.emLastName?.trim() &&
       formData.emPhone?.length >= 13 &&
-
-     hr_name?.trim() &&
-    hr_position?.trim() &&
-    (hr_id || hrSignature) &&
-    photoReady &&          // ✅ NEW: single source of truth
-
-    !photoProcessing
-
+      hr_name?.trim() &&
+      hr_position?.trim() &&
+      (hr_id || hrSignature) &&
+      photoReady && // ✅ NEW: single source of truth
+      !photoProcessing
     );
   };
 
@@ -121,6 +117,12 @@ export default function IDGeneratorForm({
     return "";
   };
 
+  const getEmailDomain = () => {
+    if (formData.type === "Intern") return "@outlook.com";
+    if (formData.type === "Employee") return "@itsquarehub.com";
+    return "";
+  };
+
   const handleEmployeeNumberChange = (value) => {
     const numericValue = value.replace(/\D/g, "").slice(0, 5);
     handleChange("employeeNumber", getEmployeePrefix() + numericValue);
@@ -141,6 +143,17 @@ export default function IDGeneratorForm({
     }
   }, [formData.type]);
 
+  useEffect(() => {
+    if (!formData.type) return;
+
+    const domain = getEmailDomain();
+    const localPart = formData.email?.split("@")[0] || "";
+
+    if (domain) {
+      handleChange("email", localPart + domain);
+    }
+  }, [formData.type]);
+
   const validateFile = (file, setFile, setError) => {
     if (!file) return false;
     if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
@@ -158,46 +171,45 @@ export default function IDGeneratorForm({
   };
 
   const handlePhotoUpload = async (file) => {
-  setPhotoReady(false); // ✅ reset on every new upload
+    setPhotoReady(false); // ✅ reset on every new upload
 
-  if (!validateFile(file, setPhoto, setPhotoError)) return;
+    if (!validateFile(file, setPhoto, setPhotoError)) return;
 
-  // ✅ NO background removal
-  if (!removePhotoBg) {
-    setPhoto(file);
-    setPhotoReady(true); // ✅ READY immediately
-    setPhotoError("");
-    return;
-  }
-
-  // ✅ WITH background removal
-  setPhotoProcessing(true);
-  try {
-    const image = await removeBackground(file);
-    const blob = image instanceof Blob ? image : await image.blob();
-
-    const processedFile = new File(
-      [blob],
-      file.name.replace(/\.(jpg|jpeg)$/i, ".png"),
-      { type: "image/png" }
-    );
-
-    if (!processedFile.size) {
-      throw new Error("Processed image empty");
+    // ✅ NO background removal
+    if (!removePhotoBg) {
+      setPhoto(file);
+      setPhotoReady(true); // ✅ READY immediately
+      setPhotoError("");
+      return;
     }
 
-    setPhoto(processedFile);
-    setPhotoReady(true); // ✅ READY only after processing
-    setPhotoError("");
-  } catch {
-    setPhoto(null);
-    setPhotoReady(false);
-    setPhotoError("Failed to remove background.");
-  } finally {
-    setPhotoProcessing(false);
-  }
-};
+    // ✅ WITH background removal
+    setPhotoProcessing(true);
+    try {
+      const image = await removeBackground(file);
+      const blob = image instanceof Blob ? image : await image.blob();
 
+      const processedFile = new File(
+        [blob],
+        file.name.replace(/\.(jpg|jpeg)$/i, ".png"),
+        { type: "image/png" },
+      );
+
+      if (!processedFile.size) {
+        throw new Error("Processed image empty");
+      }
+
+      setPhoto(processedFile);
+      setPhotoReady(true); // ✅ READY only after processing
+      setPhotoError("");
+    } catch {
+      setPhoto(null);
+      setPhotoReady(false);
+      setPhotoError("Failed to remove background.");
+    } finally {
+      setPhotoProcessing(false);
+    }
+  };
 
   return (
     <div
@@ -219,7 +231,9 @@ export default function IDGeneratorForm({
               icon={User}
               placeholder="First Name"
               value={formData.firstName}
-              onChange={(e) => handleChange("firstName", sanitizeName(e.target.value))}
+              onChange={(e) =>
+                handleChange("firstName", sanitizeName(e.target.value))
+              }
               required
             />
             <InputField
@@ -228,16 +242,19 @@ export default function IDGeneratorForm({
               maxLength={1}
               value={formData.middleInitial}
               onChange={(e) => {
-                const letter = sanitizeName(e.target.value).charAt(0).toUpperCase();
+                const letter = sanitizeName(e.target.value)
+                  .charAt(0)
+                  .toUpperCase();
                 handleChange("middleInitial", letter);
               }}
-
             />
             <InputField
               icon={User}
               placeholder="Last Name"
               value={formData.lastName}
-              onChange={(e) => handleChange("lastName", sanitizeName(e.target.value))}
+              onChange={(e) =>
+                handleChange("lastName", sanitizeName(e.target.value))
+              }
               required
             />
           </div>
@@ -305,13 +322,28 @@ export default function IDGeneratorForm({
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Email
           </label>
-          <InputField
-            type="email"
-            placeholder="Enter Email"
-            value={formData.email}
-            onChange={(e) => handleChange("email", e.target.value)}
-            required
-          />
+
+          <div className="flex">
+            <input
+              type="text"
+              placeholder="username"
+              value={formData.email?.split("@")[0] || ""}
+              onChange={(e) =>
+                handleChange(
+                  "email",
+                  e.target.value.replace(/[^a-zA-Z0-9._-]/g, "") +
+                    getEmailDomain(),
+                )
+              }
+              className="flex-1 pl-3 pr-3 py-2 border border-gray-300 rounded-l-lg text-sm"
+              disabled={!formData.type}
+              required
+            />
+
+            <span className="px-3 py-2 border border-l-0 border-gray-300 rounded-r-lg bg-gray-100 text-sm text-gray-600">
+              {getEmailDomain()}
+            </span>
+          </div>
         </div>
 
         <div>
@@ -337,7 +369,9 @@ export default function IDGeneratorForm({
               icon={User}
               placeholder="First Name"
               value={formData.emFirstName}
-              onChange={(e) => handleChange("emFirstName", sanitizeName(e.target.value))}
+              onChange={(e) =>
+                handleChange("emFirstName", sanitizeName(e.target.value))
+              }
               required
             />
             <InputField
@@ -346,16 +380,19 @@ export default function IDGeneratorForm({
               maxLength={1}
               value={formData.emMiddleInitial}
               onChange={(e) => {
-                const letter = sanitizeName(e.target.value).charAt(0).toUpperCase();
+                const letter = sanitizeName(e.target.value)
+                  .charAt(0)
+                  .toUpperCase();
                 handleChange("emMiddleInitial", letter);
               }}
-
             />
             <InputField
               icon={User}
               placeholder="Last Name"
               value={formData.emLastName}
-              onChange={(e) => handleChange("emLastName", sanitizeName(e.target.value))}
+              onChange={(e) =>
+                handleChange("emLastName", sanitizeName(e.target.value))
+              }
               required
             />
           </div>

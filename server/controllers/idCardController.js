@@ -74,6 +74,21 @@ const postIdCard = async (req, res) => {
     if (isManual === undefined || isManual === null)
       return res.status(400).json({ message: "Missing field: isManual" });
 
+    if (type === "Intern" && !email.toLowerCase().endsWith("@outlook.com")) {
+      return res
+        .status(400)
+        .json({ message: "Intern email must use @outlook.com" });
+    }
+
+    if (
+      type === "Employee" &&
+      !email.toLowerCase().endsWith("@itsquarehub.com")
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Employee email must use @itsquarehub.com" });
+    }
+
     const digits = employeeNumber.replace(/\D/g, "").slice(0, 10);
 
     let finalEmployeeNumber;
@@ -245,7 +260,7 @@ const patchIdCardDetails = async (req, res) => {
       }
     }
 
-    if (req.body.isManual === 'true' || req.body.isManual === true) {
+    if (req.body.isManual === "true" || req.body.isManual === true) {
       card.hrDetails.hrRef = null;
       card.hrDetails.isManual = true;
 
@@ -289,6 +304,30 @@ const patchIdCardDetails = async (req, res) => {
 
     const newType = req.body.type;
     const newEmployeeNumber = req.body.employeeNumber;
+    const newEmail = req.body.email;
+
+    const typeToValidate = newType || card.type;
+    const emailToValidate = newEmail || card.contactDetails.email;
+
+    if (
+      typeToValidate === "Intern" &&
+      emailToValidate &&
+      !emailToValidate.toLowerCase().endsWith("@outlook.com")
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Intern email must use @outlook.com" });
+    }
+
+    if (
+      typeToValidate === "Employee" &&
+      emailToValidate &&
+      !emailToValidate.toLowerCase().endsWith("@itsquarehub.com")
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Employee email must use @itsquarehub.com" });
+    }
 
     if (newType || newEmployeeNumber) {
       const typeToUse = newType || card.type;
@@ -333,7 +372,8 @@ const patchIdCardDetails = async (req, res) => {
       card.hrDetails.signaturePath = hrSignature.location;
       card.hrDetails.signatureKey = hrSignature.key;
       card.hrDetails.hrRef = null;
-      card.hrDetails.isManual = req.body.isManual !== undefined ? req.body.isManual : true;
+      card.hrDetails.isManual =
+        req.body.isManual !== undefined ? req.body.isManual : true;
       updated = true;
     }
     if (updated) {
