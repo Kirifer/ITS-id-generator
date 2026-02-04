@@ -97,6 +97,12 @@ export default function IDGeneratorForm({
     return "";
   };
 
+  const getEmailDomain = () => {
+    if (formData.type === "Intern") return "@outlook.com";
+    if (formData.type === "Employee") return "@itsquarehub.com";
+    return "";
+  };
+
   const handleEmployeeNumberChange = (value) => {
     const numericValue = value.replace(/\D/g, "").slice(0, 5);
     handleChange("employeeNumber", getEmployeePrefix() + numericValue);
@@ -114,6 +120,17 @@ export default function IDGeneratorForm({
     if (formData.type && formData.employeeNumber) {
       const displayNum = getDisplayNumber();
       handleChange("employeeNumber", getEmployeePrefix() + displayNum);
+    }
+  }, [formData.type]);
+
+  useEffect(() => {
+    if (!formData.type) return;
+
+    const domain = getEmailDomain();
+    const localPart = formData.email?.split("@")[0] || "";
+
+    if (domain) {
+      handleChange("email", localPart + domain);
     }
   }, [formData.type]);
 
@@ -285,13 +302,28 @@ export default function IDGeneratorForm({
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Email
           </label>
-          <InputField
-            type="email"
-            placeholder="Enter Email"
-            value={formData.email}
-            onChange={(e) => handleChange("email", e.target.value)}
-            required
-          />
+
+          <div className="flex">
+            <input
+              type="text"
+              placeholder="username"
+              value={formData.email?.split("@")[0] || ""}
+              onChange={(e) =>
+                handleChange(
+                  "email",
+                  e.target.value.replace(/[^a-zA-Z0-9._-]/g, "") +
+                    getEmailDomain(),
+                )
+              }
+              className="flex-1 pl-3 pr-3 py-2 border border-gray-300 rounded-l-lg text-sm"
+              disabled={!formData.type}
+              required
+            />
+
+            <span className="px-3 py-2 border border-l-0 border-gray-300 rounded-r-lg bg-gray-100 text-sm text-gray-600">
+              {getEmailDomain()}
+            </span>
+          </div>
         </div>
 
         <div>
@@ -304,7 +336,6 @@ export default function IDGeneratorForm({
             value={formData.phone}
             onChange={(e) => handlePhoneChange("phone", e.target.value)}
             maxLength={13}
-            minLength={13}
             required
           />
         </div>
@@ -358,7 +389,6 @@ export default function IDGeneratorForm({
             value={formData.emPhone}
             onChange={(e) => handlePhoneChange("emPhone", e.target.value)}
             maxLength={13}
-            minLength={13}
             required
           />
         </div>
@@ -406,8 +436,7 @@ export default function IDGeneratorForm({
 
         <button
           type="submit"
-          disabled={photoProcessing || isSubmitting}
-          className="w-full bg-purple-400 hover:bg-purple-500 disabled:bg-purple-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-md transition duration-200 text-lg flex items-center justify-center gap-2"
+          className="w-full bg-purple-400 hover:bg-purple-500 text-white font-semibold py-3 rounded-md transition duration-200 text-lg flex items-center justify-center gap-2"
         >
           {isSubmitting ? (
             <>
