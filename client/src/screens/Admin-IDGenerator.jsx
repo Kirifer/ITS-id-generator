@@ -51,6 +51,7 @@ export default function Admin_IDGenerator() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!photo) {
       showMessageBoxIdGen("Please upload a photo.");
       return;
@@ -74,7 +75,6 @@ export default function Admin_IDGenerator() {
       return;
     }
 
-
     if (hrSignature instanceof File) {
       if (
         !["image/jpeg", "image/png", "image/jpg"].includes(hrSignature.type)
@@ -92,7 +92,6 @@ export default function Admin_IDGenerator() {
         return;
       }
     }
-
 
     const formDataToSend = new FormData();
 
