@@ -63,10 +63,27 @@ export default function Admin_IDGenerator() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!photo) {
+      setPhotoError("Photo is required");
+      showMessageBoxIdGen("Please upload a photo");
+      return;
+    }
+
+    if (formData.phone.length < 13) {
+      showMessageBoxIdGen(
+        "Please enter a complete phone number (+639XXXXXXXXX)",
+      );
+      return;
+    }
+
+    if (formData.emPhone.length < 13) {
+      showMessageBoxIdGen(
+        "Please enter a complete emergency contact number (+639XXXXXXXXX)",
+      );
+      return;
+    }
+
     if (!validate()) {
-      if (!photo) {
-        setPhotoError("Photo is required");
-      }
       return;
     }
 
@@ -156,8 +173,11 @@ export default function Admin_IDGenerator() {
       setPhotoError("");
       setHrSignature(null);
       setHrSignatureError("");
+
+      return true;
     } else {
       showMessageBoxIdGen("ID generation failed!");
+      return false;
     }
   };
 

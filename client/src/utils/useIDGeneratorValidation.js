@@ -15,7 +15,7 @@ export default function useIDGeneratorValidation({
 
     // ---------- NAME ----------
     if (!formData.firstName?.trim()) e.firstName = true;
-    if (!formData.middleInitial?.trim()) e.middleInitial = true;
+    // if (!formData.middleInitial?.trim()) e.middleInitial = true;
     if (!formData.lastName?.trim()) e.lastName = true;
 
     // ---------- TYPE ----------
@@ -43,7 +43,7 @@ export default function useIDGeneratorValidation({
 
     // ---------- EMERGENCY CONTACT ----------
     if (!formData.emFirstName?.trim()) e.emFirstName = true;
-    if (!formData.emMiddleInitial?.trim()) e.emMiddleInitial = true;
+    // if (!formData.emMiddleInitial?.trim()) e.emMiddleInitial = true;
     if (!formData.emLastName?.trim()) e.emLastName = true;
 
     if (!formData.emPhone || formData.emPhone.length < 13) {

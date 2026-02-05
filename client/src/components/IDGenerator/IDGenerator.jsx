@@ -78,28 +78,16 @@ export default function IDGeneratorForm({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 1️⃣ run form validation FIRST
-    const isValid = await onSubmit(e);
-    if (!isValid) {
-      return;
-    }
-
-    // 2️⃣ validate photo AFTER form fields
-    if (!photo) {
-      setPhotoError("Photo is required");
-      return;
-    } else {
-      setPhotoError("");
-    }
-
     setIsSubmitting(true);
     try {
-      resetHr();
+      const success = await onSubmit(e);
+      if (success) {
+        resetHr();
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
-
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -219,7 +207,8 @@ export default function IDGeneratorForm({
         Please provide the required information below.
       </p>
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      {/* <form onSubmit={handleSubmit} noValidate className="space-y-4"> */}
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Full Name
@@ -248,7 +237,7 @@ export default function IDGeneratorForm({
                 handleChange("middleInitial", letter);
               }}
               error={errors?.middleInitial}
-              required
+              // required
             />
 
             <InputField
@@ -300,7 +289,9 @@ export default function IDGeneratorForm({
               value={getDisplayNumber()}
               onChange={(e) => handleEmployeeNumberChange(e.target.value)}
               disabled={!formData.type}
-              error={errors?.employeeNumber} // ✅ ADD
+              error={errors?.employeeNumber}
+              maxLength={5}
+              minLength={5}
               required
             />
           </div>
@@ -326,7 +317,7 @@ export default function IDGeneratorForm({
           <div className="flex">
             <input
               type="text"
-              placeholder="username"
+              placeholder="Email"
               value={formData.email?.split("@")[0] || ""}
               onChange={(e) =>
                 handleChange(
@@ -399,7 +390,7 @@ export default function IDGeneratorForm({
                 handleChange("emMiddleInitial", letter);
               }}
               error={errors?.emMiddleInitial}
-              required
+              // required
             />
 
             <InputField
