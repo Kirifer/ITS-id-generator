@@ -3,6 +3,7 @@ import { idCardPostStore } from "../store/cardStore";
 import Sidebar from "../components/Sidebar";
 import IDGeneratorForm from "../components/IDGenerator/IDGenerator";
 import { showMessageBoxIdGen } from "../utils/messageBoxIDGen";
+import useIDGeneratorValidation from "../utils/useIDGeneratorValidation";
 
 export default function Admin_IDGenerator() {
   const [sidebarHover, setSidebarHover] = useState(false);
@@ -36,12 +37,22 @@ export default function Admin_IDGenerator() {
   const [hrSignature, setHrSignature] = useState(null);
   const [hrSignatureError, setHrSignatureError] = useState("");
 
+  // 🔴 VALIDATION HOOK (CONNECTED PROPERLY)
+  const { errors, validate } = useIDGeneratorValidation({
+    formData,
+    hr_name: formData.hrName,
+    hr_position: formData.hrPosition,
+    hr_id: formData.hrId,
+    hrSignature,
+    getDisplayNumber: () =>
+      formData.employeeNumber.replace(/^(ITS-|ITSIN-)/, ""),
+  });
+
   useEffect(() => {
     console.log("HR SIGNATURE:", hrSignature);
   }, [hrSignature]);
 
-  const { loading, success, error, message, idCardPost, reset } =
-    idCardPostStore();
+  const { idCardPost, reset } = idCardPostStore();
 
   useLayoutEffect(() => {
     if (formRef.current) {
@@ -52,10 +63,13 @@ export default function Admin_IDGenerator() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!photo) {
-      showMessageBoxIdGen("Please upload a photo.");
+    if (!validate()) {
+      if (!photo) {
+        setPhotoError("Photo is required");
+      }
       return;
     }
+
     if (!formData.hrId && !hrSignature) {
       showMessageBoxIdGen("Please upload HR signature.");
       return;
@@ -143,8 +157,7 @@ export default function Admin_IDGenerator() {
       setHrSignature(null);
       setHrSignatureError("");
     } else {
-      const currentMessage = idCardPostStore.getState().message;
-      showMessageBoxIdGen(currentMessage || "ID generation failed!");
+      showMessageBoxIdGen("ID generation failed!");
     }
   };
 
@@ -160,6 +173,7 @@ export default function Admin_IDGenerator() {
                 formRef={formRef}
                 formData={formData}
                 setFormData={setFormData}
+                errors={errors} // 🔴 PASS ERRORS
                 photo={photo}
                 setPhoto={setPhoto}
                 photoError={photoError}
