@@ -20,6 +20,7 @@ export default function IDGeneratorForm({
   formRef,
   formData,
   setFormData,
+  errors,
   photo,
   setPhoto,
   photoError,
@@ -76,9 +77,23 @@ export default function IDGeneratorForm({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // 1️⃣ run form validation FIRST
+    const isValid = await onSubmit(e);
+    if (!isValid) {
+      return;
+    }
+
+    // 2️⃣ validate photo AFTER form fields
+    if (!photo) {
+      setPhotoError("Photo is required");
+      return;
+    } else {
+      setPhotoError("");
+    }
+
     setIsSubmitting(true);
     try {
-      await onSubmit(e);
       resetHr();
     } finally {
       setIsSubmitting(false);
@@ -204,7 +219,7 @@ export default function IDGeneratorForm({
         Please provide the required information below.
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Full Name
@@ -217,8 +232,10 @@ export default function IDGeneratorForm({
               onChange={(e) =>
                 handleChange("firstName", sanitizeName(e.target.value))
               }
+              error={errors?.firstName} // ✅ ADD
               required
             />
+
             <InputField
               icon={User}
               placeholder="Middle Initial"
@@ -230,7 +247,10 @@ export default function IDGeneratorForm({
                   .toUpperCase();
                 handleChange("middleInitial", letter);
               }}
+              error={errors?.middleInitial}
+              required
             />
+
             <InputField
               icon={User}
               placeholder="Last Name"
@@ -238,11 +258,11 @@ export default function IDGeneratorForm({
               onChange={(e) =>
                 handleChange("lastName", sanitizeName(e.target.value))
               }
+              error={errors?.lastName} // ✅ ADD
               required
             />
           </div>
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Type
@@ -253,10 +273,10 @@ export default function IDGeneratorForm({
             value={formData.type}
             onChange={(e) => handleChange("type", e.target.value)}
             placeholder="Select Type"
+            error={errors?.type} // 🔴 ADD THIS
             required
           />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Employee Number{" "}
@@ -280,14 +300,11 @@ export default function IDGeneratorForm({
               value={getDisplayNumber()}
               onChange={(e) => handleEmployeeNumberChange(e.target.value)}
               disabled={!formData.type}
+              error={errors?.employeeNumber} // ✅ ADD
               required
-              minLength={5}
-              maxLength={5}
-              pattern="[0-9]{5}"
             />
           </div>
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Position
@@ -297,37 +314,47 @@ export default function IDGeneratorForm({
             value={formData.position}
             onChange={(e) => handleChange("position", e.target.value)}
             placeholder="Select Position"
+            error={errors?.position} // ✅ ADD
             required
           />
         </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-800 mb-1">
+            Email
+          </label>
 
-     <div>
-  <label className="block text-sm font-semibold text-gray-800 mb-1">
-    Email
-  </label>
+          <div className="flex">
+            <input
+              type="text"
+              placeholder="username"
+              value={formData.email?.split("@")[0] || ""}
+              onChange={(e) =>
+                handleChange(
+                  "email",
+                  e.target.value.replace(/[^a-zA-Z0-9._-]/g, "") +
+                    getEmailDomain(),
+                )
+              }
+              className={`flex-1 pl-3 pr-3 py-2 rounded-l-lg text-sm ${
+                errors?.email
+                  ? "border border-red-500"
+                  : "border border-gray-300"
+              }`}
+              disabled={!formData.type}
+              required
+            />
 
-  <div className="flex">
-    <input
-      type="text"
-      placeholder="username"
-      value={formData.email?.split("@")[0] || ""}
-      onChange={(e) =>
-        handleChange(
-          "email",
-          e.target.value.replace(/[^a-zA-Z0-9._-]/g, "") +
-            getEmailDomain(),
-        )
-      }
-      className="flex-1 pl-3 pr-3 py-2 border border-gray-300 rounded-l-lg text-sm"
-      disabled={!formData.type}
-      required
-    />
-
-    <span className="px-3 py-2 border border-l-0 border-gray-300 rounded-r-lg bg-gray-100 text-sm text-gray-600">
-      {getEmailDomain()}
-    </span>
-  </div>
-</div>
+            <span
+              className={`px-3 py-2 border border-l-0 rounded-r-lg bg-gray-100 text-sm ${
+                errors?.email
+                  ? "border-red-500 text-red-500"
+                  : "border-gray-300 text-gray-600"
+              }`}
+            >
+              {getEmailDomain()}
+            </span>
+          </div>
+        </div>
 
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
@@ -340,10 +367,10 @@ export default function IDGeneratorForm({
             onChange={(e) => handlePhoneChange("phone", e.target.value)}
             maxLength={13}
             minLength={13}
+            error={errors?.phone} // ✅ ADD
             required
           />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Emergency Contact Person
@@ -356,8 +383,10 @@ export default function IDGeneratorForm({
               onChange={(e) =>
                 handleChange("emFirstName", sanitizeName(e.target.value))
               }
+              error={errors?.emFirstName} // 🔴 ADD THIS
               required
             />
+
             <InputField
               icon={User}
               placeholder="Middle Initial"
@@ -369,7 +398,10 @@ export default function IDGeneratorForm({
                   .toUpperCase();
                 handleChange("emMiddleInitial", letter);
               }}
+              error={errors?.emMiddleInitial}
+              required
             />
+
             <InputField
               icon={User}
               placeholder="Last Name"
@@ -377,11 +409,11 @@ export default function IDGeneratorForm({
               onChange={(e) =>
                 handleChange("emLastName", sanitizeName(e.target.value))
               }
+              error={errors?.emLastName}
               required
             />
           </div>
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-800 mb-1">
             Emergency Contact Number
@@ -394,10 +426,10 @@ export default function IDGeneratorForm({
             onChange={(e) => handlePhoneChange("emPhone", e.target.value)}
             maxLength={13}
             minLength={13}
+            error={errors?.emPhone}
             required
           />
         </div>
-
         <HrSelector
           key={hrResetKey}
           hr_name={hr_name}
@@ -410,6 +442,7 @@ export default function IDGeneratorForm({
           hr_signature_error={hrSignatureError}
           set_hr_signature_error={setHrSignatureError}
           setFormData={setFormData}
+          errors={errors}
         />
 
         <div className="border-t pt-4">
@@ -438,7 +471,6 @@ export default function IDGeneratorForm({
             />
           </div>
         </div>
-
         <button
           type="submit"
           disabled={photoProcessing || isSubmitting}
@@ -452,7 +484,7 @@ export default function IDGeneratorForm({
           ) : (
             "Generate"
           )}
-        </button>a
+        </button>
       </form>
     </div>
   );
