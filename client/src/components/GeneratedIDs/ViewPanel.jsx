@@ -135,6 +135,13 @@ export default function ViewPanel({ row, onEdit, onClose }) {
         </div>
       </div>
 
+
+        <div className="mb-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+        <p className="text-xs text-blue-700">
+          ℹ️ Image preview expires in 1 hour. If image fails to load, please refresh or reopen this view.
+        </p>
+      </div>
+
       <div className="border rounded-xl p-3 bg-gray-50 mb-3">
         {loading ? (
           <div className="h-48 flex items-center justify-center text-gray-400 text-sm">

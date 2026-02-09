@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 const Hr = require("../models/Hr");
 const { s3 } = require("../config/s3");
 
-
 const getHrList = async (req, res) => {
   try {
     const hrs = await Hr.find().sort({ name: 1, position: 1 });
@@ -18,7 +17,6 @@ const getHrList = async (req, res) => {
     });
   }
 };
-
 
 const getHrById = async (req, res) => {
   try {
@@ -52,7 +50,6 @@ const getHrById = async (req, res) => {
   }
 };
 
-
 const createHr = async (req, res) => {
   try {
     const { name, position } = req.body;
@@ -72,13 +69,11 @@ const createHr = async (req, res) => {
       });
     }
 
-    
-
     const hr = await Hr.create({
       name,
       position,
-      signaturePath: signature.location,  
-      signatureKey: signature.key,          
+      signaturePath: signature.location,
+      signatureKey: signature.key,
 
       isManual: true,
       createdBy: req.user.id,
@@ -102,7 +97,6 @@ const createHr = async (req, res) => {
     });
   }
 };
-
 
 const patchHr = async (req, res) => {
   try {
@@ -139,7 +133,6 @@ const patchHr = async (req, res) => {
     }
 
     if (signature) {
-    
       if (hr.signatureKey) {
         await s3
           .deleteObject({
@@ -148,7 +141,6 @@ const patchHr = async (req, res) => {
           })
           .promise();
       }
-
 
       hr.signaturePath = signature.location;
       hr.signatureKey = signature.key;
@@ -183,7 +175,6 @@ const patchHr = async (req, res) => {
   }
 };
 
-
 const deleteHr = async (req, res) => {
   try {
     const { id } = req.params;
@@ -202,7 +193,6 @@ const deleteHr = async (req, res) => {
         error: "HR not found",
       });
     }
-
 
     if (hr.signatureKey) {
       await s3

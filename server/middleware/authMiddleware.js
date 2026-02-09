@@ -1,22 +1,17 @@
-
 const jwt = require("jsonwebtoken");
-
 
 const verifyToken = (req, res, next) => {
   try {
-   
     const token = req.cookies?.accessToken;
 
     if (!token) {
       return res.status(401).json({ error: "Access Token not found." });
     }
 
-   
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
 
-    
     req.user = {
-      id: decoded.id || decoded._id, 
+      id: decoded.id || decoded._id,
       role: decoded.role,
       email: decoded.email,
     };
@@ -27,7 +22,6 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-
 const requireRole = (role) => (req, res, next) => {
   if (!req.user || req.user.role !== role) {
     return res
@@ -36,7 +30,6 @@ const requireRole = (role) => (req, res, next) => {
   }
   next();
 };
-
 
 const requireAnyRole =
   (...roles) =>

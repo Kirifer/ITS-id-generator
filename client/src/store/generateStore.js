@@ -32,11 +32,12 @@ export const generateIDStore = create(
           });
         }
       } catch (err) {
+        console.log(err.response.data.message)
         set({
           loading: false,
           success: false,
           error: true,
-          message: err.response?.data?.error || "Something went wrong",
+          message: err.response?.data?.message || "Something went wrong",
         });
       }
     },

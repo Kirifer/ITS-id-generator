@@ -197,45 +197,57 @@ export default function Admin_GeneratedIDs() {
     mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function onEdit(row) {
-    setSelectedId({ ...row });
-    setPanelMode("edit");
-    setPhoto(null);
-    setHrSignature(null);
-    mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+function onEdit(row) {
+  console.log(row)
+  setSelectedId({
+    ...row,
+    hrId: row.hrDetails?.hrRef || null,
+    hrName: row.hrDetails?.name || "",
+    hrPosition: row.hrDetails?.position || "",
+    hrDetails: row.hrDetails,
+    isManual: row.hrDetails?.isManual || false,
+  });
+  setPanelMode("edit");
+  setPhoto(null);
+  setHrSignature(null);
+  mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+}
+async function onSubmitUpdate(e) {
+  e.preventDefault();
+  if (!selectedId?._id) return;
+  console.log(selectedId.isManual)
+  const formData = new FormData();
+  formData.append("firstName", selectedId.firstName);
+  formData.append("middleInitial", selectedId.middleInitial);
+  formData.append("lastName", selectedId.lastName);
+  formData.append("position", selectedId.position);
+  formData.append("type", selectedId.type);
+  formData.append("email", selectedId.email);
+  formData.append("phone", selectedId.phone);
+  formData.append("emFirstName", selectedId.emFirstName);
+  formData.append("emMiddleInitial", selectedId.emMiddleInitial);
+  formData.append("emLastName", selectedId.emLastName);
+  formData.append("emPhone", selectedId.emPhone);
+  formData.append("hrName", selectedId.hrName);
+  formData.append("hrPosition", selectedId.hrPosition);
+  formData.append("employeeNumber", selectedId.employeeNumber);
+  formData.append("isManual", selectedId.isManual); 
+
+  if (selectedId.hrId) {
+    formData.append("hrRef", selectedId.hrId);
+  }
+  if (photo) {
+    formData.append("photo", photo);
+  }
+  if (hrSignature) {
+    formData.append("hrSignature", hrSignature);
   }
 
-  async function onSubmitUpdate(e) {
-    e.preventDefault();
-    if (!selectedId?._id) return;
-
-    const formData = new FormData();
-    formData.append("firstName", selectedId.firstName);
-    formData.append("middleInitial", selectedId.middleInitial);
-    formData.append("lastName", selectedId.lastName);
-    formData.append("position", selectedId.position);
-    formData.append("type", selectedId.type);
-    formData.append("email", selectedId.email);
-    formData.append("phone", selectedId.phone);
-    formData.append("emFirstName", selectedId.emFirstName);
-    formData.append("emMiddleInitial", selectedId.emMiddleInitial);
-    formData.append("emLastName", selectedId.emLastName);
-    formData.append("emPhone", selectedId.emPhone);
-    formData.append("hrName", selectedId.hrName);
-    formData.append("hrPosition", selectedId.hrPosition);
-    formData.append("employeeNumber", selectedId.employeeNumber); 
-
-    if (photo) {
-      formData.append("photo", photo);
-    }
-    if (hrSignature) {
-      formData.append("hrSignature", hrSignature);
-    }
-
-    try {
-      await idCardUpdate(formData, selectedId._id);
-    } catch (e) {}
-  }
+  try {
+    await idCardUpdate(formData, selectedId._id);
+    console.log(formData);
+  } catch (e) {}
+}
 
   function onDelete(row) {
     setPendingDeleteRow(row);

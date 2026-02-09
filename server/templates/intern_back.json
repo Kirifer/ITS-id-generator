@@ -35,7 +35,7 @@
       "minFontSize": 16,
       "maxWidth": 480,
       "fill": "#111111",
-      "weight": 500
+      "weight": 700
     },
 
     "hrTitle": {
@@ -46,16 +46,17 @@
       "minFontSize": 14,
       "maxWidth": 460,
       "fill": "#111111",
-      "weight": 700
+      "weight": 500
     }
   },
 
   "signature": {
-    "x": 300,
-    "y": 670,
-    "width": 150,
-    "height": 55
-  },
+  "x": 253,
+  "y": 640,
+  "width": 264,
+  "height": 108
+},
+
 
   "barcode": {
     "x": 225,

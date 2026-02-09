@@ -1,5 +1,3 @@
-// server/models/IdCard.js
-
 const mongoose = require("mongoose");
 
 const FullNameSchema = new mongoose.Schema(
@@ -21,7 +19,7 @@ const FullNameSchema = new mongoose.Schema(
       trim: true,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const EmergencyContactSchema = new mongoose.Schema(
@@ -53,20 +51,15 @@ const EmergencyContactSchema = new mongoose.Schema(
       },
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
-/**
- * HR snapshot + optional reference
- * - hrRef exists ONLY when HR is selected from DB
- * - Manual HR uses snapshot fields only
- */
 const HrSnapshotSchema = new mongoose.Schema(
   {
     hrRef: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Hr",
-      required: false, // ✅ allow manual HR
+      required: false,
     },
     name: {
       type: String,
@@ -79,23 +72,23 @@ const HrSnapshotSchema = new mongoose.Schema(
       trim: true,
     },
     signaturePath: {
-      type: String, // S3 URL
+      type: String,
       required: true,
       trim: true,
     },
 
-    // 🔴 ADDED — S3 KEY FOR DELETION
     signatureKey: {
       type: String,
       trim: true,
     },
+    isManual: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
   },
-  { _id: false }
+  { _id: false },
 );
-
-// ===========================
-// VALIDATORS
-// ===========================
 
 const employeeNumberValidator = {
   validator: function (value) {
@@ -176,7 +169,6 @@ const IdCardSchema = new mongoose.Schema(
       required: true,
     },
 
-    // 🔴 EMPLOYEE PHOTO (S3)
     photoPath: {
       type: String,
       trim: true,
@@ -186,7 +178,6 @@ const IdCardSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // 🔴 GENERATED FRONT IMAGE (S3)
     generatedFrontImagePath: {
       type: String,
       trim: true,
@@ -196,7 +187,6 @@ const IdCardSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // 🔴 GENERATED BACK IMAGE (S3)
     generatedBackImagePath: {
       type: String,
       trim: true,
@@ -243,14 +233,9 @@ const IdCardSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-/* ===========================
-   INDEXES (DATABASE GUARANTEE)
-=========================== */
-
-// Avoid duplicate index warnings (already handled by schema)
 IdCardSchema.index({ type: 1, status: 1 });
 
 module.exports = mongoose.model("IdCard", IdCardSchema);

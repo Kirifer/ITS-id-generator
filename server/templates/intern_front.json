@@ -1,47 +1,43 @@
 {
   "background": "Intern-Front-Template.png",
   "designSize": {
-    "width": 1200,
-    "height": 750
+    "width": 750,
+    "height": 1200
   },
-
   "photo": {
-    "left": 475,
-    "top": 195,
-    "width": 250,
-    "height": 320,
+    "left": 170,
+    "top": 320,
+    "width": 410,
+    "height": 500,
     "radius": 16
   },
-
   "text": {
     "name": {
-      "x": 600,
-      "y": 560,
+      "x": 375,
+      "y": 900,
       "align": "center",
-      "fontSize": 40,
+      "fontSize": 52,
       "minFontSize": 18,
-      "maxWidth": 420,
+      "maxWidth": 700,
       "fill": "#111",
       "weight": 700
     },
-
     "position": {
-      "x": 600,
-      "y": 610,
+      "x": 375,
+      "y": 975,
       "align": "center",
-      "fontSize": 30,
+      "fontSize": 46,
       "minFontSize": 18,
-      "maxWidth": 480,
+      "maxWidth": 680,
       "fill": "#2f6cb4",
       "weight": 600
     },
-
     "idNumber": {
-      "x": 600,
-      "y": 655,
+      "x": 375,
+      "y": 1040,
       "align": "center",
-      "fontSize": 28,
-      "maxWidth": 400,
+      "fontSize": 40,
+      "maxWidth": 600,
       "fill": "#111",
       "weight": 500
     }

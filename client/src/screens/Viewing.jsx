@@ -6,7 +6,8 @@ import { downloadImage } from "../utils/downloadUtils";
 
 export default function GeneratedID() {
   const { idNumber } = useParams();
-  const { data, loading, error, message, getIdCardDetail } = idCardDetailStore();
+  const { data, loading, error, message, getIdCardDetail } =
+    idCardDetailStore();
   const [side, setSide] = useState("front");
   const [imgUrl, setImgUrl] = useState("");
   const [imageLoading, setImageLoading] = useState(false);
@@ -47,11 +48,12 @@ export default function GeneratedID() {
 
   const handleDownload = async () => {
     if (!data) return;
-    
-    const path = side === "back" 
-      ? data.generatedBackImagePath 
-      : data.generatedFrontImagePath;
-      
+
+    const path =
+      side === "back"
+        ? data.generatedBackImagePath
+        : data.generatedFrontImagePath;
+
     if (!path) return;
 
     setDownloading(true);
@@ -64,12 +66,70 @@ export default function GeneratedID() {
     }
   };
 
+  const handlePrint = () => {
+    if (!imgUrl) return;
+
+    const w = window.open("", "PRINT", "height=700,width=900");
+    if (!w) return;
+
+    w.document.write(`
+      <html>
+        <head>
+          <title>Print ID-${idNumber} (${side})</title>
+          <style>
+            @page {
+              margin: 0;
+            }
+            html, body {
+              width: 100%;
+              height: 100%;
+              margin: 0;
+            }
+            body {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .card {
+              width: 350mm;
+              height: 150mm;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            img {
+              width: 100%;
+              height: 100%;
+              object-fit: contain;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <img
+              src="${imgUrl}"
+              onload="window.focus();window.print();window.close();"
+              alt="ID ${side}"
+            />
+          </div>
+        </body>
+      </html>
+    `);
+
+    w.document.close();
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen custom-bg p-6">
       <div className="bg-white rounded-3xl shadow-lg p-8 w-full max-w-3xl">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-extrabold text-gray-800">View Generated ID</h1>
-          <Link to="/view-login" className="text-sm text-purple-600 hover:underline">
+          <h1 className="text-2xl font-extrabold text-gray-800">
+            View Generated ID
+          </h1>
+          <Link
+            to="/view-login"
+            className="text-sm text-purple-600 hover:underline"
+          >
             Back
           </Link>
         </div>
@@ -97,8 +157,13 @@ export default function GeneratedID() {
               >
                 Back
               </button>
+            </div>{" "}
+            <div className="mb-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs text-blue-700">
+                ℹ️ Image preview expires in 1 hour. If image fails to load,
+                please refresh or reopen this view.
+              </p>
             </div>
-
             <div className="border rounded-xl p-3 bg-gray-50 mb-6">
               {imageLoading ? (
                 <div className="h-48 flex items-center justify-center text-gray-400 text-sm">
@@ -116,14 +181,15 @@ export default function GeneratedID() {
                 </div>
               )}
             </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <Info label="Name" value={formatName(data?.fullName)} />
               <Info label="Position" value={data?.position} />
               <Info label="Type" value={data?.type} />
-              <Info label="ID Number" value={data?.employeeNumber || idNumber} />
+              <Info
+                label="ID Number"
+                value={data?.employeeNumber || idNumber}
+              />
             </div>
-
             {imgUrl && !imageLoading && (
               <div className="mt-6 flex gap-3">
                 <button
@@ -134,7 +200,7 @@ export default function GeneratedID() {
                   {downloading ? "Downloading..." : "Download"}
                 </button>
                 <button
-                  onClick={() => window.print()}
+                  onClick={handlePrint}
                   className="flex-1 bg-gray-300 hover:bg-gray-400 text-white font-semibold py-2 rounded-md"
                 >
                   Print
@@ -161,6 +227,6 @@ function Info({ label, value }) {
 
 function formatName(n) {
   if (!n) return "";
-  const mi = n.middleInitial ? `${n.middleInitial}. ` : "";
+  const mi = n.middleInitial ? `${n.middleInitial} ` : "";
   return `${n.firstName || ""} ${mi}${n.lastName || ""}`.trim();
 }

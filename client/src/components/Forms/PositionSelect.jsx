@@ -1,7 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import { getPositionsStore } from "../../store/positionStore";
 
-export default function PositionSelect({ value, onChange, disabled, required }) {
+export default function PositionSelect({
+  value,
+  onChange,
+  disabled,
+  required,
+  error,
+}) {
   const hasFetched = useRef(false);
 
   const positions = getPositionsStore((state) => state.positions);
@@ -17,11 +23,16 @@ export default function PositionSelect({ value, onChange, disabled, required }) 
 
   return (
     <div>
-
       {loading ? (
-        <div className="flex items-center justify-center py-2 px-4 border border-gray-300 rounded-lg bg-gray-50">
+        <div
+          className={`flex items-center justify-center py-2 px-4 rounded-lg bg-gray-50 ${
+            error ? "border border-red-500" : "border border-gray-300"
+          }`}
+        >
           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-sm text-gray-600">Loading positions...</span>
+          <span className="ml-2 text-sm text-gray-600">
+            Loading positions...
+          </span>
         </div>
       ) : (
         <select
@@ -29,7 +40,9 @@ export default function PositionSelect({ value, onChange, disabled, required }) 
           onChange={onChange}
           disabled={disabled}
           required={required}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`w-full px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+            error ? "border border-red-500" : "border border-gray-300"
+          }`}
         >
           <option value="">Select Position</option>
           {positions.map((position) => (

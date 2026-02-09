@@ -12,7 +12,7 @@ const login = async (req, res) => {
 
   try {
     const user = await User.findOne({ username }).select(
-      "+password +role +isActive +refreshToken"
+      "+password +role +isActive +refreshToken",
     );
 
     if (!user) {
@@ -31,29 +31,31 @@ const login = async (req, res) => {
     const accessToken = jwt.sign(
       { id: user._id, role: user.role, username: user.username },
       process.env.JWT_ACCESS_SECRET,
-      { expiresIn: "15m", algorithm: "HS256" }
+      { expiresIn: "15m", algorithm: "HS256" },
     );
 
     const refreshToken = jwt.sign(
       { id: user._id, role: user.role, username: user.username },
       process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "7d", algorithm: "HS256" }
+      { expiresIn: "7d", algorithm: "HS256" },
     );
 
     user.refreshToken = await bcrypt.hash(refreshToken, 10);
     await user.save();
-
-    return res
+    console.log("partitioned: ", process.env.NODE_ENV === "production");
+    res
       .cookie("accessToken", accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        partitioned: process.env.NODE_ENV === "production",
         maxAge: 15 * 60 * 1000,
       })
       .cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        partitioned: process.env.NODE_ENV === "production",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
       .status(200)
@@ -70,7 +72,7 @@ const login = async (req, res) => {
 const refresher = async (req, res) => {
   try {
     const token = req.cookies?.refreshToken;
-    console.log("refresh: ", token)
+    console.log("refresh: ", token);
     if (!token || token === undefined) {
       res.clearCookie("refreshToken");
       res.clearCookie("accessToken");
@@ -83,7 +85,9 @@ const refresher = async (req, res) => {
     } catch (err) {
       res.clearCookie("refreshToken");
       res.clearCookie("accessToken");
-      return res.status(403).json({ error: "Invalid or expired refresh token." });
+      return res
+        .status(403)
+        .json({ error: "Invalid or expired refresh token." });
     }
 
     const user = await User.findById(payload.id).select("+refreshToken");
@@ -105,7 +109,7 @@ const refresher = async (req, res) => {
     const accessToken = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_ACCESS_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "15m" },
     );
 
     return res
@@ -113,6 +117,7 @@ const refresher = async (req, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        partitioned: process.env.NODE_ENV === "production",
         maxAge: 15 * 60 * 1000,
       })
       .status(200)
@@ -124,7 +129,6 @@ const refresher = async (req, res) => {
     return res.status(500).json({ error: "Something went wrong." });
   }
 };
-
 
 const checkAuth = async (req, res) => {
   try {
@@ -145,23 +149,26 @@ const checkAuth = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-
     const user = await User.findById(req.user.id).select("_id");
 
-    if (!user) {
-      return res.status(401).json({ error: "You are not authenticated." });
+    if (user) {
+      user.refreshToken = null;
+      await user.save();
     }
-
-    user.refreshToken = null;
-    await user.save();
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      partitioned: process.env.NODE_ENV === "production",
+    };
 
     return res
-      .clearCookie("accessToken")
-      .clearCookie("refreshToken")
+      .clearCookie("accessToken", cookieOptions)
+      .clearCookie("refreshToken", cookieOptions)
       .status(200)
       .json({ success: "Successfully logged out." });
   } catch (err) {
-    console.error(err);
+    console.error("Logout error:", err);
     return res.status(500).json({ error: "Something went wrong." });
   }
 };

@@ -15,14 +15,17 @@ export default function FileUpload({
 
       <label
         htmlFor={id}
-        className={`flex flex-col items-center justify-center p-6 mb-3 border-2 border-dashed rounded-lg transition-colors duration-200 ${
-          isProcessing
-            ? "border-gray-300 text-gray-400 cursor-not-allowed"
-            : "text-gray-500 cursor-pointer hover:border-purple-300 hover:text-purple-400 focus-within:border-purple-300 focus-within:text-purple-400"
-        }`}
+        className={`flex flex-col items-center justify-center p-6 mb-3 border-2 border-dashed rounded-lg transition-colors duration-200
+          ${
+            error
+              ? "border-red-500 text-red-500"
+              : isProcessing
+              ? "border-gray-300 text-gray-400 cursor-not-allowed"
+              : "border-gray-300 text-gray-500 cursor-pointer hover:border-purple-300 hover:text-purple-400"
+          }
+        `}
         style={{ minHeight: "120px" }}
       >
-        {/* ✅ SAFE ICON RENDER */}
         {Icon && <Icon size={32} />}
 
         <p className={`mt-2 text-sm text-center ${file ? "text-purple-600" : ""}`}>

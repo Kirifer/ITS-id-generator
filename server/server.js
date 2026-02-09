@@ -14,7 +14,7 @@ const { dashboardRoutes } = require("./routes/dashboardRoutes");
 const { adminRoutes } = require("./routes/adminRoutes");
 const hrRoutes = require("./routes/hrRoutes");
 const { positionRoutes } = require("./routes/positionRoutes");
-const downloadRoutes = require("./routes/downloadRoutes")
+const s3Routes = require("./routes/s3Routes")
 
 if (
   !process.env.MONGO_URI ||
@@ -26,16 +26,11 @@ if (
   !process.env.AWS_REGION ||
   !process.env.AWS_BUCKET_NAME
 ) {
-
-  console.log(process.env);
-  console.error(
-    "❌ Missing required environment variables. Check .env file."
-  );
+  console.error("❌ Missing required environment variables. Check .env file.");
   process.exit(1);
 }
 
 const app = express();
-
 
 const corsOptions = {
   origin: [
@@ -52,15 +47,12 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(cookieParser());
 
-
 app.use(express.json({ limit: "10mb", strict: false }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
 
 const primaryUploads = path.join(__dirname, "uploads");
 console.log("[static] /uploads →", primaryUploads);
 app.use("/uploads", express.static(primaryUploads));
-
 
 app.use("/api/auth", authRoutes);
 app.use("/api/id-cards", idCardsRouter);
@@ -70,30 +62,7 @@ app.use("/api/stats", dashboardRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/hr", hrRoutes);
 app.use("/api/position", positionRoutes);
-app.use("/api/images", downloadRoutes);
-
-app.get("/api/images/url", async (req, res) => {
-  try {
-    const { key } = req.query;
-
-    if (!key) {
-      return res.status(400).json({ error: "S3 key is required" });
-    }
-
-    console.log("Generating pre-signed URL for key:", key);
-
-    const presignedUrl = await getPresignedUrl(key);
-    
-    console.log("Generated pre-signed URL:", presignedUrl);
-
-    res.json({ url: presignedUrl });
-  } catch (error) {
-    console.error("Failed to generate pre-signed URL:", error);
-    res.status(500).json({ error: "Failed to generate image URL" });
-  }
-});
-
-
+app.use("/api/images", s3Routes);
 
 app.use((req, res) => {
   console.log("404 - Route Not Found:", req.method, req.url);
@@ -111,7 +80,6 @@ app.use((err, req, res, next) => {
     message: err.message,
   });
 });
-
 
 const PORT = process.env.PORT || 5000;
 

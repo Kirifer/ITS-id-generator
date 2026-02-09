@@ -122,7 +122,9 @@ const patchPosition = async (req, res) => {
     if (name !== undefined) updateData.name = name;
     if (isActive !== undefined) updateData.isActive = isActive;
 
-    const position = await Position.findByIdAndUpdate(id, updateData, { new: true });
+    const position = await Position.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
 
     if (!position) {
       return res.status(404).json({
@@ -156,11 +158,7 @@ const deletePosition = async (req, res) => {
       });
     }
 
-    const position = await Position.findByIdAndUpdate(
-      id,
-      { isActive: false },
-      { new: true }
-    );
+    const position = await Position.findById(id);
 
     if (!position) {
       return res.status(404).json({
@@ -168,6 +166,16 @@ const deletePosition = async (req, res) => {
         message: "Position not found",
       });
     }
+
+    if (!position.isActive) {
+      return res.status(400).json({
+        success: false,
+        message: "Position is already inactive",
+      });
+    }
+
+    position.isActive = false;
+    await position.save();
 
     res.status(200).json({
       success: true,

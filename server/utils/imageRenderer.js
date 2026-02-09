@@ -8,16 +8,26 @@ const {
   drawImageCover,
   generateBarcodeImage,
   loadTemplate,
+  loadImageFromSource,
 } = require("./imageHelper");
 
 const { renderInternFront } = require("./internLayout");
-
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   region: process.env.AWS_REGION,
+  signatureVersion: "v4",
 });
+
+function getPresignedUrl(s3Key, expiresIn = 900) {
+  const params = {
+    Bucket: process.env.AWS_BUCKET_NAME,
+    Key: s3Key,
+    Expires: expiresIn,
+  };
+  return s3.getSignedUrl("getObject", params);
+}
 
 async function renderSide(card, templateKey, suffix) {
   const tpl = await loadTemplate(templateKey);
@@ -33,9 +43,23 @@ async function renderSide(card, templateKey, suffix) {
     tpl.bgH * scale,
   );
 
-
   if (suffix === "front" && card.photoPath && tpl.photo) {
-    const img = await loadImage(card.photoPath);
+    let photoSource = card.photoPath;
+
+    if (!photoSource.startsWith("http")) {
+      photoSource = getPresignedUrl(photoSource, 900);
+    } else {
+      try {
+        const url = new URL(photoSource);
+        const key = decodeURIComponent(url.pathname.substring(1));
+
+        photoSource = getPresignedUrl(key, 900);
+      } catch (err) {
+        console.error("Failed to parse URL:", err);
+      }
+    }
+
+    const img = await loadImageFromSource(photoSource);
     drawImageCover(
       ctx,
       img,
@@ -45,7 +69,6 @@ async function renderSide(card, templateKey, suffix) {
       toPx(tpl.photo.height, tpl.designH),
     );
   }
-
 
   if (suffix === "front" && templateKey.toLowerCase().includes("employee")) {
     try {
@@ -91,7 +114,6 @@ async function renderSide(card, templateKey, suffix) {
       bh,
     );
   }
-
 
   const drawText = (value, spec) => {
     if (!value || !spec) return;
@@ -139,17 +161,18 @@ async function renderSide(card, templateKey, suffix) {
     const firstNameParts = firstName.trim().split(/\s+/);
 
     let nameValue;
+    let sizeMultiplier = 1.0;
 
     if (firstNameParts.length === 2) {
       nameValue =
         `${firstNameParts[0]}\n${firstNameParts[1]}\n${middleInitial ? middleInitial + " " : ""}${lastName}`.trim();
-      size = Math.floor(size * 0.7);
+      sizeMultiplier = 0.85;
     } else if (firstNameParts.length === 3 || firstNameParts.length === 4) {
       const line1 = firstNameParts.slice(0, 2).join(" ");
       const line2 = firstNameParts.slice(2).join(" ");
       nameValue =
         `${line1}\n${line2}\n${middleInitial ? middleInitial + " " : ""}${lastName}`.trim();
-      size = Math.floor(size * 0.7);
+      sizeMultiplier = 0.75;
     } else if (firstNameParts.length >= 5) {
       const line1 = firstNameParts.slice(0, 2).join(" ");
       const line2 = firstNameParts.slice(2, 5).join(" ");
@@ -157,7 +180,7 @@ async function renderSide(card, templateKey, suffix) {
       const line3 =
         `${line3Parts.join(" ")}${line3Parts.length > 0 ? " " : ""}${middleInitial ? middleInitial + " " : ""}${lastName}`.trim();
       nameValue = `${line1}\n${line2}\n${line3}`;
-      size = Math.floor(size * 0.7);
+      sizeMultiplier = 0.65;
     } else {
       if (middleInitial) {
         nameValue = `${firstName} ${middleInitial}\n${lastName}`.trim();
@@ -167,6 +190,8 @@ async function renderSide(card, templateKey, suffix) {
     }
 
     const maxWidth = spec.maxWidth ? toPx(spec.maxWidth, tpl.designW) : null;
+
+    size = Math.floor(size * sizeMultiplier);
 
     while (maxWidth && size >= minSize) {
       ctx.font = `${spec.weight || 700} ${size}px Arial`;
@@ -188,7 +213,6 @@ async function renderSide(card, templateKey, suffix) {
       ctx.fillText(line, x, y + i * lineHeight);
     });
   };
-
 
   if (suffix === "front") {
     if (templateKey.toLowerCase().includes("employee")) {
@@ -236,7 +260,22 @@ async function renderSide(card, templateKey, suffix) {
     drawText(card.hrDetails.position, tpl.text.hrTitle);
 
     if (tpl.signature && card.hrDetails.signaturePath) {
-      const sig = await loadImage(card.hrDetails.signaturePath);
+      let signatureSource = card.hrDetails.signaturePath;
+
+      if (!signatureSource.startsWith("http")) {
+        signatureSource = getPresignedUrl(signatureSource, 900);
+      } else {
+        try {
+          const url = new URL(signatureSource);
+          const key = decodeURIComponent(url.pathname.substring(1));
+
+          signatureSource = getPresignedUrl(key, 900);
+        } catch (err) {
+          console.error("Failed to parse signature URL:", err);
+        }
+      }
+
+      const sig = await loadImageFromSource(signatureSource);
       ctx.drawImage(
         sig,
         toPx(tpl.signature.x, tpl.designW),
@@ -246,7 +285,6 @@ async function renderSide(card, templateKey, suffix) {
       );
     }
   }
-
 
   const buffer = canvas.toBuffer("image/png");
   const fileName = `${Date.now()}-${card.idNumber}-${suffix}.png`;
@@ -262,8 +300,8 @@ async function renderSide(card, templateKey, suffix) {
     .promise();
 
   return {
-    url: uploadResult.Location, 
-    key: key,                  
+    url: uploadResult.Location,
+    key: key,
   };
 }
 

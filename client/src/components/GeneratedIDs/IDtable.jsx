@@ -34,7 +34,7 @@ export default function IDTable({
     });
   };
 
-  const filteredData = useMemo(() => {
+const filteredData = useMemo(() => {
     return items.map((id) => ({
       _id: id._id,
       firstName: id?.fullName?.firstName || "",
@@ -53,6 +53,7 @@ export default function IDTable({
       emPhone: id?.emergencyContact?.phone || "",
       hrName: id?.hrDetails?.name || "",
       hrPosition: id?.hrDetails?.position || "",
+      hrDetails: id?.hrDetails || null, 
       generatedFrontImagePath:
         id?.generatedFrontImagePath || id?.generatedImagePath || "",
       generatedBackImagePath: id?.generatedBackImagePath || "",

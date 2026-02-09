@@ -23,8 +23,10 @@ function renderInternFront(ctx, tpl, card, drawText) {
   const positionSpec = { ...tpl.text.position };
   const idSpec = { ...tpl.text.idNumber };
 
-  const lockedOtherSize =
-    Math.min(positionSpec.fontSize || 30, idSpec.fontSize || 28);
+  const lockedOtherSize = Math.min(
+    positionSpec.fontSize || 30,
+    idSpec.fontSize || 28,
+  );
 
   let nameSize = nameSpec.fontSize || 40;
 
@@ -50,7 +52,7 @@ function renderInternFront(ctx, tpl, card, drawText) {
     ctx.font = `${nameSpec.weight || 700} ${nameSize}px Arial`;
     const lines = nameValue.split("\n");
     const maxLineWidth = Math.max(
-      ...lines.map((l) => ctx.measureText(l).width)
+      ...lines.map((l) => ctx.measureText(l).width),
     );
     if (maxLineWidth <= maxNameWidth) break;
     nameSize--;

@@ -17,16 +17,28 @@ export default function HrSelector({
   set_hr_id,
   hr_signature_error,
   set_hr_signature_error,
+  setFormData,
+  errors,
+  initialIsManual = false,
+  setIsManual,
 }) {
   const { hrList, getHrList } = hrStore()
 
-  const [use_dropdown, set_use_dropdown] = useState(true)
+  const [use_dropdown, set_use_dropdown] = useState(!initialIsManual)
   const [remove_signature_bg, set_remove_signature_bg] = useState(false)
   const [signature_processing, set_signature_processing] = useState(false)
 
   useEffect(() => {
     getHrList()
   }, [])
+
+  const reset_hr_fields = () => {
+    set_hr_name("")
+    set_hr_position("")
+    set_hr_id(null)
+    set_hr_signature(null)
+    set_hr_signature_error("")
+  }
 
   const validate_file = (file) => {
     if (!file) return false
@@ -37,9 +49,9 @@ export default function HrSelector({
       return false
     }
 
-    if (file.size > 2 * 1024 * 1024) {
+    if (file.size > 4 * 1024 * 1024) {
       set_hr_signature(null)
-      set_hr_signature_error("Max 2MB")
+      set_hr_signature_error("Max 4MB")
       return false
     }
 
@@ -80,6 +92,16 @@ export default function HrSelector({
     set_hr_signature(null)
     set_hr_id(selected_hr._id)
     set_hr_signature_error("")
+
+    if (setFormData) {
+      setFormData((prev) => ({
+        ...prev,
+        hrRef: selected_hr._id,
+        hrId: selected_hr._id,
+        hrSignaturePath: selected_hr.signaturePath,
+        hrSignatureKey: selected_hr.signatureKey,
+      }))
+    }
   }
 
   return (
@@ -92,9 +114,10 @@ export default function HrSelector({
         checked={use_dropdown}
         onChange={(val) => {
           set_use_dropdown(val)
-          if (!val) {
-            set_hr_id(null)
-            set_hr_signature(null)
+          reset_hr_fields()
+          if (setIsManual) setIsManual(!val)
+          if (setFormData) {
+            setFormData((prev) => ({ ...prev, isManual: !val }))
           }
         }}
       />
@@ -106,6 +129,7 @@ export default function HrSelector({
           value={hr_name}
           onChange={(e) => handle_hr_select(e.target.value)}
           placeholder="Select HR"
+          error={errors?.hrName}
           required
         />
       ) : (
@@ -114,6 +138,7 @@ export default function HrSelector({
           placeholder="HR Name"
           value={hr_name}
           onChange={(e) => set_hr_name(e.target.value)}
+          error={errors?.hrName}
           required
         />
       )}
@@ -123,6 +148,7 @@ export default function HrSelector({
         placeholder="HR Position"
         value={hr_position}
         onChange={(e) => set_hr_position(e.target.value)}
+        error={errors?.hrPosition}
         required
         disabled={use_dropdown}
       />
@@ -140,8 +166,10 @@ export default function HrSelector({
             id="hr_signature"
             icon={UploadCloud}
             file={hr_signature}
-            error={hr_signature_error}
-            onFileChange={(e) => handle_signature_upload(e.target.files[0])}
+            error={errors?.hrSignature || hr_signature_error}
+            onFileChange={(e) =>
+              handle_signature_upload(e.target.files[0])
+            }
             label="HR Signature"
             isProcessing={signature_processing}
           />

@@ -8,8 +8,6 @@ const {
   deleteFromS3,
 } = require("../service/helper");
 
-
-// ================= GET DETAIL =================
 const getDetailIdCard = async (req, res) => {
   try {
     const item = await IdCard.findOne({
@@ -36,8 +34,6 @@ const getDetailIdCard = async (req, res) => {
   }
 };
 
-
-// ================= CREATE =================
 const postIdCard = async (req, res) => {
   try {
     const {
@@ -56,6 +52,7 @@ const postIdCard = async (req, res) => {
       hrId,
       hrName,
       hrPosition,
+      isManual,
     } = req.body || {};
 
     const required = [
@@ -74,7 +71,24 @@ const postIdCard = async (req, res) => {
     for (const [k, v] of required)
       if (!v) return res.status(400).json({ message: `Missing field: ${k}` });
 
-    // normalize + enforce prefix by type
+    if (isManual === undefined || isManual === null)
+      return res.status(400).json({ message: "Missing field: isManual" });
+
+    if (type === "Intern" && !email.toLowerCase().endsWith("@outlook.com")) {
+      return res
+        .status(400)
+        .json({ message: "Intern email must use @outlook.com" });
+    }
+
+    if (
+      type === "Employee" &&
+      !email.toLowerCase().endsWith("@itsquarehub.com")
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Employee email must use @itsquarehub.com" });
+    }
+
     const digits = employeeNumber.replace(/\D/g, "").slice(0, 10);
 
     let finalEmployeeNumber;
@@ -112,6 +126,7 @@ const postIdCard = async (req, res) => {
         position: hr.position,
         signaturePath: hr.signaturePath,
         signatureKey: hr.signatureKey,
+        isManual: false,
       };
     } else {
       if (!hrName || !hrPosition || !hrSignature) {
@@ -126,6 +141,7 @@ const postIdCard = async (req, res) => {
         position: hrPosition,
         signaturePath: hrSignature.location,
         signatureKey: hrSignature.key,
+        isManual: true,
       };
     }
 
@@ -161,8 +177,6 @@ const postIdCard = async (req, res) => {
   }
 };
 
-
-// ================= LIST =================
 const getIdCard = async (req, res) => {
   try {
     const filter = req.query.status ? { status: req.query.status } : {};
@@ -173,8 +187,6 @@ const getIdCard = async (req, res) => {
   }
 };
 
-
-// ================= APPROVE / REJECT =================
 const patchIdCardApprove = async (req, res) => {
   try {
     const { id } = req.params;
@@ -184,7 +196,7 @@ const patchIdCardApprove = async (req, res) => {
     const updated = await IdCard.findByIdAndUpdate(
       id,
       { status: "Approved", approvedBy: req.user.id },
-      { new: true }
+      { new: true },
     );
 
     if (!updated) return res.status(404).json({ message: "Not found" });
@@ -203,7 +215,7 @@ const patchIdCardReject = async (req, res) => {
     const updated = await IdCard.findByIdAndUpdate(
       id,
       { status: "Rejected", approvedBy: req.user.id },
-      { new: true }
+      { new: true },
     );
 
     if (!updated) return res.status(404).json({ message: "Not found" });
@@ -213,8 +225,6 @@ const patchIdCardReject = async (req, res) => {
   }
 };
 
-
-// ================= UPDATE DETAILS =================
 const patchIdCardDetails = async (req, res) => {
   try {
     const { id } = req.params;
@@ -241,8 +251,6 @@ const patchIdCardDetails = async (req, res) => {
       "emergencyContact.firstName": req.body.emFirstName,
       "emergencyContact.middleInitial": req.body.emMiddleInitial,
       "emergencyContact.lastName": req.body.emLastName,
-      "hrDetails.name": req.body.hrName,
-      "hrDetails.position": req.body.hrPosition,
     };
 
     for (const [path, value] of Object.entries(updates)) {
@@ -250,6 +258,38 @@ const patchIdCardDetails = async (req, res) => {
         card.set(path, value);
         updated = true;
       }
+    }
+
+    if (req.body.isManual === "true" || req.body.isManual === true) {
+      card.hrDetails.hrRef = null;
+      card.hrDetails.isManual = true;
+
+      if (req.body.hrName !== undefined) {
+        card.set("hrDetails.name", req.body.hrName);
+        updated = true;
+      }
+
+      if (req.body.hrPosition !== undefined) {
+        card.set("hrDetails.position", req.body.hrPosition);
+        updated = true;
+      }
+    } else if (req.body.hrRef) {
+      const hr = await Hr.findById(req.body.hrRef);
+
+      if (!hr) {
+        return res.status(404).json({ message: "Selected HR not found" });
+      }
+
+      card.hrDetails = {
+        hrRef: hr._id,
+        name: hr.name,
+        position: hr.position,
+        signatureKey: hr.signatureKey,
+        signaturePath: hr.signaturePath || null,
+        isManual: false,
+      };
+
+      updated = true;
     }
 
     if (req.body.phone !== undefined) {
@@ -262,9 +302,32 @@ const patchIdCardDetails = async (req, res) => {
       updated = true;
     }
 
-    // 🔥 TYPE + EMPLOYEE NUMBER HANDLING
     const newType = req.body.type;
     const newEmployeeNumber = req.body.employeeNumber;
+    const newEmail = req.body.email;
+
+    const typeToValidate = newType || card.type;
+    const emailToValidate = newEmail || card.contactDetails.email;
+
+    if (
+      typeToValidate === "Intern" &&
+      emailToValidate &&
+      !emailToValidate.toLowerCase().endsWith("@outlook.com")
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Intern email must use @outlook.com" });
+    }
+
+    if (
+      typeToValidate === "Employee" &&
+      emailToValidate &&
+      !emailToValidate.toLowerCase().endsWith("@itsquarehub.com")
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Employee email must use @itsquarehub.com" });
+    }
 
     if (newType || newEmployeeNumber) {
       const typeToUse = newType || card.type;
@@ -280,7 +343,6 @@ const patchIdCardDetails = async (req, res) => {
 
       card.type = typeToUse;
 
-      // prevent duplicate on update
       const exists = await IdCard.exists({
         _id: { $ne: card._id },
         employeeNumber: card.employeeNumber,
@@ -295,7 +357,6 @@ const patchIdCardDetails = async (req, res) => {
       updated = true;
     }
 
-    // photo update
     const photo = req.files?.photo?.[0];
     if (photo) {
       await deleteFromS3(oldPhotoKey);
@@ -305,16 +366,16 @@ const patchIdCardDetails = async (req, res) => {
       updated = true;
     }
 
-    // hr signature update
     const hrSignature = req.files?.hrSignature?.[0];
     if (hrSignature) {
-      await deleteFromS3(oldSignatureKey);
+      // await deleteFromS3(oldSignatureKey);
       card.hrDetails.signaturePath = hrSignature.location;
       card.hrDetails.signatureKey = hrSignature.key;
+      card.hrDetails.hrRef = null;
+      card.hrDetails.isManual =
+        req.body.isManual !== undefined ? req.body.isManual : true;
       updated = true;
     }
-
-    // reset generation if anything changed
     if (updated) {
       await deleteFromS3(oldFrontKey);
       await deleteFromS3(oldBackKey);
@@ -336,9 +397,6 @@ const patchIdCardDetails = async (req, res) => {
     res.status(500).json({ message: e.message });
   }
 };
-
-
-// ================= DELETE =================
 const deleteIdCard = async (req, res) => {
   try {
     const { id } = req.params;
@@ -348,17 +406,24 @@ const deleteIdCard = async (req, res) => {
     const doc = await IdCard.findByIdAndDelete(id);
     if (!doc) return res.status(404).json({ message: "Not found" });
 
-    await deleteFromS3(doc.photoKey);
-    await deleteFromS3(doc.generatedFrontKey);
-    await deleteFromS3(doc.generatedBackKey);
-    await deleteFromS3(doc.hrDetails?.signatureKey);
+    if (doc.photoKey) {
+      await deleteFromS3(doc.photoKey);
+    }
+
+    if (doc.generatedFrontKey) {
+      await deleteFromS3(doc.generatedFrontKey);
+    }
+
+    if (doc.generatedBackKey) {
+      await deleteFromS3(doc.generatedBackKey);
+    }
 
     res.json({ ok: true });
   } catch (e) {
+    console.error(e);
     res.status(500).json({ message: e.message });
   }
 };
-
 
 module.exports = {
   getDetailIdCard,

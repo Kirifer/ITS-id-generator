@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 
 const HrSchema = new mongoose.Schema(
@@ -15,13 +14,11 @@ const HrSchema = new mongoose.Schema(
       trim: true,
     },
 
-
     signaturePath: {
       type: String,
       required: true,
       trim: true,
     },
-
 
     signatureKey: {
       type: String,
@@ -31,7 +28,7 @@ const HrSchema = new mongoose.Schema(
 
     isManual: {
       type: Boolean,
-      default: true, 
+      default: true,
     },
 
     createdBy: {
@@ -42,9 +39,8 @@ const HrSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
-
 
 HrSchema.index({ name: 1, position: 1 }, { unique: true });
 
