@@ -26,19 +26,19 @@ export default function GeneratedID() {
         return;
       }
 
-      const path =
+      const key =
         side === "back"
-          ? data.generatedBackImagePath
-          : data.generatedFrontImagePath;
+          ? data.generatedBackKey
+          : data.generatedFrontKey;
 
-      if (!path) {
+      if (!key) {
         setImgUrl("");
         setImageLoading(false);
         return;
       }
 
       setImageLoading(true);
-      const url = await getImageUrl(path);
+      const url = await getImageUrl(key);
       setImgUrl(url);
       setImageLoading(false);
     };
@@ -49,16 +49,16 @@ export default function GeneratedID() {
   const handleDownload = async () => {
     if (!data) return;
 
-    const path =
+    const key =
       side === "back"
-        ? data.generatedBackImagePath
-        : data.generatedFrontImagePath;
+        ? data.generatedBackKey
+        : data.generatedFrontKey;
 
-    if (!path) return;
+    if (!key) return;
 
     setDownloading(true);
     try {
-      await downloadImage(path, `ID-${idNumber}-${side}.png`);
+      await downloadImage(key, `ID-${idNumber}-${side}.png`);
     } catch (err) {
       alert("Download failed. Please try again.");
     } finally {
