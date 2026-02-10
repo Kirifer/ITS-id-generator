@@ -26,8 +26,10 @@ const getDetailIdCard = async (req, res) => {
       fullName: item.fullName,
       position: item.position,
       type: item.type,
-      generatedFrontImagePath: item.generatedFrontImagePath,
-      generatedBackImagePath: item.generatedBackImagePath,
+
+      //key based
+      generatedFrontKey: item.generatedFrontKey,
+      generatedBackKey: item.generatedBackKey,
     });
   } catch (e) {
     res.status(500).json({ message: e.message });

@@ -1,6 +1,7 @@
 const { createCanvas, loadImage } = require("canvas");
 const path = require("path");
 const AWS = require("aws-sdk");
+const { randomUUID } = require("crypto");
 
 const {
   SERVER_ROOT,
@@ -287,8 +288,7 @@ async function renderSide(card, templateKey, suffix) {
   }
 
   const buffer = canvas.toBuffer("image/png");
-  const fileName = `${Date.now()}-${card.idNumber}-${suffix}.png`;
-  const key = `generated/${fileName}`;
+  const key = `generated/${randomUUID()}-${suffix}.png`;
 
   const uploadResult = await s3
     .upload({

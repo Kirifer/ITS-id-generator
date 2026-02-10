@@ -14,6 +14,17 @@ export default function ViewPanel({ row, onEdit, onClose }) {
       ? row.generatedBackImagePath || ""
       : row.generatedFrontImagePath || row.photoPath;
 
+  const rawKey =
+    side === "back"
+      ? row.generatedBackKey
+      : row.generatedFrontKey;
+
+  const downloadKey = rawKey
+    ? rawKey
+    : relativePath
+    ? relativePath.replace(/^https?:\/\/[^/]+\//, "")
+    : null;
+
   useEffect(() => {
     const loadImage = async () => {
       if (!relativePath) {
@@ -46,9 +57,7 @@ export default function ViewPanel({ row, onEdit, onClose }) {
         <head>
           <title>Print ${filenameBase} (${side})</title>
           <style>
-            @page {
-              margin: 0;
-            }
+            @page { margin: 0; }
             html, body {
               width: 100%;
               height: 100%;
@@ -89,11 +98,11 @@ export default function ViewPanel({ row, onEdit, onClose }) {
   }
 
   async function handleDownload() {
-    if (!relativePath) return;
+    if (!downloadKey) return;
 
     setDownloading(true);
     try {
-      await downloadImage(relativePath, `${filenameBase}-${side}.png`);
+      await downloadImage(downloadKey, `${filenameBase}-${side}.png`);
     } catch (err) {
       alert("Download failed. Please try again.");
     } finally {
@@ -135,8 +144,7 @@ export default function ViewPanel({ row, onEdit, onClose }) {
         </div>
       </div>
 
-
-        <div className="mb-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+      <div className="mb-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
         <p className="text-xs text-blue-700">
           ℹ️ Image preview expires in 1 hour. If image fails to load, please refresh or reopen this view.
         </p>
