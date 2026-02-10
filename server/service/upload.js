@@ -1,17 +1,23 @@
 const multer = require("multer");
 const multerS3 = require("multer-s3");
+const path = require("path");
 const { s3 } = require("../config/s3");
+const generateFileKey = require("./generateFileKey");
 
 const upload = multer({
   storage: multerS3({
     s3: s3,
     bucket: process.env.AWS_BUCKET_NAME,
-
     contentType: multerS3.AUTO_CONTENT_TYPE,
 
-    key: (_req, file, cb) => {
-      const cleanName = file.originalname.replace(/\s+/g, "_");
-      cb(null, `photos/${Date.now()}-${cleanName}`);
+    key: (req, file, cb) => {
+      const fileKey = generateFileKey();       // 🔑 generated key
+      const extension = path.extname(file.originalname);
+
+      // expose the key for controller usage
+      req.generatedFileKey = fileKey;
+
+      cb(null, `photos/${fileKey}${extension}`);
     },
   }),
 

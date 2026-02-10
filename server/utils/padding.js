@@ -1,5 +1,6 @@
 const sharp = require("sharp");
 const AWS = require("aws-sdk");
+const generateFileKey = require("../service/generateFileKey");
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -33,10 +34,7 @@ async function processPhotoByType(file, type) {
         .png()
         .toBuffer();
     }
-    const newKey = `photos/padded-${Date.now()}-${file.originalname.replace(
-      /\s+/g,
-      "_",
-    )}`;
+    const newKey = `photos/${generateFileKey()}.png`;
 
     const uploadResult = await s3
       .upload({
